@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida Online V39</title>
+  <title>Avenida Estoque Online V40 — Edge Function</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,7 +1161,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v39-criacao-sem-email-edge-function-2026-07-10';
+    const TEAM_VERSION = 'v40-edge-function-confirmada-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
@@ -2806,8 +2806,8 @@
             <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" placeholder="Digite a senha" autocomplete="new-password"></div>
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" placeholder="Repita a senha" autocomplete="new-password"></div>
           </div>
-          <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
-          <div class="category-help">O usuário fará login somente pelo código de operador. O cadastro é criado diretamente no servidor, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
+          <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso no servidor</button></div>
+          <div class="category-help"><strong>VERSÃO V40 • CADASTRO PELO SERVIDOR</strong><br>O usuário fará login somente pelo código de operador. A criação acontece pela Edge Function <code>create-stock-user</code>, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -3352,6 +3352,8 @@
     window.addEventListener('offline',()=>{
       definirStatusSync('offline','☁️ Offline • salvo neste aparelho');
     });
+
+    console.info('AVENIDA ESTOQUE V40 — criação de usuários via Edge Function create-stock-user');
 
     window.addEventListener('load',async()=>{
       atualizarTema();
