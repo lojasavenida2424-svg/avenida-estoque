@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avenida Estoque Online V40 — Edge Function</title>
+  <title>Avenida Estoque Online V41 — Controle de Senhas</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,7 +1161,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v40-edge-function-confirmada-2026-07-10';
+    const TEAM_VERSION = 'v41-desenvolvedor-altera-senhas-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
@@ -2752,7 +2752,7 @@
               ${MODULOS.filter(([id])=>p[id]).map(([,nome])=>`<div class="permission-item">✅ ${nome}</div>`).join('')}
               ${p.alterarSenha?'<div class="permission-item">✅ 🔑 Alterar a própria senha</div>':''}
             </div>
-            ${p.alterarSenha?`<div class="config-actions" style="margin-top:16px"><button class="btn" onclick="abrirAlteracaoSenha('${normalizarLogin(currentUser.nome)}')">🔑 Alterar minha senha</button></div>`:'<p style="margin-top:16px;color:var(--muted);font-weight:750">A alteração de senha não foi liberada pelo administrador.</p>'}
+            ${p.alterarSenha?`<div class="config-actions" style="margin-top:16px"><button class="btn" onclick="abrirAlteracaoSenha('${currentUser.id}')">🔑 Alterar minha senha</button></div>`:'<p style="margin-top:16px;color:var(--muted);font-weight:750">A alteração de senha não foi liberada pelo administrador.</p>'}
           </div>`;
         return;
       }
@@ -2770,7 +2770,7 @@
           <td>${dev?'Acesso integral':`${liberadas} módulos`}</td>
           <td class="no-print"><div class="config-actions">
             <button class="btn secondary" onclick="editarPermissoesUsuario('${u.id}')" ${dev?'disabled':''}>⚙️ Permissões</button>
-            ${proprio?`<button class="btn secondary" onclick="abrirAlteracaoSenha('${u.id}')">🔑 Minha senha</button>`:''}
+            <button class="btn secondary" onclick="abrirAlteracaoSenha('${u.id}')">${proprio?'🔑 Minha senha':'🔑 Alterar senha'}</button>
             <button class="${u.ativo?'btn danger':'btn success'}" onclick="alternarStatusUsuario('${u.id}')" ${dev?'disabled':''}>${u.ativo?'Desativar':'Reativar'}</button>
           </div></td>
         </tr>`;
@@ -2807,7 +2807,7 @@
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" placeholder="Repita a senha" autocomplete="new-password"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso no servidor</button></div>
-          <div class="category-help"><strong>VERSÃO V40 • CADASTRO PELO SERVIDOR</strong><br>O usuário fará login somente pelo código de operador. A criação acontece pela Edge Function <code>create-stock-user</code>, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
+          <div class="category-help"><strong>VERSÃO V41 • CADASTRO E SENHAS PELO SERVIDOR</strong><br>O usuário fará login somente pelo código de operador. A criação e a redefinição administrativa de senhas acontecem pela Edge Function <code>create-stock-user</code>, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -2991,31 +2991,117 @@
     }
 
     function abrirAlteracaoSenha(userId){
-      const u=state.usuariosLogin.find(x=>x.id===userId); if(!u)return;
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u){toast('Usuário não encontrado.');return;}
+
       const proprio=userId===currentAuthUser?.id;
-      const autorizado=proprio && (usuarioDesenvolvedor() || permissoesUsuario(currentUser.nome).alterarSenha);
+      const desenvolvedor=usuarioDesenvolvedor();
+      const autorizado=proprio
+        ? (desenvolvedor || permissoesUsuario(currentUser.nome).alterarSenha)
+        : desenvolvedor;
+
       if(!autorizado){
-        toast('Por segurança, somente o próprio usuário pode alterar a senha nesta tela.');
+        toast('Alteração de senha não autorizada.');
         return;
       }
+
+      const titulo=proprio?'Alterar minha senha':`Alterar senha de ${escapeHtml(u.nome)}`;
+      const descricao=proprio
+        ? `${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}`
+        : `Operador ${escapeHtml(u.operador||'—')} • Função exclusiva do desenvolvedor`;
+
       document.getElementById('configModalContent').innerHTML=`
-        <div class="modal-head"><div><h2 id="configModalTitle">Alterar minha senha</h2><p>${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
-        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" placeholder="Digite a nova senha" autocomplete="new-password"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" placeholder="Repita a senha" autocomplete="new-password"></div></div>
-        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarNovaSenha('${userId}')">💾 Salvar nova senha</button><button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button></div>`;
+        <div class="modal-head">
+          <div>
+            <h2 id="configModalTitle">${titulo}</h2>
+            <p>${descricao}</p>
+          </div>
+          <button class="icon-btn" onclick="fecharModalConfig()">✕</button>
+        </div>
+        ${!proprio?'<div class="developer-panel card"><h2>🔐 REDEFINIÇÃO ADMINISTRATIVA</h2><p>A nova senha substituirá imediatamente a senha atual desse usuário.</p></div>':''}
+        <div class="form-row two">
+          <div class="field">
+            <label>Nova senha</label>
+            <input id="novaSenhaUsuario" type="password" placeholder="Digite a nova senha" autocomplete="new-password">
+          </div>
+          <div class="field">
+            <label>Confirmar senha</label>
+            <input id="confirmarSenhaUsuario" type="password" placeholder="Repita a senha" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="config-actions" style="margin-top:16px">
+          <button class="btn" onclick="salvarNovaSenha('${userId}')">💾 Salvar nova senha</button>
+          <button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button>
+        </div>`;
+
       document.getElementById('configModal').classList.add('active');
       setTimeout(()=>document.getElementById('novaSenhaUsuario')?.focus(),50);
     }
 
     async function salvarNovaSenha(userId){
-      if(userId!==currentAuthUser?.id){toast('Alteração de senha não autorizada.');return;}
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u){toast('Usuário não encontrado.');return;}
+
+      const proprio=userId===currentAuthUser?.id;
+      const desenvolvedor=usuarioDesenvolvedor();
+      const autorizado=proprio
+        ? (desenvolvedor || permissoesUsuario(currentUser.nome).alterarSenha)
+        : desenvolvedor;
+
+      if(!autorizado){
+        toast('Alteração de senha não autorizada.');
+        return;
+      }
+
       const nova=String(document.getElementById('novaSenhaUsuario')?.value||'');
       const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'');
+
       if(nova===''){toast('Digite a nova senha.');return;}
       if(nova!==confirma){toast('As senhas não são iguais.');return;}
-      const {error}=await supabaseClient.auth.updateUser({password:senhaInterna(nova)});
-      if(error){toast(`Não foi possível alterar a senha: ${error.message}`);return;}
-      fecharModalConfig();
-      toast('Senha alterada com sucesso no Supabase 🔑');
+
+      definirStatusSync('syncing','☁️ Alterando senha…');
+
+      try{
+        if(proprio){
+          const {error}=await supabaseClient.auth.updateUser({
+            password:senhaInterna(nova)
+          });
+          if(error) throw error;
+        }else{
+          const {data,error}=await supabaseClient.functions.invoke('create-stock-user',{
+            body:{
+              action:'update_password',
+              user_id:userId,
+              senha:nova
+            }
+          });
+
+          if(error){
+            let detalhe=error.message || 'Erro desconhecido';
+            try{
+              const contexto=await error.context?.json?.();
+              detalhe=contexto?.error || contexto?.message || detalhe;
+            }catch(_){}
+            throw new Error(detalhe);
+          }
+
+          if(!data?.success){
+            throw new Error(data?.error || 'A senha não foi alterada.');
+          }
+        }
+
+        fecharModalConfig();
+        toast(
+          proprio
+            ? 'Sua senha foi alterada com sucesso 🔑'
+            : `Senha de ${u.nome} alterada com sucesso 🔑`
+        );
+      }catch(e){
+        console.error(e);
+        toast(`Não foi possível alterar a senha: ${e?.message||'erro desconhecido'}`);
+      }finally{
+        definirStatusSync('online','☁️ Online • tempo real');
+      }
     }
 
     function fecharModalConfig(){document.getElementById('configModal')?.classList.remove('active');}
@@ -3353,7 +3439,7 @@
       definirStatusSync('offline','☁️ Offline • salvo neste aparelho');
     });
 
-    console.info('AVENIDA ESTOQUE V40 — criação de usuários via Edge Function create-stock-user');
+    console.info('AVENIDA ESTOQUE V41 — criação e redefinição de senhas via Edge Function create-stock-user');
 
     window.addEventListener('load',async()=>{
       atualizarTema();
