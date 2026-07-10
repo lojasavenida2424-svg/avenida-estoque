@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida Online V35</title>
+  <title>Assistência Gerencial de Estoque - Avenida Online V36</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -790,18 +790,18 @@
       </div>
       <div class="login-body">
         <div class="field">
-          <label>E-mail</label>
-          <input id="loginUser" type="email" placeholder="Digite o e-mail cadastrado no Supabase" autocomplete="username" inputmode="email" spellcheck="false">
+          <label>Operador</label>
+          <input id="loginUser" type="text" placeholder="Digite seu código de operador" autocomplete="username" inputmode="text" autocapitalize="characters" spellcheck="false">
         </div>
         <div class="field">
           <label>Senha</label>
           <input id="loginSenha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
         </div>
         <button class="btn login-submit" style="width:100%;margin-top:4px" type="submit">Entrar no Sistema</button>
-        <div class="login-error" id="loginError">E-mail ou senha incorretos. Confira os dados e tente novamente.</div>
+        <div class="login-error" id="loginError">Operador ou senha incorretos. Confira os dados e tente novamente.</div>
         <div class="login-hint">
           <strong>Acesso individual</strong>
-          Digite o e-mail cadastrado no Supabase e sua senha para acessar o controle de estoque online.
+          Digite seu código de operador e sua senha para acessar o controle de estoque online.
         </div>
       </div>
     </form>
@@ -2800,7 +2800,7 @@
         <div class="card" style="border:2px solid var(--amarelo-2)">
           <div class="section-title" style="margin-top:0"><div><h2>🔐 Controle de login online</h2><p>Crie acessos vinculados ao Supabase Auth, controle os módulos permitidos e desative usuários sem apagar os registros históricos.</p></div></div>
           <div class="form-row">
-            <div class="field"><label>E-mail de acesso</label><input id="novoLoginEmail" type="email" placeholder="usuario@empresa.com"></div>
+            <div class="field"><label>E-mail interno / recuperação</label><input id="novoLoginEmail" type="email" placeholder="usuario@empresa.com"></div>
             <div class="field"><label>Operador</label><input id="novoLoginOperador" placeholder="Ex.: 133"></div>
             <div class="field"><label>Nome do usuário</label><input id="novoLoginNome" placeholder="Ex.: MARIA SILVA"></div>
             <div class="field"><label>Cargo</label><input id="novoLoginCargo" placeholder="Ex.: FISCAL"></div>
@@ -2810,7 +2810,7 @@
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" minlength="6" placeholder="Repita a senha"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
-          <div class="category-help">Caso a confirmação de e-mail esteja habilitada no Supabase, o novo usuário precisará confirmar o endereço antes do primeiro acesso.</div>
+          <div class="category-help">O usuário fará login pelo código de operador. O e-mail é usado apenas internamente pelo Supabase e para recuperação de acesso.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -3181,16 +3181,16 @@
 
     function popularLoginUsers(){
       const input=document.getElementById('loginUser');
-      if(input) input.placeholder='Digite o e-mail cadastrado no Supabase';
+      if(input) input.placeholder='Digite seu código de operador';
     }
 
     async function fazerLogin(evt){
       evt.preventDefault();
-      const email=String(document.getElementById('loginUser').value||'').trim().toLowerCase();
+      const operador=String(document.getElementById('loginUser').value||'').trim().toUpperCase();
       const senha=String(document.getElementById('loginSenha').value||'');
       const erro=document.getElementById('loginError');
-      if(!email || !senha){
-        erro.textContent='Informe o e-mail e a senha.';
+      if(!operador || !senha){
+        erro.textContent='Informe o operador e a senha.';
         erro.classList.add('show');
         return;
       }
@@ -3198,27 +3198,31 @@
       erro.classList.remove('show');
       const botao=evt.submitter || evt.target.querySelector('button[type="submit"]');
       if(botao){botao.disabled=true;botao.textContent='Entrando…';}
-      definirStatusSync('syncing','☁️ Autenticando…');
-
-      const {data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});
-      if(error || !data?.session){
-        erro.textContent='E-mail ou senha incorretos, ou o usuário ainda não confirmou o e-mail.';
-        erro.classList.add('show');
-        definirStatusSync('offline','☁️ Não conectado');
-        if(botao){botao.disabled=false;botao.textContent='Entrar no Sistema';}
-        return;
-      }
+      definirStatusSync('syncing','☁️ Localizando operador…');
 
       try{
+        const {data:emailResolvido,error:resolverError}=await supabaseClient
+          .rpc('resolve_stock_login_email',{p_operator:operador});
+
+        if(resolverError) throw resolverError;
+        const email=String(emailResolvido||'').trim().toLowerCase();
+        if(!email) throw new Error('LOGIN_INVALIDO');
+
+        definirStatusSync('syncing','☁️ Autenticando…');
+        const {data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});
+        if(error || !data?.session) throw new Error('LOGIN_INVALIDO');
+
         await inicializarSessaoOnline(data.session);
         document.getElementById('loginSenha').value='';
         toast(`Bem-vindo, ${currentUser.nome} ✅`);
       }catch(e){
-        console.error(e);
-        await supabaseClient.auth.signOut();
-        erro.textContent=e?.message || 'Não foi possível carregar o perfil deste usuário.';
+        console.error('Falha no login por operador:',e);
+        await supabaseClient.auth.signOut().catch(()=>{});
+        erro.textContent=e?.message==='LOGIN_INVALIDO'
+          ? 'Operador ou senha incorretos. Confira os dados e tente novamente.'
+          : 'Não foi possível acessar o sistema agora. Verifique a conexão e tente novamente.';
         erro.classList.add('show');
-        mostrarLogin();
+        definirStatusSync('offline','☁️ Não conectado');
       }finally{
         if(botao){botao.disabled=false;botao.textContent='Entrar no Sistema';}
       }
