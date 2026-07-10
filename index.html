@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida Online V36</title>
+  <title>Assistência Gerencial de Estoque - Avenida Online V37</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,7 +1161,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v35-topbar-fix-2026-07-10';
+    const TEAM_VERSION = 'v37-login-sem-email-cargos-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
@@ -2799,18 +2799,24 @@
 
         <div class="card" style="border:2px solid var(--amarelo-2)">
           <div class="section-title" style="margin-top:0"><div><h2>🔐 Controle de login online</h2><p>Crie acessos vinculados ao Supabase Auth, controle os módulos permitidos e desative usuários sem apagar os registros históricos.</p></div></div>
-          <div class="form-row">
-            <div class="field"><label>E-mail interno / recuperação</label><input id="novoLoginEmail" type="email" placeholder="usuario@empresa.com"></div>
-            <div class="field"><label>Operador</label><input id="novoLoginOperador" placeholder="Ex.: 133"></div>
-            <div class="field"><label>Nome do usuário</label><input id="novoLoginNome" placeholder="Ex.: MARIA SILVA"></div>
-            <div class="field"><label>Cargo</label><input id="novoLoginCargo" placeholder="Ex.: FISCAL"></div>
+          <div class="form-row three">
+            <div class="field"><label>Operador</label><input id="novoLoginOperador" placeholder="Ex.: 133" inputmode="numeric" autocomplete="off"></div>
+            <div class="field"><label>Nome do usuário</label><input id="novoLoginNome" placeholder="Ex.: MARIA SILVA" autocomplete="off"></div>
+            <div class="field"><label>Cargo</label><select id="novoLoginCargo">
+              <option value="">Selecione o cargo</option>
+              <option value="GERENTE">GERENTE</option>
+              <option value="FISCAL">FISCAL</option>
+              <option value="ADMINISTRATIVO">ADMINISTRATIVO</option>
+              <option value="VISUAL MERCHANDISING">VISUAL MERCHANDISING</option>
+              <option value="ASSESSOR">ASSESSOR</option>
+            </select></div>
           </div>
           <div class="form-row two" style="margin-top:12px">
             <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div>
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" minlength="6" placeholder="Repita a senha"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
-          <div class="category-help">O usuário fará login pelo código de operador. O e-mail é usado apenas internamente pelo Supabase e para recuperação de acesso.</div>
+          <div class="category-help">O usuário fará login somente pelo código de operador. O identificador técnico necessário ao Supabase é criado automaticamente e não precisa ser preenchido.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -2851,16 +2857,23 @@
 
     async function adicionarUsuarioLogin(){
       if(!usuarioDesenvolvedor()){ toast('Controle de login exclusivo para o administrador.'); return; }
-      const email=String(document.getElementById('novoLoginEmail')?.value||'').trim().toLowerCase();
       const operador=String(document.getElementById('novoLoginOperador')?.value||'').trim().toUpperCase();
       const nome=String(document.getElementById('novoLoginNome')?.value||'').trim().toUpperCase();
-      const cargo=String(document.getElementById('novoLoginCargo')?.value||'USUÁRIO').trim().toUpperCase();
+      const cargo=String(document.getElementById('novoLoginCargo')?.value||'').trim().toUpperCase();
       const senha=String(document.getElementById('novoLoginSenha')?.value||'');
       const confirmar=String(document.getElementById('novoLoginSenhaConfirmar')?.value||'');
 
-      if(!email || !email.includes('@')){toast('Informe um e-mail válido.');return;}
       if(!operador){toast('Informe o número ou código do operador.');return;}
+      if(!/^[A-Z0-9._-]+$/.test(operador)){toast('Use apenas letras, números, ponto, hífen ou sublinhado no operador.');return;}
       if(!nome){toast('Informe o nome do usuário.');return;}
+      if(!cargo){toast('Selecione o cargo do usuário.');return;}
+
+      const operadorEmail=operador
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g,'-');
+      const email=`${operadorEmail}@avenida-estoque.local`;
       if(senha.length<6){toast('A senha inicial deve ter pelo menos 6 caracteres.');return;}
       if(senha!==confirmar){toast('As senhas não são iguais.');return;}
       if(state.usuariosLogin.some(u=>normalizarLogin(u.operador)===normalizarLogin(operador))){
@@ -2894,7 +2907,7 @@
           || state.usuariosLogin.find(u=>normalizarLogin(u.operador)===normalizarLogin(operador));
         toast(data?.session
           ? 'Acesso online criado com sucesso ✅'
-          : 'Usuário criado. Aguarde a confirmação do e-mail, se exigida. ✅'
+          : 'Usuário criado. Caso o acesso não funcione, desative a confirmação de e-mail no Supabase Auth. ✅'
         );
         if(criado && !criado.isDeveloper) setTimeout(()=>editarPermissoesUsuario(criado.id),80);
       }catch(e){
