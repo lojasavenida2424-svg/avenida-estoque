@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida Online V37</title>
+  <title>Assistência Gerencial de Estoque - Avenida Online V38</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,10 +1161,15 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v37-login-sem-email-cargos-2026-07-10';
+    const TEAM_VERSION = 'v38-login-operador-senha-livre-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
+    const INTERNAL_PASSWORD_PREFIX = 'AV_ESTOQUE_V38::';
+
+    function senhaInterna(valor){
+      return INTERNAL_PASSWORD_PREFIX + String(valor ?? '');
+    }
 
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
@@ -1490,8 +1495,7 @@
         id:meuPerfil.id,
         nome:String(meuPerfil.full_name||meuPerfil.username||'USUÁRIO').toUpperCase(),
         cargo:String(meuPerfil.job_title||'USUÁRIO').toUpperCase(),
-        operador:String(meuPerfil.username||'').toUpperCase(),
-        email:currentAuthUser?.email||''
+        operador:String(meuPerfil.username||'').toUpperCase()
       };
 
       const permissionsById=Object.fromEntries((permissions||[]).map(p=>[p.user_id,p]));
@@ -2812,11 +2816,11 @@
             </select></div>
           </div>
           <div class="form-row two" style="margin-top:12px">
-            <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div>
-            <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" minlength="6" placeholder="Repita a senha"></div>
+            <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" placeholder="Digite a senha" autocomplete="new-password"></div>
+            <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" placeholder="Repita a senha" autocomplete="new-password"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
-          <div class="category-help">O usuário fará login somente pelo código de operador. O identificador técnico necessário ao Supabase é criado automaticamente e não precisa ser preenchido.</div>
+          <div class="category-help">O usuário fará login somente pelo código de operador. Nenhum e-mail precisa ser informado. A senha pode ter qualquer quantidade de caracteres.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -2873,8 +2877,8 @@
         .replace(/[\u0300-\u036f]/g,'')
         .toLowerCase()
         .replace(/[^a-z0-9._-]/g,'-');
-      const email=`${operadorEmail}@avenida-estoque.local`;
-      if(senha.length<6){toast('A senha inicial deve ter pelo menos 6 caracteres.');return;}
+      const email=`operador.${operadorEmail}@login.avenidaestoque.com.br`;
+      if(senha===''){toast('Digite uma senha para o usuário.');return;}
       if(senha!==confirmar){toast('As senhas não são iguais.');return;}
       if(state.usuariosLogin.some(u=>normalizarLogin(u.operador)===normalizarLogin(operador))){
         toast('Este operador já está cadastrado.');
@@ -2884,7 +2888,7 @@
       definirStatusSync('syncing','☁️ Criando usuário…');
       const {data,error}=await signupClient.auth.signUp({
         email,
-        password:senha,
+        password:senhaInterna(senha),
         options:{
           data:{
             username:operador,
@@ -2907,7 +2911,7 @@
           || state.usuariosLogin.find(u=>normalizarLogin(u.operador)===normalizarLogin(operador));
         toast(data?.session
           ? 'Acesso online criado com sucesso ✅'
-          : 'Usuário criado. Caso o acesso não funcione, desative a confirmação de e-mail no Supabase Auth. ✅'
+          : 'Acesso online criado com sucesso ✅'
         );
         if(criado && !criado.isDeveloper) setTimeout(()=>editarPermissoesUsuario(criado.id),80);
       }catch(e){
@@ -2998,7 +3002,7 @@
       }
       document.getElementById('configModalContent').innerHTML=`
         <div class="modal-head"><div><h2 id="configModalTitle">Alterar minha senha</h2><p>${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
-        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" minlength="6" placeholder="Repita a senha"></div></div>
+        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" placeholder="Digite a nova senha" autocomplete="new-password"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" placeholder="Repita a senha" autocomplete="new-password"></div></div>
         <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarNovaSenha('${userId}')">💾 Salvar nova senha</button><button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button></div>`;
       document.getElementById('configModal').classList.add('active');
       setTimeout(()=>document.getElementById('novaSenhaUsuario')?.focus(),50);
@@ -3008,9 +3012,9 @@
       if(userId!==currentAuthUser?.id){toast('Alteração de senha não autorizada.');return;}
       const nova=String(document.getElementById('novaSenhaUsuario')?.value||'');
       const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'');
-      if(nova.length<6){toast('A nova senha deve ter pelo menos 6 caracteres.');return;}
+      if(nova===''){toast('Digite a nova senha.');return;}
       if(nova!==confirma){toast('As senhas não são iguais.');return;}
-      const {error}=await supabaseClient.auth.updateUser({password:nova});
+      const {error}=await supabaseClient.auth.updateUser({password:senhaInterna(nova)});
       if(error){toast(`Não foi possível alterar a senha: ${error.message}`);return;}
       fecharModalConfig();
       toast('Senha alterada com sucesso no Supabase 🔑');
@@ -3222,10 +3226,32 @@
         if(!email) throw new Error('LOGIN_INVALIDO');
 
         definirStatusSync('syncing','☁️ Autenticando…');
-        const {data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});
-        if(error || !data?.session) throw new Error('LOGIN_INVALIDO');
 
-        await inicializarSessaoOnline(data.session);
+        let loginResult = await supabaseClient.auth.signInWithPassword({
+          email,
+          password:senhaInterna(senha)
+        });
+
+        // Compatibilidade com usuários criados antes da V38.
+        if(loginResult.error || !loginResult.data?.session){
+          loginResult = await supabaseClient.auth.signInWithPassword({
+            email,
+            password:senha
+          });
+
+          if(!loginResult.error && loginResult.data?.session){
+            const migration = await supabaseClient.auth.updateUser({
+              password:senhaInterna(senha)
+            });
+            if(migration.error){
+              console.warn('Não foi possível migrar a senha antiga automaticamente:', migration.error);
+            }
+          }
+        }
+
+        if(loginResult.error || !loginResult.data?.session) throw new Error('LOGIN_INVALIDO');
+
+        await inicializarSessaoOnline(loginResult.data.session);
         document.getElementById('loginSenha').value='';
         toast(`Bem-vindo, ${currentUser.nome} ✅`);
       }catch(e){
