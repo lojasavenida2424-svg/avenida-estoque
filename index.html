@@ -1,0 +1,2700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistência Gerencial de Estoque - Avenida V32</title>
+
+  <script>
+    /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
+    (() => {
+      const root = document.documentElement;
+      root.classList.add('theme-booting');
+      try {
+        const saved = JSON.parse(localStorage.getItem('avenidaEstoqueProV2') || '{}');
+        root.dataset.theme = saved.theme === 'dark' ? 'dark' : 'light';
+      } catch (_) {
+        root.dataset.theme = 'light';
+      }
+    })();
+  </script>
+  <style id="theme-bootstrap-style">
+    html { background:#EDF2F7; }
+    html[data-theme="dark"] { background:#2E0D1E; color-scheme:dark; }
+    html.theme-booting *, html.theme-booting *::before, html.theme-booting *::after { transition:none!important; }
+
+
+    /* ===== V32: CONTROLE DE LOGIN, PERMISSÕES E CATEGORIAS ===== */
+    .developer-panel{
+      position:relative;overflow:hidden;border:1px solid rgba(246,196,38,.58)!important;
+      background:linear-gradient(135deg,rgba(246,196,38,.16),var(--surface))!important;
+    }
+    .developer-panel::before{
+      content:"</>";position:absolute;right:18px;top:5px;font-size:4.3rem;font-weight:1000;
+      opacity:.075;pointer-events:none;
+    }
+    .developer-badge{
+      display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;
+      background:linear-gradient(135deg,#291A1E,#5A263B);color:#F6C426;font-weight:1000;
+      font-size:.72rem;letter-spacing:.07em;box-shadow:0 0 0 1px rgba(246,196,38,.34);
+    }
+    .permission-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+    .permission-item{
+      display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);
+      border-radius:14px;background:var(--surface-2);font-weight:850;min-height:46px;
+    }
+    .permission-item input{width:18px;height:18px;accent-color:var(--amarelo-2);flex:0 0 auto}
+    .config-stack{display:grid;gap:16px}
+    .config-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .config-user-name{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .config-user-name strong{font-size:.94rem}
+    .config-password{font-family:Consolas,monospace;font-weight:900;letter-spacing:.05em}
+    .category-config-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);gap:16px}
+    .category-list{display:grid;gap:10px}
+    .category-row{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;
+      padding:13px 14px;border:1px solid var(--border);border-radius:16px;background:var(--surface-2)
+    }
+    .category-row h3{margin:0 0 4px;font-size:.98rem}.category-row p{margin:0;color:var(--muted);font-size:.79rem;font-weight:750}
+    .config-locked{padding:18px;border-radius:18px;background:var(--red-bg);color:var(--red);font-weight:900}
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(15,23,42,.68);display:none;align-items:center;
+      justify-content:center;padding:22px;z-index:1200;backdrop-filter:blur(6px)
+    }
+    .modal-backdrop.active{display:flex}
+    .modal{
+      width:min(860px,100%);max-height:92vh;overflow:auto;background:var(--surface);color:var(--text);
+      border:1px solid var(--border);border-radius:24px;box-shadow:0 28px 80px rgba(0,0,0,.35);padding:20px
+    }
+    .modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+    .modal-head h2{margin:0}.modal-head p{margin:4px 0 0;color:var(--muted);font-weight:800}
+    .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;font-weight:1000}
+    body.dark .developer-panel{background:linear-gradient(135deg,rgba(255,205,9,.10),var(--surface))!important}
+    @media(max-width:900px){.category-config-grid{grid-template-columns:1fr}}
+    @media(max-width:720px){.permission-grid{grid-template-columns:1fr}.modal{padding:16px}.category-row{grid-template-columns:1fr}}
+
+  </style>
+  <style>
+    :root{
+      --amarelo:#F6C426;
+      --amarelo-2:#DEB022;
+      --preto-logo:#291A1E;
+      --bg:#F2F4F8;
+      --surface:#FFFFFF;
+      --surface-2:#F8FAFC;
+      --surface-3:#FFF7DB;
+      --text:#171717;
+      --muted:#64748B;
+      --border:#D8DEE9;
+      --shadow:0 18px 45px rgba(15,23,42,.10);
+      --shadow-soft:0 8px 24px rgba(15,23,42,.08);
+      --green:#16A34A;
+      --green-bg:#DCFCE7;
+      --red:#DC2626;
+      --red-bg:#FEE2E2;
+      --blue:#2563EB;
+      --blue-bg:#DBEAFE;
+      --orange:#EA580C;
+      --orange-bg:#FFEDD5;
+      --radius:18px;
+      --sidebar:286px;
+    }
+
+    body.dark{
+      --bg:#111111;
+      --surface:#1B1B1F;
+      --surface-2:#25252B;
+      --surface-3:#3A321C;
+      --text:#F7F7F7;
+      --muted:#A3A3A3;
+      --border:#34343B;
+      --shadow:0 18px 45px rgba(0,0,0,.30);
+      --shadow-soft:0 8px 24px rgba(0,0,0,.22);
+      --green-bg:#15351F;
+      --red-bg:#421B1B;
+      --blue-bg:#17294D;
+      --orange-bg:#472A16;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif}
+    body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;transition:.25s background,.25s color}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+
+    .login-screen{position:fixed;inset:0;z-index:100;background:radial-gradient(circle at top left,rgba(246,196,38,.42),transparent 34%),linear-gradient(135deg,var(--preto-logo),#111);display:grid;place-items:center;padding:20px;color:#fff}
+    .login-screen.hidden{display:none}
+    .login-card{width:min(460px,100%);background:rgba(255,255,255,.97);color:#171717;border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.35);border:1px solid rgba(246,196,38,.45)}
+    .login-brand{display:flex;align-items:center;gap:14px;margin-bottom:20px}.login-brand .brand-mark{flex:0 0 auto}.login-brand h1{font-size:1.35rem;line-height:1.08}.login-brand p{color:#64748B;font-weight:800;font-size:.9rem;margin-top:4px}
+    .login-card .field{margin-bottom:12px}.login-card input,.login-card select{background:#F8FAFC;color:#171717;border:1px solid #D8DEE9}.login-card label{color:#64748B}.login-card #loginUser{text-transform:uppercase;font-weight:900;letter-spacing:.02em}
+    .login-hint{margin-top:14px;border:1px dashed #DEB022;background:#FFF7DB;color:#291A1E;border-radius:16px;padding:12px;font-size:.86rem;line-height:1.45}.login-hint strong{display:block;margin-bottom:4px}
+    .login-error{display:none;margin-top:10px;border-radius:13px;padding:10px 12px;background:#FEE2E2;color:#B91C1C;font-weight:900}.login-error.show{display:block}
+
+    .app-shell{display:flex;width:100%;min-height:100vh}.app-shell.hidden{display:none}
+    .sidebar{width:var(--sidebar);background:linear-gradient(180deg,var(--amarelo),#FFD84D);color:var(--preto-logo);padding:18px;display:flex;flex-direction:column;gap:14px;position:fixed;inset:0 auto 0 0;box-shadow:10px 0 32px rgba(41,26,30,.18);z-index:20}
+    .brand-card{background:rgba(255,255,255,.50);border:1px solid rgba(41,26,30,.18);border-radius:22px;padding:16px;box-shadow:0 12px 24px rgba(41,26,30,.12)}
+    .brand-logo{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .brand-mark{width:52px;height:52px;border-radius:16px;background:var(--preto-logo);color:var(--amarelo);display:grid;place-items:center;font-weight:900;font-size:1.4rem;letter-spacing:-1px}
+    .brand-name{line-height:1.05}.brand-name strong{font-size:1.2rem;display:block}.brand-name span{font-weight:800;font-size:.78rem;opacity:.8;text-transform:uppercase;letter-spacing:.08em}
+    .brand-card p{font-size:.83rem;font-weight:700;opacity:.8;line-height:1.35}
+    .user-card{background:rgba(41,26,30,.12);border:1px solid rgba(41,26,30,.18);border-radius:18px;padding:12px;color:var(--preto-logo)}
+    .user-card span{display:block;font-size:.72rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em;opacity:.72}.user-card strong{display:block;font-size:.98rem;margin-top:3px}.user-card small{display:block;font-weight:900;margin-top:3px;opacity:.82}
+
+    .nav{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+    .nav button{border:0;border-radius:15px;background:transparent;color:var(--preto-logo);padding:13px 14px;text-align:left;font-weight:900;display:flex;align-items:center;gap:10px;transition:.2s}
+    .nav button:hover,.nav button.active{background:rgba(41,26,30,.13);transform:translateX(2px)}
+    .nav button.active{box-shadow:inset 5px 0 0 var(--preto-logo);background:rgba(41,26,30,.18)}
+
+    .side-footer{margin-top:auto;display:grid;gap:10px}
+    .theme-btn,.backup-btn,.logout-btn{border:0;border-radius:16px;padding:13px 14px;font-weight:900;background:var(--preto-logo);color:var(--amarelo)}
+    .backup-btn{background:rgba(41,26,30,.15);color:var(--preto-logo);border:1px solid rgba(41,26,30,.16)}
+    .logout-btn{background:#291A1E;color:#fff;border:1px solid rgba(255,255,255,.18)}
+
+    .main{margin-left:var(--sidebar);width:calc(100% - var(--sidebar));padding:24px;display:flex;flex-direction:column;gap:18px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-soft);border-radius:var(--radius);padding:18px 78px 18px 20px;position:sticky;top:12px;z-index:12}
+    .title-block h1{font-size:1.45rem;line-height:1.2}.title-block p{color:var(--muted);font-size:.92rem;margin-top:4px}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;flex:1;min-width:0}
+    .chip{background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:9px 12px;color:var(--muted);font-weight:800;font-size:.86rem;white-space:nowrap}.chip strong{color:var(--text)}
+    .btn{border:0;border-radius:14px;padding:11px 14px;font-weight:900;background:var(--amarelo);color:var(--preto-logo);box-shadow:0 8px 18px rgba(246,196,38,.22);transition:.2s}.btn:hover{transform:translateY(-1px);background:var(--amarelo-2)}
+    .btn.secondary{background:var(--surface-2);box-shadow:none;color:var(--text);border:1px solid var(--border)}
+    .btn.danger{background:var(--red);color:white;box-shadow:none}.btn.success{background:var(--green);color:white;box-shadow:none}.btn.blue{background:var(--blue);color:white;box-shadow:none}
+        .header-logout{position:absolute;top:50%;right:20px;transform:translateY(-50%);width:42px;height:42px;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);display:grid;place-items:center;font-size:1.05rem;font-weight:950;line-height:1;box-shadow:none;transition:.18s;z-index:2}
+    .header-logout:hover{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.38);transform:translateY(-50%) scale(1.04)}
+    .header-logout:focus-visible{outline:3px solid rgba(246,196,38,.45);outline-offset:3px}
+    .header-logout .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    .page{display:none;animation:fade .18s ease}.page.active{display:block}@keyframes fade{from{opacity:.4;transform:translateY(3px)}to{opacity:1;transform:none}}
+    .grid{display:grid;gap:16px}.grid.cards{grid-template-columns:repeat(4,minmax(180px,1fr))}.grid.two{grid-template-columns:1.1fr .9fr}.grid.three{grid-template-columns:repeat(3,1fr)}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-soft)}
+    .metric{position:relative;overflow:hidden}.metric::after{content:"";position:absolute;width:120px;height:120px;border-radius:999px;background:var(--amarelo);opacity:.13;right:-34px;top:-46px}.metric .label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.86rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.metric .value{font-size:2.15rem;font-weight:950;margin-top:8px;letter-spacing:-.04em}.metric .hint{color:var(--muted);font-size:.82rem;margin-top:4px;font-weight:700}
+    .section-title{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:22px 0 12px}.section-title h2{font-size:1.12rem}.section-title p{color:var(--muted);font-size:.9rem;margin-top:3px}
+
+    .form-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.form-row.two{grid-template-columns:repeat(2,1fr)}.form-row.three{grid-template-columns:repeat(3,1fr)}
+    .field{display:flex;flex-direction:column;gap:6px}.field label{font-weight:900;color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.04em}.field input,.field select,.field textarea{width:100%;border:1px solid var(--border);border-radius:13px;background:var(--surface-2);color:var(--text);padding:11px 12px;outline:none}.field textarea{min-height:90px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amarelo);box-shadow:0 0 0 4px rgba(246,196,38,.18)}
+
+    .quick-card{background:linear-gradient(135deg,var(--surface),var(--surface-3));border-color:rgba(246,196,38,.55)}
+    .alert-box{border-radius:16px;padding:14px;border:1px solid var(--border);background:var(--surface-2);display:flex;gap:10px;align-items:flex-start}.alert-box strong{display:block;margin-bottom:3px}.alert-box p{color:var(--muted);font-size:.9rem;line-height:1.35}
+
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:10px 13px;font-weight:900}.tab.active{background:var(--preto-logo);border-color:var(--preto-logo);color:var(--amarelo)}
+    .subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.subtab-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:11px 14px;font-weight:950}.subtab-btn.active{background:var(--preto-logo);border-color:var(--preto-logo);color:var(--amarelo)}.subtab-panel{display:none}.subtab-panel.active{display:block}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.filters input,.filters select{border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);padding:10px 12px;font-weight:800;outline:none}
+
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:var(--shadow-soft)}
+    table{width:100%;border-collapse:separate;border-spacing:0;min-width:1180px;font-size:.86rem}th,td{border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;padding:8px}tr:last-child td{border-bottom:0}th:last-child,td:last-child{border-right:0}thead th{position:sticky;top:0;z-index:5;background:var(--preto-logo);color:var(--amarelo);font-weight:950}.subhead th{top:35px;background:var(--surface-3);color:var(--text);font-size:.78rem}.day-cell{font-weight:950;background:var(--surface-2)}tbody tr:nth-child(even) td{background:rgba(148,163,184,.06)}td input,td select{border:0;background:transparent;color:var(--text);text-align:center;width:100%;min-width:54px;outline:none;padding:4px;border-radius:8px}td input:focus,td select:focus{background:rgba(246,196,38,.18)}.total-row td{font-weight:950;background:var(--surface-3)!important}.calc{font-weight:950;background:var(--surface-2)!important}.status-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:5px 9px;font-weight:950;font-size:.75rem;white-space:nowrap}.ok{background:var(--green-bg);color:var(--green)}.warn{background:var(--orange-bg);color:var(--orange)}.bad{background:var(--red-bg);color:var(--red)}.neutral{background:var(--blue-bg);color:var(--blue)}.field input.result-ok{border-color:var(--green);background:var(--green-bg);color:var(--green);font-weight:950}.field input.result-bad{border-color:var(--red);background:var(--red-bg);color:var(--red);font-weight:950}.field input.result-neutral{border-color:var(--blue);background:var(--blue-bg);color:var(--blue);font-weight:950}.conference-note{margin-top:12px;padding:12px 14px;border-radius:14px;font-weight:900}.conference-note.ok{background:var(--green-bg);color:var(--green)}.conference-note.bad{background:var(--red-bg);color:var(--red)}.conference-note.neutral{background:var(--blue-bg);color:var(--blue)}.money{font-variant-numeric:tabular-nums}.audit-note{display:block;margin-top:4px;color:var(--muted);font-size:.72rem;font-weight:800;line-height:1.25}
+
+    .report-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}.mini{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:14px}.mini b{display:block;font-size:1.4rem;margin-top:5px}.mini span{color:var(--muted);font-weight:900;font-size:.78rem;text-transform:uppercase}.category-panel{margin-bottom:14px}.category-kpi{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px}.category-kpi .mini b{font-size:1.18rem}.category-kpi .mini small{display:block;color:var(--muted);font-weight:800;margin-top:4px;line-height:1.25}.category-help{margin-top:12px;border:1px solid var(--border);background:var(--surface-2);border-radius:16px;padding:13px 14px;color:var(--muted);font-weight:800;line-height:1.4}.category-help strong{color:var(--text)}
+    .report-print-header{display:none;margin-bottom:14px;border:2px solid var(--preto-logo);border-radius:16px;padding:14px;background:#fff;color:#111}.report-print-header h2{font-size:1.25rem;margin-bottom:6px}.report-print-header p{font-weight:800;color:#444;line-height:1.4}.report-note{border:1px solid var(--border);background:var(--surface-2);border-radius:16px;padding:13px 14px;margin-bottom:12px;color:var(--muted);font-weight:800;line-height:1.4}.report-note strong{color:var(--text)}.report-zero{color:var(--muted);font-weight:800}.report-strong{font-weight:950}.report-day-empty td{color:var(--muted)}
+    .empty{padding:24px;text-align:center;color:var(--muted);font-weight:800}
+    .toast{position:fixed;right:22px;bottom:22px;background:var(--preto-logo);color:var(--amarelo);border-radius:16px;padding:14px 16px;font-weight:950;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1;transform:none}
+
+    .mobile-menu{display:none}
+
+    @media(max-width:1080px){.grid.cards{grid-template-columns:repeat(2,1fr)}.grid.two,.grid.three{grid-template-columns:1fr}.form-row,.form-row.two,.form-row.three{grid-template-columns:1fr 1fr}.report-summary{grid-template-columns:repeat(2,1fr)}.category-kpi{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:760px){body{display:block}.category-kpi{grid-template-columns:1fr}.sidebar{transform:translateX(-105%);transition:.25s;position:fixed}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:14px}.topbar{position:relative;top:0;align-items:flex-start;flex-direction:column;padding:16px 72px 16px 16px}.top-actions{justify-content:flex-start}.header-logout{top:16px;right:16px;transform:none}.header-logout:hover{transform:scale(1.04)}.mobile-menu{display:inline-flex}.grid.cards,.report-summary{grid-template-columns:1fr}.form-row,.form-row.two,.form-row.three{grid-template-columns:1fr}.title-block h1{font-size:1.2rem}.chip{white-space:normal}.table-wrap{border-radius:12px}table{font-size:.8rem}}
+
+    @page{size:A4 landscape;margin:10mm}
+    @media print{
+      *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      html,body{width:297mm;min-height:210mm;background:#fff!important;color:#111!important;display:block!important;overflow:visible!important}
+      body.dark{--surface:#fff;--surface-2:#f7f7f7;--surface-3:#fff7db;--text:#111;--muted:#555;--border:#999;--bg:#fff}
+      .login-screen,.sidebar,.topbar,.toolbar,.btn,.tabs,.subtabs,.quick-card,.toast,.no-print,.mobile-menu,.header-logout{display:none!important}
+      .app-shell,.main{display:block!important;margin:0!important;width:100%!important;min-height:auto!important;padding:0!important}
+      .page{display:none!important;animation:none!important;box-shadow:none!important;background:#fff!important}
+      .page.active{display:block!important}
+      .card,.table-wrap{box-shadow:none!important;border-color:#999!important;background:#fff!important;break-inside:avoid}
+      .grid,.grid.cards,.grid.two,.grid.three{display:block!important}
+      .card{margin-bottom:10mm!important;padding:8mm!important;border-radius:8px!important}
+      .section-title{margin:0 0 5mm!important}
+      table{width:100%!important;min-width:0!important;border-collapse:collapse!important;font-size:8.5pt!important}
+      th,td{padding:4px 5px!important;border:1px solid #888!important}
+      thead th,.subhead th{position:static!important;background:#291A1E!important;color:#F6C426!important}
+      tr,td,th{break-inside:avoid}
+      .table-wrap{overflow:visible!important;border-radius:0!important}
+      .report-print-header{display:block!important}
+      .report-note{display:none!important}
+    }
+  </style>
+
+  <style id="visual-gerencial-v29">
+    /* ==========================================================
+       ASSISTÊNCIA GERENCIAL DE ESTOQUE — IDENTIDADE V27
+       Esta camada é carregada por último e prevalece sobre o tema antigo.
+       ========================================================== */
+    :root{
+      --amarelo:#F6C426;
+      --amarelo-2:#DEB022;
+      --preto-logo:#291A1E;
+      --bg:#EDF2F7;
+      --surface:#FFFFFF;
+      --surface-2:#F8FAFC;
+      --surface-3:#F1F5F9;
+      --text:#111827;
+      --muted:#64748B;
+      --border:#CBD5E1;
+      --shadow:0 18px 35px rgba(15,23,42,.12);
+      --shadow-soft:0 8px 24px rgba(15,23,42,.08);
+      --radius:22px;
+      --sidebar:278px;
+    }
+    body.dark{
+      --bg:#2E0D1E;
+      --surface:#1E1E1E;
+      --surface-2:#2A2A2A;
+      --surface-3:#292929;
+      --text:#F8FAFC;
+      --muted:#C9B8C1;
+      --border:#5A263B;
+      --shadow:0 18px 35px rgba(0,0,0,.42);
+      --shadow-soft:0 8px 24px rgba(0,0,0,.28);
+      --preto-logo:#2E0D1E;
+      --green-bg:#123A24;
+      --red-bg:#4C1D1D;
+      --blue-bg:#172554;
+      --orange-bg:#432A13;
+    }
+    *{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{background:var(--bg);color:var(--text);transition:none}
+
+    /* LOGIN — mesma composição do Assistência Gerencial */
+    .login-screen{
+      background:radial-gradient(circle at top left,rgba(246,196,38,.35),transparent 38%),linear-gradient(135deg,#291A1E 0%,#111827 100%);
+      padding:20px;
+    }
+    .login-card{
+      width:min(460px,100%);padding:0;background:#FFFFFF;color:#111827;border-radius:24px;
+      box-shadow:0 28px 70px rgba(0,0,0,.35);overflow:hidden;border:1px solid rgba(255,255,255,.35);
+    }
+    .login-hero{background:var(--amarelo);padding:28px 28px 22px;border-bottom:4px solid #291A1E}
+    .login-brand{display:flex;align-items:center;gap:12px;margin:0}
+    .login-brand .brand-mark{width:62px;height:54px;border-radius:18px;background:#291A1E;color:var(--amarelo);font-size:1.35rem;font-weight:1000}
+    .login-brand h1{margin:0;font-size:1.35rem;line-height:1.15;color:#291A1E}
+    .login-brand p{margin:5px 0 0;color:#291A1E;opacity:.78;font-weight:700;font-size:.9rem}
+    .login-body{padding:26px 28px 30px}
+    .login-body .field{margin:0 0 14px;gap:0}
+    .login-body label{display:block;margin:0 0 7px;color:#111827;font-weight:800;font-size:.88rem;letter-spacing:0;text-transform:none}
+    .login-body input{width:100%;padding:14px;border:1px solid #CBD5E1;border-radius:14px;background:#FFFFFF;color:#111827;font-size:1rem;outline:none}
+    .login-body input:focus{border-color:var(--amarelo-2);box-shadow:0 0 0 4px rgba(246,196,38,.25)}
+    .login-submit{margin-top:4px!important;padding:14px 16px!important;border-radius:14px!important;background:#291A1E!important;color:#F6C426!important;box-shadow:none!important;font-size:1rem}
+    .login-error{margin-top:12px;padding:10px 12px;border-radius:13px}
+    .login-hint{margin-top:14px;padding:12px;background:#F8FAFC;border:1px dashed #CBD5E1;color:#475569;border-radius:14px;font-size:.86rem}
+    body.dark .login-screen{background:radial-gradient(circle at top left,rgba(255,205,9,.22),transparent 35%),linear-gradient(135deg,#2E0D1E 0%,#1E1E1E 100%)}
+    body.dark .login-card{background:#1E1E1E;color:#F8FAFC;border-color:#5A263B}
+    body.dark .login-hero{background:#2E0D1E;border-bottom-color:#FFCD09}
+    body.dark .login-brand h1,body.dark .login-brand p{color:#FFCD09}
+    body.dark .login-brand .brand-mark{background:#FFCD09;color:#2E0D1E}
+    body.dark .login-body label{color:#F8FAFC}
+    body.dark .login-body input{background:#2A2A2A;color:#F8FAFC;border-color:#5A263B}
+    body.dark .login-submit{background:#FFCD09!important;color:#2E0D1E!important}
+    body.dark .login-hint{background:#2A2A2A;color:#C9B8C1;border-color:#5A263B}
+
+    /* SIDEBAR */
+    .app-shell{display:flex;width:100%;min-height:100vh}
+    .sidebar{
+      width:278px;background:var(--amarelo);color:#291A1E;padding:0;gap:0;display:flex;flex-direction:column;
+      height:100vh;position:fixed;inset:0 auto 0 0;box-shadow:2px 0 15px rgba(0,0,0,.18);z-index:20;
+    }
+    .brand-card{background:transparent;border:0;border-bottom:2px solid #291A1E;border-radius:0;padding:22px;box-shadow:none}
+    .brand-logo{display:flex;align-items:center;gap:12px;margin:0}
+    .brand-mark{width:58px;height:48px;border-radius:16px;background:#291A1E;color:var(--amarelo);display:grid;place-items:center;font-size:1.2rem;font-weight:1000}
+    .brand-name{line-height:1.08}.brand-name strong{font-size:1rem;font-weight:1000}.brand-name span{font-size:.78rem;font-weight:800;text-transform:none;letter-spacing:0}
+    .brand-card p{margin:9px 0 0;font-size:.76rem;font-weight:700;line-height:1.4;opacity:.78}
+    .user-card{margin:16px;padding:14px 58px 14px 14px;background:rgba(41,26,30,.12);border:1px solid rgba(41,26,30,.18);border-radius:18px;color:#291A1E;position:relative}
+    .user-card span{font-size:.68rem;font-weight:900;letter-spacing:.04em}.user-card strong{font-size:.94rem;font-weight:1000}.user-card small{font-size:.76rem;font-weight:800}
+    .theme-btn{position:absolute;top:12px;right:12px;width:38px;height:38px;padding:0;border:1px solid rgba(41,26,30,.20);border-radius:50%;background:#291A1E;color:var(--amarelo);display:grid;place-items:center;font-size:1rem;cursor:pointer;box-shadow:0 7px 16px rgba(41,26,30,.18)}
+    .theme-btn:hover{transform:translateY(-2px) rotate(-8deg)}
+    .nav{padding:4px 12px 14px;display:block;overflow-y:auto;flex:1}
+    .nav button{width:100%;margin:5px 0;padding:12px;border:0;border-radius:14px;background:transparent;color:#291A1E;font-weight:900;text-align:left;display:flex;align-items:center;gap:10px;transform:none}
+    .nav button:hover,.nav button.active{background:var(--amarelo-2);box-shadow:inset 5px 0 0 #291A1E;transform:none}
+    .side-footer{margin-top:auto;padding:0 16px 16px;display:grid;gap:10px}
+    .backup-btn{padding:11px 14px;border-radius:13px;background:rgba(41,26,30,.12);color:#291A1E;border:1px solid rgba(41,26,30,.18);font-weight:900}
+    body.dark .sidebar{background:#2E0D1E;color:#FFCD09;border-right:1px solid #5A263B}
+    body.dark .brand-card{border-bottom-color:#FFCD09}
+    body.dark .brand-mark{background:#FFCD09;color:#2E0D1E}
+    body.dark .user-card{background:rgba(255,205,9,.10);color:#FFCD09;border-color:rgba(255,205,9,.22)}
+    body.dark .theme-btn{background:#FFCD09;color:#2E0D1E;border-color:rgba(255,205,9,.45)}
+    body.dark .nav button{color:#FFCD09}
+    body.dark .nav button:hover,body.dark .nav button.active{background:rgba(255,205,9,.16);box-shadow:inset 5px 0 0 #FFCD09}
+    body.dark .backup-btn{background:rgba(255,205,9,.10);color:#FFCD09;border-color:rgba(255,205,9,.22)}
+
+    /* CONTEÚDO E TOPO */
+    .main{margin-left:278px;width:calc(100% - 278px);padding:0;display:flex;flex-direction:column;gap:0}
+    .topbar{position:sticky;top:0;z-index:12;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:16px 86px 16px 22px;background:rgba(237,242,247,.88);backdrop-filter:blur(14px);box-shadow:none}
+    body.dark .topbar{background:rgba(46,13,30,.90);border-bottom-color:#5A263B}
+    .title-block h1{font-size:1.12rem;margin:0}.title-block p{margin:4px 0 0;color:var(--muted);font-size:.86rem;font-weight:700}
+    .top-actions{gap:8px}.chip{background:var(--surface);border:1px solid var(--border);padding:8px 11px;border-radius:999px;color:var(--text);font-size:.8rem;font-weight:900}
+    .header-logout{position:fixed;top:15px;right:18px;transform:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text);box-shadow:var(--shadow);z-index:30}
+    .header-logout:hover{transform:translateY(-1px);background:var(--surface);color:var(--text);border-color:var(--amarelo-2)}
+    .page{padding:22px}
+
+    /* CARTÕES E MÉTRICAS */
+    .grid{gap:16px}.card{background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+    .metric{position:relative;overflow:hidden;border-radius:20px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.08)}
+    .metric::after{display:none}.metric::before{content:"";position:absolute;top:0;left:0;width:100%;height:5px;background:var(--amarelo)}
+    .metric .label{color:var(--muted);font-size:.72rem;font-weight:900;text-transform:uppercase}.metric .value{font-size:2rem;margin-top:8px}.metric .hint{font-size:.82rem;font-weight:700}
+    .section-title{align-items:flex-start;margin:18px 0 16px}.section-title h2{font-size:1.35rem}.section-title p{margin:4px 0 0;color:var(--muted);font-weight:700}
+    .quick-card{background:var(--surface);border-color:var(--border)}
+    .report-summary{gap:12px}.mini{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:14px}
+    .alert-box,.category-help,.report-note{background:var(--surface-2);border-color:var(--border);border-radius:16px}
+
+    /* FORMULÁRIOS */
+    .field{gap:0}.field label{display:block;margin:0 0 7px;color:var(--text);font-size:.78rem;font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+    .field input,.field select,.field textarea{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:13px;padding:11px 12px;outline:none}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--amarelo-2);box-shadow:0 0 0 4px rgba(246,196,38,.18)}
+    .field input[readonly]{background:var(--surface-3);color:var(--muted);cursor:not-allowed;font-weight:900}
+    .btn{border:0;padding:11px 14px;border-radius:13px;background:#291A1E;color:#F6C426;font-weight:900;box-shadow:none}
+    .btn:hover{background:#291A1E;transform:translateY(-1px)}
+    .btn.secondary{background:var(--surface-3);color:var(--text);border:1px solid var(--border)}
+    .btn.success{background:#16A34A;color:#fff}.btn.blue{background:#2563EB;color:#fff}.btn.danger{background:#DC2626;color:#fff}
+    body.dark .btn:not(.secondary):not(.success):not(.blue):not(.danger){background:#FFCD09;color:#2E0D1E}
+    .tab,.subtab-btn{border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:999px;padding:9px 13px;font-weight:900}
+    .tab.active,.subtab-btn.active{background:#291A1E;color:#F6C426;border-color:#291A1E}
+    body.dark .tab.active,body.dark .subtab-btn.active{background:#FFCD09;color:#2E0D1E;border-color:#FFCD09}
+    .filters input,.filters select{background:var(--surface);border-color:var(--border);color:var(--text)}
+
+    /* TABELAS E INDICADORES */
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:none}
+    table{font-size:.86rem}th,td{border-color:var(--border);padding:10px}thead th{background:#291A1E;color:#F6C426}.subhead th{background:var(--surface-3);color:var(--text)}
+    body.dark thead th{background:#2E0D1E;color:#FFCD09}
+    .status-pill{padding:6px 9px}.toast{background:#291A1E;color:#F6C426;border-radius:16px}
+    body.dark .toast{background:#FFCD09;color:#2E0D1E}
+
+    /* BARRAS DE ROLAGEM */
+    .nav,.table-wrap{scrollbar-width:thin;scrollbar-color:rgba(100,116,139,.85) transparent}
+    .nav::-webkit-scrollbar,.table-wrap::-webkit-scrollbar{width:9px;height:9px}
+    .nav::-webkit-scrollbar-track,.table-wrap::-webkit-scrollbar-track{background:transparent}
+    .nav::-webkit-scrollbar-thumb,.table-wrap::-webkit-scrollbar-thumb{background:rgba(100,116,139,.82);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+    body.dark .nav,body.dark .table-wrap{scrollbar-color:rgba(203,213,225,.68) transparent}
+
+    @media(max-width:1080px){
+      .grid.cards{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:760px){
+      body{display:block}.sidebar{width:278px;transform:translateX(-105%);transition:.25s}.sidebar.open{transform:none}
+      .main{margin-left:0;width:100%;padding:0}.page{padding:14px}.topbar{position:relative;top:0;padding:16px 72px 16px 16px;align-items:flex-start;flex-direction:column}
+      .header-logout{top:15px;right:16px}.grid.cards,.report-summary{grid-template-columns:1fr}
+    }
+    @media print{
+      .page{padding:0!important}
+    }
+  </style>
+
+  <style id="visual-final-gerencial-v30">
+    /* ==========================================================
+       V30 — APARÊNCIA FINAL DO ASSISTÊNCIA GERENCIAL V27
+       Claro: amarelo + branco/creme
+       Escuro: bordô profundo + preto/cinza + amarelo
+       ========================================================== */
+    body:not(.dark){
+      --amarelo:#FFCD09;--amarelo-2:#D9A900;--preto-logo:#241F14;
+      --bg:#FFFDF5;--surface:#FFFFFF;--surface-2:#FFFBEA;--surface-3:#FFF6C9;
+      --text:#241F14;--muted:#6F6958;--border:#E8D989;
+      --shadow:0 16px 34px rgba(106,82,0,.10);--shadow-soft:0 8px 22px rgba(106,82,0,.075);
+      background:radial-gradient(circle at 78% 4%,rgba(255,205,9,.20),transparent 30%),radial-gradient(circle at 92% 72%,rgba(246,196,38,.10),transparent 34%),linear-gradient(145deg,#FFFDF5 0%,#FFFFFF 58%,#FFF9DD 100%)!important;
+      color:#241F14;
+    }
+    body.dark{
+      --amarelo:#FFCD09;--amarelo-2:#D9A900;--preto-logo:#18191D;
+      --bg:#101114;--surface:#1A1C21;--surface-2:#23262C;--surface-3:#25282E;
+      --text:#F7F4EE;--muted:#C7BFC0;--border:rgba(255,205,9,.18);
+      --shadow:0 18px 45px rgba(0,0,0,.38);--shadow-soft:0 9px 24px rgba(0,0,0,.24);
+      background:radial-gradient(circle at 78% 3%,rgba(255,205,9,.065),transparent 28%),radial-gradient(circle at 94% 68%,rgba(71,0,28,.18),transparent 35%),linear-gradient(145deg,#0F1013 0%,#17181D 54%,#190A10 100%)!important;
+      color:#F7F4EE;
+    }
+
+    /* Login final */
+    body:not(.dark) .login-screen{background:radial-gradient(circle at top left,rgba(255,205,9,.38),transparent 40%),linear-gradient(135deg,#FFF9D8 0%,#FFFFFF 100%)!important}
+    body:not(.dark) .login-card{background:#FFFFFF!important;color:#241F14!important;box-shadow:0 30px 70px rgba(56,46,15,.28)!important}
+    body:not(.dark) .login-hero{background:#FFCD09!important;border-bottom-color:#D9A900!important}
+    body:not(.dark) .login-brand .brand-mark{background:#241F14!important;color:#FFCD09!important}
+    body:not(.dark) .login-brand h1,body:not(.dark) .login-brand p{color:#241F14!important}
+    body:not(.dark) .login-body input{border-color:rgba(217,169,0,.42)!important;background:#FFFFFF!important;color:#241F14!important}
+    body:not(.dark) .login-submit{background:#241F14!important;color:#FFCD09!important}
+    body.dark .login-screen{background:radial-gradient(circle at top left,rgba(255,205,9,.12),transparent 38%),linear-gradient(135deg,#320014 0%,#111216 100%)!important}
+    body.dark .login-card{background:#181A1F!important;color:#F7F4EE!important;border-color:rgba(255,205,9,.18)!important}
+    body.dark .login-hero{background:#320014!important;border-bottom-color:#FFCD09!important}
+    body.dark .login-brand h1,body.dark .login-brand p{color:#FFF7D7!important}
+    body.dark .login-brand .brand-mark{background:#FFCD09!important;color:#2A1020!important}
+    body.dark .login-body input{background:#23262C!important;color:#F7F4EE!important;border-color:rgba(255,205,9,.18)!important}
+    body.dark .login-submit{background:#FFCD09!important;color:#241F14!important}
+
+    /* Sidebar final */
+    body:not(.dark) .sidebar{background:linear-gradient(180deg,rgba(255,215,50,.98),rgba(246,196,38,.98))!important;color:#241F14!important;border-right:1px solid rgba(112,85,0,.22)!important;box-shadow:12px 0 34px rgba(106,82,0,.12)!important}
+    body:not(.dark) .brand-card{background:linear-gradient(135deg,rgba(255,255,255,.30),transparent 70%)!important;border-bottom-color:rgba(80,61,0,.28)!important}
+    body:not(.dark) .brand-mark{background:#FFFFFF!important;color:#241F14!important;border:1px solid rgba(112,85,0,.18)!important;box-shadow:0 9px 22px rgba(106,82,0,.13),inset 0 1px 0 rgba(255,255,255,.85)!important}
+    body:not(.dark) .user-card{background:linear-gradient(145deg,rgba(255,255,255,.68),rgba(255,255,255,.35))!important;color:#241F14!important;border-color:rgba(112,85,0,.22)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.82),0 10px 24px rgba(106,82,0,.10)!important;padding:16px!important}
+    body:not(.dark) .nav button{color:#241F14!important;border:1px solid transparent!important}
+    body:not(.dark) .nav button:hover{background:rgba(255,255,255,.34)!important;border-color:rgba(112,85,0,.15)!important;box-shadow:none!important}
+    body:not(.dark) .nav button.active{background:linear-gradient(90deg,rgba(255,255,255,.76),rgba(255,255,255,.32))!important;border-color:rgba(112,85,0,.22)!important;box-shadow:inset 4px 0 0 #FFFFFF,0 8px 20px rgba(106,82,0,.09)!important}
+    body:not(.dark) .backup-btn{background:rgba(255,255,255,.34)!important;color:#241F14!important;border-color:rgba(112,85,0,.22)!important}
+    body.dark .sidebar{background:linear-gradient(180deg,rgba(49,0,20,.992),rgba(19,20,24,.997))!important;color:#FFCD09!important;border-right:1px solid rgba(255,205,9,.16)!important;box-shadow:12px 0 38px rgba(0,0,0,.28)!important}
+    body.dark .brand-card{background:linear-gradient(135deg,rgba(255,205,9,.055),rgba(71,0,28,.065) 56%,transparent 76%)!important;border-bottom-color:rgba(255,205,9,.28)!important}
+    body.dark .brand-mark{background:linear-gradient(145deg,#FFD928,#F5B900)!important;color:#2E0D1E!important;border-color:rgba(255,255,255,.22)!important}
+    body.dark .user-card{background:linear-gradient(145deg,rgba(255,205,9,.08),rgba(255,255,255,.025)),rgba(71,0,28,.46)!important;color:#FFCD09!important;border-color:rgba(255,205,9,.22)!important;padding:16px!important}
+    body.dark .nav button{color:#FFCD09!important;border:1px solid transparent!important}
+    body.dark .nav button:hover{background:rgba(255,205,9,.075)!important;border-color:rgba(255,205,9,.12)!important;box-shadow:none!important}
+    body.dark .nav button.active{color:#FFF4B8!important;background:linear-gradient(90deg,rgba(255,205,9,.18),rgba(255,205,9,.055))!important;border-color:rgba(255,205,9,.22)!important;box-shadow:inset 4px 0 0 #FFCD09,0 8px 20px rgba(0,0,0,.12)!important}
+    body.dark .backup-btn{background:rgba(255,205,9,.08)!important;color:#FFCD09!important;border-color:rgba(255,205,9,.20)!important}
+
+    /* Cabeçalho final com blocos */
+    .topbar{min-height:106px!important;padding:15px 18px 15px 22px!important;gap:18px!important;align-items:center!important;box-shadow:0 10px 30px rgba(106,82,0,.10),inset 0 -1px 0 rgba(255,255,255,.34)!important;isolation:isolate}
+    .topbar::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+    body:not(.dark) .topbar{background:linear-gradient(115deg,rgba(255,222,76,.78),rgba(255,205,9,.62) 48%,rgba(246,196,38,.55)),rgba(255,205,9,.52)!important;border-bottom-color:rgba(112,85,0,.20)!important;color:#241F14!important}
+    body:not(.dark) .topbar::before{background:linear-gradient(90deg,rgba(255,255,255,.28),transparent 38%,rgba(255,255,255,.10))!important}
+    body.dark .topbar{background:linear-gradient(115deg,rgba(49,0,20,.36),rgba(26,28,33,.76) 43%,rgba(26,28,33,.82) 67%,rgba(71,0,28,.24)),rgba(17,18,20,.66)!important;border-bottom-color:rgba(255,205,9,.15)!important;box-shadow:0 12px 34px rgba(0,0,0,.24)!important}
+    body.dark .topbar::before{background:linear-gradient(90deg,rgba(255,205,9,.06),transparent 38%,rgba(71,0,28,.075))!important}
+    .title-block{flex:0 0 clamp(230px,20vw,310px)!important;min-width:0}
+    .title-block h1{font-size:clamp(1.12rem,1.4vw,1.42rem)!important;letter-spacing:-.025em!important}.title-block p{margin-top:7px!important;line-height:1.42!important}
+    body:not(.dark) .title-block h1,body:not(.dark) .title-block p{color:#241F14!important}
+    .top-actions{flex:1 1 auto!important;min-width:0!important;display:grid!important;grid-template-columns:82px 112px 112px minmax(120px,1fr) minmax(115px,1fr) auto 48px 48px!important;align-items:stretch!important;gap:8px!important}
+    .top-actions .chip,.top-actions .top-print,.header-theme,.header-logout{min-width:0!important;min-height:66px!important;height:auto!important;margin:0!important;border-radius:17px!important;position:relative!important;inset:auto!important;transform:none!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.88),0 8px 20px rgba(106,82,0,.075)!important}
+    .top-actions .chip{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;white-space:normal!important;padding:10px 12px!important;font-size:.63rem!important;font-weight:1000!important;letter-spacing:.045em!important;text-transform:uppercase!important;overflow:hidden}
+    .top-actions .chip strong{display:block!important;max-width:100%;margin-top:4px;font-size:.78rem!important;line-height:1.12!important;letter-spacing:0!important;text-transform:none!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    body:not(.dark) .top-actions .chip,body:not(.dark) .top-actions .top-print,body:not(.dark) .header-theme,body:not(.dark) .header-logout{background:linear-gradient(145deg,rgba(255,255,255,.76),rgba(255,255,255,.42))!important;color:#241F14!important;border-color:rgba(112,85,0,.20)!important}
+    body.dark .top-actions .chip,body.dark .top-actions .top-print,body.dark .header-theme,body.dark .header-logout{background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.018)),rgba(20,19,20,.48)!important;color:#F7F4EE!important;border-color:rgba(255,205,9,.18)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 10px 20px rgba(0,0,0,.22)!important}
+    .top-actions .top-print{padding:0 14px!important;display:flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important;background-image:none!important;font-size:.83rem!important}
+    .header-theme,.header-logout{width:48px!important;padding:0!important;display:grid!important;place-items:center!important;font-size:1.05rem!important;cursor:pointer}
+    body:not(.dark) .header-theme{color:#8A6900!important}body:not(.dark) .header-logout{color:#8A6900!important}
+    body.dark .header-theme{color:#FFCD09!important}body.dark .header-logout{color:#FFCD09!important}
+    .header-theme:hover,.header-logout:hover{transform:translateY(-2px)!important}
+
+    /* Cards e métricas finais */
+    .page{padding:22px!important}
+    body:not(.dark) .card,body:not(.dark) .table-wrap,body:not(.dark) .mini,body:not(.dark) .alert-box,body:not(.dark) .category-help,body:not(.dark) .report-note{background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(255,253,244,.88))!important;border-color:rgba(217,169,0,.30)!important;color:#241F14!important;box-shadow:0 12px 28px rgba(106,82,0,.075),inset 0 1px 0 rgba(255,255,255,.86)!important}
+    body.dark .card,body.dark .table-wrap,body.dark .mini,body.dark .alert-box,body.dark .category-help,body.dark .report-note{background:linear-gradient(145deg,rgba(255,205,9,.03),rgba(255,255,255,.01)),rgba(26,28,33,.92)!important;border-color:rgba(255,205,9,.16)!important;color:#F7F4EE!important;box-shadow:0 14px 32px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.03)!important}
+    .card{border-radius:23px!important}.metric{min-height:146px!important;border-radius:21px!important;padding:20px 74px 18px 18px!important}
+    .metric::before{height:4px!important;background:linear-gradient(90deg,#FFCD09,rgba(255,205,9,.25))!important}
+    .metric::after{content:attr(data-icon)!important;position:absolute!important;right:17px!important;top:50%!important;transform:translateY(-50%)!important;width:47px!important;height:47px!important;display:grid!important;place-items:center!important;border-radius:15px!important;color:#9B7600!important;font-size:1.45rem!important;font-weight:900!important;background:rgba(255,205,9,.12)!important;border:1px solid rgba(217,169,0,.28)!important;opacity:1!important}
+    body.dark .metric::after{color:#FFCD09!important;background:rgba(255,205,9,.10)!important;border-color:rgba(255,205,9,.24)!important}
+    .metric .label{font-size:.72rem!important;letter-spacing:.025em!important}.metric .value{font-size:2.1rem!important;margin-top:12px!important;line-height:1!important}.metric .hint{display:block!important;margin-top:8px!important;line-height:1.35!important}
+    .section-title h2{letter-spacing:-.025em!important}.section-title p{line-height:1.42!important}
+
+    /* Botões, formulários e tabelas */
+    body:not(.dark) .btn{background:linear-gradient(145deg,#FFD936,#F6C426)!important;color:#241F14!important;border:1px solid rgba(112,85,0,.20)!important;box-shadow:0 8px 18px rgba(106,82,0,.14)!important}
+    body:not(.dark) .btn.secondary,body:not(.dark) .tab,body:not(.dark) .subtab-btn{background:#FFFFFF!important;color:#241F14!important;border-color:rgba(217,169,0,.34)!important}
+    body:not(.dark) .tab.active,body:not(.dark) .subtab-btn.active{background:#FFCD09!important;color:#241F14!important;border-color:#D9A900!important}
+    body.dark .btn{background:linear-gradient(145deg,#FFCD09,#D9A900)!important;color:#241F14!important;border:1px solid rgba(255,205,9,.28)!important;box-shadow:0 8px 20px rgba(0,0,0,.26)!important}
+    body.dark .btn.secondary,body.dark .tab,body.dark .subtab-btn{background:#25282E!important;color:#F7F4EE!important;border-color:rgba(255,205,9,.20)!important}
+    body.dark .tab.active,body.dark .subtab-btn.active{background:rgba(255,205,9,.16)!important;color:#FFCD09!important;border-color:rgba(255,205,9,.28)!important}
+    body:not(.dark) .field input,body:not(.dark) .field select,body:not(.dark) .field textarea,.filters input,.filters select{background:#FFFFFF!important;color:#241F14!important;border-color:rgba(217,169,0,.34)!important}
+    body.dark .field input,body.dark .field select,body.dark .field textarea,body.dark .filters input,body.dark .filters select{background:#23262C!important;color:#F7F4EE!important;border-color:rgba(255,205,9,.18)!important}
+    body:not(.dark) thead th{background:linear-gradient(180deg,#FFD936,#F6C426)!important;color:#241F14!important;border-color:rgba(112,85,0,.20)!important}
+    body.dark thead th{background:linear-gradient(180deg,#320014,#201217)!important;color:#FFCD09!important;border-color:rgba(255,205,9,.18)!important}
+
+    @media(max-width:1460px) and (min-width:1081px){
+      .topbar{gap:12px!important;padding-inline:16px!important}.title-block{flex-basis:220px!important}
+      .top-actions{grid-template-columns:72px 95px 100px minmax(105px,1fr) minmax(105px,1fr) auto 44px 44px!important;gap:6px!important}
+      .top-actions .chip{padding:8px!important}.header-theme,.header-logout{width:44px!important}
+    }
+    @media(max-width:1180px) and (min-width:761px){
+      .topbar{align-items:stretch!important;flex-direction:column!important}.title-block{flex:0 0 auto!important}.top-actions{grid-template-columns:repeat(4,minmax(100px,1fr)) 48px 48px!important}.top-print{grid-column:span 2!important}
+    }
+    @media(max-width:760px){
+      .topbar{min-height:auto!important;padding:14px!important;gap:12px!important}.title-block{flex:0 0 auto!important;width:100%}.top-actions{width:100%!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}.header-theme,.header-logout{width:100%!important;min-height:52px!important}.top-print{min-height:52px!important}.page{padding:14px!important}
+    }
+    @media print{.header-theme{display:none!important}}
+  </style>
+
+  <style id="creation-panels-v31">
+    .creation-header {
+      align-items: center;
+      margin-bottom: 0 !important;
+    }
+    .creation-trigger,
+    #recebimentoSubtabs .subtab-btn {
+      min-height: 42px;
+      padding: 11px 16px;
+      border-radius: 13px;
+      border: 0;
+      background: var(--preto-logo);
+      color: var(--amarelo);
+      font-weight: 1000;
+      letter-spacing: .015em;
+      box-shadow: 0 8px 18px rgba(41,26,30,.14);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .creation-trigger:hover,
+    #recebimentoSubtabs .subtab-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 11px 23px rgba(41,26,30,.20);
+    }
+    .creation-trigger.active,
+    #recebimentoSubtabs .subtab-btn.active {
+      background: var(--amarelo);
+      color: var(--preto-logo);
+      box-shadow: inset 0 0 0 2px var(--preto-logo), 0 8px 18px rgba(246,196,38,.22);
+    }
+    #recebimentoSubtabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0 0;
+    }
+    .creation-panel,
+    #page-recebimento .subtab-panel {
+      display: none;
+      margin-top: 16px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+    .creation-panel.active,
+    #page-recebimento .subtab-panel.active {
+      display: block;
+      animation: fade .18s ease;
+    }
+    body.dark .creation-trigger,
+    body.dark #recebimentoSubtabs .subtab-btn {
+      background: #FFCD09;
+      color: #2E0D1E;
+      box-shadow: 0 8px 18px rgba(0,0,0,.24);
+    }
+    body.dark .creation-trigger.active,
+    body.dark #recebimentoSubtabs .subtab-btn.active {
+      background: #2E0D1E;
+      color: #FFCD09;
+      box-shadow: inset 0 0 0 2px #FFCD09, 0 8px 18px rgba(0,0,0,.28);
+    }
+    @media (max-width: 720px) {
+      .creation-header { align-items: stretch; }
+      .creation-header .creation-trigger { width: 100%; }
+      #recebimentoSubtabs { display: grid; grid-template-columns: 1fr; }
+      #recebimentoSubtabs .subtab-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <script>
+    /* Mantém o tema correto antes de exibir a interface. */
+    (() => {
+      if(document.documentElement.dataset.theme === 'dark') document.body.classList.add('dark');
+      requestAnimationFrame(() => document.documentElement.classList.remove('theme-booting'));
+    })();
+  </script>
+  <section class="login-screen" id="loginScreen">
+    <form class="login-card" onsubmit="fazerLogin(event)">
+      <div class="login-hero">
+        <div class="login-brand">
+          <div class="brand-mark">AV</div>
+          <div>
+            <h1>Assistência Gerencial de Estoque</h1>
+            <p>Avenida V21 • Acesso operacional</p>
+          </div>
+        </div>
+      </div>
+      <div class="login-body">
+        <div class="field">
+          <label>Usuário</label>
+          <input id="loginUser" type="text" placeholder="Digite seu nome cadastrado" autocomplete="username" autocapitalize="characters" spellcheck="false">
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input id="loginSenha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
+        </div>
+        <button class="btn login-submit" style="width:100%;margin-top:4px" type="submit">Entrar no Sistema</button>
+        <div class="login-error" id="loginError">Usuário não encontrado ou senha incorreta. Confira o nome cadastrado e a senha.</div>
+        <div class="login-hint">
+          <strong>Acesso individual</strong>
+          Digite seu nome cadastrado e sua senha para acessar o controle de estoque.
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-card">
+        <div class="brand-logo">
+          <div class="brand-mark">AV</div>
+          <div class="brand-name">
+            <strong>Avenida</strong>
+            <span>Estoque Pro</span>
+          </div>
+        </div>
+        <p>Sistema interno para recebimento, inventário, check list e relatório de mercadorias.</p>
+      </div>
+
+      <div class="user-card">
+        <span>Usuário conectado</span>
+        <strong id="sideUserName">—</strong>
+        <small id="sideUserRole">—</small>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="active" data-page="dashboard">📊 Painel Geral</button>
+        <button data-page="recebimento">📥 Recebimento de Mercadoria</button>
+        <button data-page="inventario">🧮 Inventário</button>
+        <button data-page="checklist">✅ Check List</button>
+        <button data-page="categorias">📦 Controle por Categoria</button>
+        <button data-page="relatorios">🧾 Relatórios</button>
+        <button data-page="config">⚙️ Configurações</button>
+      </nav>
+
+      <div class="side-footer">
+        <button class="backup-btn" onclick="exportarBackup()">⬇️ Baixar Backup</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title-block">
+          <button class="btn secondary mobile-menu" onclick="toggleSidebar()">☰ Menu</button>
+          <h1 id="pageTitle">Painel Geral</h1>
+          <p id="pageSubtitle">Visão consolidada do mês, movimentações e alertas de estoque.</p>
+        </div>
+        <div class="top-actions">
+          <span class="chip">Loja: <strong id="topLoja">—</strong></span>
+          <span class="chip">Mês: <strong id="topMes">—</strong></span>
+          <span class="chip">Gerente: <strong id="topGerente">—</strong></span>
+          <span class="chip">Usuário: <strong id="topUsuario">—</strong></span>
+          <span class="chip">Cargo: <strong id="topCargo">—</strong></span>
+          <button class="btn secondary top-print" onclick="window.print()">🖨️ Imprimir</button>
+          <button class="header-theme theme-btn" id="themeBtn" onclick="toggleTema()" title="Alternar tema" aria-label="Alternar tema">🌙</button>
+          <button class="header-logout" onclick="logout()" title="Sair do sistema" aria-label="Sair do sistema"><span aria-hidden="true">⏻</span><span class="sr-only">Sair</span></button>
+        </div>
+      </header>
+
+      <section class="page active" id="page-dashboard">
+        <div class="grid cards">
+          <article class="card metric" data-icon="▤"><div class="label">Total de Vendas</div><div class="value" id="mVendas">0</div><div class="hint">Soma de abertura + fechamento</div></article>
+          <article class="card metric" data-icon="⇩"><div class="label">Recebidos</div><div class="value" id="mRecebidos">0</div><div class="hint">Mercadorias recebidas no mês</div></article>
+          <article class="card metric" data-icon="◇"><div class="label">Defeitos</div><div class="value" id="mDefeitos">0</div><div class="hint">Itens com avaria ou defeito</div></article>
+          <article class="card metric" data-icon="◷"><div class="label">Saldo Estimado</div><div class="value" id="mSaldo">0</div><div class="hint">Recebidos - vendas - defeitos</div></article>
+        </div>
+
+        <div class="section-title"><div><h2>Resumo Inteligente</h2><p>Leitura rápida do desempenho atual.</p></div></div>
+        <div class="grid two">
+          <div class="card">
+            <div class="report-summary">
+              <div class="mini"><span>Categoria líder</span><b id="categoriaLider">—</b></div>
+              <div class="mini"><span>Mais defeitos</span><b id="categoriaDefeito">—</b></div>
+              <div class="mini"><span>Taxa de defeito</span><b id="taxaDefeito">0%</b></div>
+              <div class="mini"><span>Dias com movimento</span><b id="diasMovimento">0</b></div>
+            </div>
+            <div class="alert-box" id="alertaPrincipal">
+              <div>💡</div>
+              <div><strong>Sistema pronto para operação.</strong><p>Use Recebimento de Mercadoria para entradas/DRM, Inventário para contagem das categorias e Check List para abertura/fechamento.</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="section-title" style="margin-top:0"><div><h2>Atalhos</h2><p>Ações comuns da rotina.</p></div></div>
+            <div class="grid" style="grid-template-columns:1fr 1fr">
+              <button class="btn success" onclick="goPage('recebimento')">📥 Novo Recebimento</button>
+              <button class="btn" onclick="goPage('recebimento')">🧾 Novo DRM</button>
+              <button class="btn secondary" onclick="goPage('inventario')">🧮 Fazer Inventário</button>
+              <button class="btn blue" onclick="goPage('checklist')">✅ Abrir Check List</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title"><div><h2>Resumo por Categoria</h2><p>Comparativo mensal das áreas controladas.</p></div></div>
+        <div class="table-wrap"><table id="dashTable"></table></div>
+      </section>
+
+      <section class="page" id="page-recebimento">
+        <div class="card quick-card">
+          <div class="section-title" style="margin-top:0">
+            <div>
+              <h2>📥 Recebimento de Mercadoria</h2>
+              <p>Módulo operacional para registrar entrada de mercadoria e abrir DRM quando houver divergência, avaria ou ocorrência.</p>
+            </div>
+          </div>
+
+          <div class="subtabs no-print" id="recebimentoSubtabs">
+            <button class="subtab-btn" type="button" data-rec-tab="recebimento" onclick="switchRecebimentoTab('recebimento')">+NOVO RECEBIMENTO</button>
+            <button class="subtab-btn" type="button" data-rec-tab="drm" onclick="switchRecebimentoTab('drm')">+NOVO DRM</button>
+          </div>
+
+          <div class="subtab-panel" id="rec-tab-recebimento">
+            <div class="section-title" style="margin-top:0"><div><h2>📦 Novo Recebimento</h2><p>Use esta subaba para lançar mercadoria recebida nas categorias cadastradas no sistema.</p></div></div>
+            <div class="form-row">
+              <div class="field"><label>Categoria do item</label><select id="recCategoria"></select></div>
+              <div class="field"><label>Data do recebimento</label><input id="recData" type="date"></div>
+              <div class="field"><label>Quantidade recebida</label><input id="recQtd" type="number" min="0" placeholder="0"></div>
+              <div class="field"><label>Responsável</label><input id="recResp" placeholder="Nome de quem recebeu"></div>
+            </div>
+            <div class="form-row" style="margin-top:12px">
+              <div class="field"><label>Documento / NF / Romaneio</label><input id="recDoc" placeholder="Ex.: NF 12345 / Romaneio"></div>
+              <div class="field"><label>Conferência</label><select id="recStatus"><option value="Recebido OK">Recebido OK</option><option value="Recebido com divergência">Recebido com divergência</option><option value="Recebido com avaria">Recebido com avaria</option></select></div>
+              <div class="field"><label>Volume / Caixa</label><input id="recVolume" placeholder="Opcional"></div>
+              <div class="field"><label>Destino</label><select id="recDestino"><option value="Estoque loja">Estoque loja</option><option value="Depósito">Depósito</option><option value="Separado para conferência">Separado para conferência</option></select></div>
+            </div>
+            <div class="field" style="margin-top:12px"><label>Acontecimento / Observação</label><textarea id="recObs" placeholder="Ex.: mercadoria chegou correta, quantidade conferida, volume lacrado, divergência encontrada e encaminhada para DRM..."></textarea></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+              <button class="btn success" onclick="salvarRecebimento()">✅ Registrar Recebimento</button>
+              <button class="btn secondary" onclick="limparRecebimentoForm()">🧹 Limpar Campos</button>
+            </div>
+          </div>
+
+          <div class="subtab-panel" id="rec-tab-drm">
+            <div class="section-title" style="margin-top:0"><div><h2>🧾 Novo DRM</h2><p>Use esta subaba somente quando houver divergência, avaria, falta, sobra ou outro problema no recebimento.</p></div></div>
+            <div class="form-row">
+              <div class="field"><label>Categoria do item</label><select id="drmCategoria"></select></div>
+              <div class="field"><label>Data do DRM</label><input id="drmData" type="date"></div>
+              <div class="field"><label>Quantidade em DRM</label><input id="drmQtd" type="number" min="0" placeholder="0"></div>
+              <div class="field"><label>Responsável</label><input id="drmResp" placeholder="Nome de quem abriu o DRM"></div>
+            </div>
+            <div class="form-row" style="margin-top:12px">
+              <div class="field"><label>Nº DRM</label><input id="drmNumero" placeholder="Ex.: DRM 12345"></div>
+              <div class="field"><label>Documento / NF / Romaneio</label><input id="drmDoc" placeholder="Documento relacionado"></div>
+              <div class="field"><label>Motivo</label><select id="drmMotivo"><option value="Divergência de quantidade">Divergência de quantidade</option><option value="Mercadoria avariada">Mercadoria avariada</option><option value="Item faltando">Item faltando</option><option value="Item sobrando">Item sobrando</option><option value="Produto trocado">Produto trocado</option><option value="Outro">Outro</option></select></div>
+              <div class="field"><label>Status do DRM</label><select id="drmStatus"><option value="DRM necessário">DRM necessário</option><option value="DRM aberto">DRM aberto</option><option value="DRM encaminhado">DRM encaminhado</option><option value="DRM resolvido">DRM resolvido</option></select></div>
+            </div>
+            <div class="field" style="margin-top:12px"><label>Acontecimento / Registro do DRM</label><textarea id="drmObs" placeholder="Descreva exatamente o ocorrido: quantidade divergente, item avariado, caixa violada, peça faltando, orientação recebida, solução tomada..."></textarea></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+              <button class="btn" onclick="salvarDRM()">✅ Registrar DRM</button>
+              <button class="btn secondary" onclick="limparDRMForm()">🧹 Limpar Campos</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title"><div><h2>Histórico de Recebimentos e DRM</h2><p>Entradas e ocorrências registradas por categoria, documento, responsável e usuário do sistema.</p></div></div>
+        <div class="toolbar">
+          <div class="filters">
+            <select id="filtroRecCategoria" onchange="renderRecebimentos()"><option value="todos">Todas as categorias</option></select>
+            <select id="filtroRecTipo" onchange="renderRecebimentos()"><option value="todos">Todos os tipos</option><option value="Recebimento">Recebimentos</option><option value="DRM">DRM</option></select>
+            <select id="filtroRecStatus" onchange="renderRecebimentos()"><option value="todos">Todas as situações</option><option value="Recebido OK">Recebido OK</option><option value="Recebido com divergência">Recebido com divergência</option><option value="Recebido com avaria">Recebido com avaria</option><option value="DRM necessário">DRM necessário</option><option value="DRM aberto">DRM aberto</option><option value="DRM encaminhado">DRM encaminhado</option><option value="DRM resolvido">DRM resolvido</option></select>
+          </div>
+          <button class="btn blue" onclick="exportarRecebimentosCSV()">📄 Exportar Recebimentos/DRM</button>
+        </div>
+        <div class="table-wrap"><table id="recebimentosTable"></table></div>
+      </section>
+
+      <section class="page" id="page-inventario">
+        <div class="card quick-card">
+          <div class="section-title creation-header" style="margin-top:0">
+            <div>
+              <h2>🧮 Inventário</h2>
+              <p>Registro da contagem de estoque de todas as categorias cadastradas no sistema.</p>
+            </div>
+            <button class="creation-trigger" id="novoInventarioBtn" type="button" onclick="toggleInventarioForm()">+NOVO INVENTARIO</button>
+          </div>
+          <div class="creation-panel" id="inventarioFormPanel">
+          <div class="form-row">
+            <div class="field"><label>Categoria</label><select id="invCategoria"></select></div>
+            <div class="field"><label>Data do inventário</label><input id="invData" type="date"></div>
+            <div class="field"><label>Responsável pelo inventário</label><input id="invResp" placeholder="Nome de quem realizou a contagem"></div>
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="field"><label>Área de vendas</label><input id="invAreaVendas" type="number" min="0" placeholder="Quantidade na área de vendas" oninput="calcularTotalInventarioForm()"></div>
+            <div class="field"><label>Depósito</label><input id="invDeposito" type="number" min="0" placeholder="Quantidade no depósito" oninput="calcularTotalInventarioForm()"></div>
+            <div class="field"><label>Total de itens</label><input id="invTotal" type="number" min="0" placeholder="0" readonly></div>
+            <div class="field"><label>Referência / lote / observação curta</label><input id="invReferencia" placeholder="Opcional"></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label>Observação do inventário</label><textarea id="invObs" placeholder="Ex.: contagem conferida, itens separados, ajuste necessário, observação da categoria..."></textarea></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+            <button class="btn" onclick="salvarInventario()">✅ Salvar Inventário</button>
+            <button class="btn secondary" onclick="limparInventarioForm()">🧹 Limpar Campos</button>
+          </div>
+          </div>
+        </div>
+
+        <div class="section-title"><div><h2>Histórico de Inventários</h2><p>Últimas contagens registradas por categoria. O Check List usa esses dados como estoque esperado.</p></div></div>
+        <div class="toolbar">
+          <div class="filters">
+            <select id="filtroInvCategoria" onchange="renderInventario()"><option value="todos">Todas as categorias</option></select>
+          </div>
+          <button class="btn blue" onclick="exportarInventarioCSV()">📄 Exportar Inventário</button>
+        </div>
+        <div class="table-wrap"><table id="inventarioTable"></table></div>
+      </section>
+
+      <section class="page" id="page-checklist">
+        <div class="card quick-card">
+          <div class="section-title creation-header" style="margin-top:0">
+            <div>
+              <h2>✅ Check List</h2>
+              <p>Checagem operacional em ordem correta: a abertura confere o inventário; o fechamento confere a abertura menos as movimentações do dia.</p>
+            </div>
+            <button class="creation-trigger" id="novoChecklistBtn" type="button" onclick="toggleChecklistForm()">+Novo Check List</button>
+          </div>
+          <div class="creation-panel" id="checklistFormPanel">
+          <div class="alert-box">
+            <div>⏱️</div>
+            <div><strong>Controle de tempo</strong><p>A hora de início congela quando esta aba é aberta. A hora de término fica rodando até salvar/finalizar o check list.</p></div>
+          </div>
+          <div class="alert-box" style="margin-top:12px">
+            <div>🧭</div>
+            <div><strong>Ordem correta da conferência</strong><p><b>Abertura:</b> compara o último inventário com a contagem inicial. <b>Fechamento:</b> usa a abertura do mesmo dia/categoria, soma recebimentos, desconta DRM e vendas, e compara com a contagem final.</p></div>
+          </div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="field"><label>Tipo de checagem</label><select id="checkTipo" onchange="atualizarModoChecklist()"><option value="Abertura">Abertura</option><option value="Fechamento">Fechamento</option></select></div>
+            <div class="field"><label>Data</label><input id="checkData" type="date" onchange="atualizarEstoqueEsperadoChecklist()"></div>
+            <div class="field"><label>Categoria</label><select id="checkCategoria" onchange="atualizarEstoqueEsperadoChecklist()"></select></div>
+            <div class="field"><label id="checkEsperadoLabel">Estoque esperado</label><input id="checkEsperado" readonly placeholder="Calculado automaticamente"></div>
+          </div>
+          <div id="checkBaseDetalhe" class="conference-note neutral">Selecione tipo, data e categoria para calcular a base da conferência.</div>
+          <div class="form-row three" style="margin-top:12px">
+            <div class="field"><label id="checkContagemLabel">Contagem</label><input id="checkContagem" type="number" min="0" placeholder="Quantidade contada" oninput="atualizarFaltanteChecklist()"></div>
+            <div class="field" id="checkVendasWrap"><label>Vendas <small>(vendido no período)</small></label><input id="checkVendas" type="number" min="0" placeholder="Use 0 se não vendeu" oninput="atualizarFaltanteChecklist()"></div>
+            <div class="field"><label>Faltante / Divergência</label><input id="checkFaltante" readonly placeholder="Calculado automaticamente"></div>
+          </div>
+          <div id="checkStatusConferencia" class="conference-note neutral">Informe a contagem para calcular a conferência.</div>
+          <div class="form-row" style="margin-top:12px">
+            <div class="field"><label>Hora de início</label><input id="checkHoraInicio" readonly placeholder="Congelada ao abrir a aba"></div>
+            <div class="field"><label>Hora de término</label><input id="checkHoraFim" readonly placeholder="Rodando até finalizar"></div>
+            <div class="field"><label>Líder responsável</label><select id="checkLider">
+              <option value="">Selecione o líder</option>
+              <option value="JOAO PEDRO - VM">JOAO PEDRO - VM</option>
+              <option value="CELIO VACARE - PF">CELIO VACARE - PF</option>
+              <option value="CASSIO GABRIEL - FISCAL">CASSIO GABRIEL - FISCAL</option>
+              <option value="RICHARD BAPTISTE - FISCAL">RICHARD BAPTISTE - FISCAL</option>
+              <option value="ALANA ARAUJO - GERENTE">ALANA ARAUJO - GERENTE</option>
+              <option value="HELEN CRISTINA - VM">HELEN CRISTINA - VM</option>
+            </select></div>
+            <div class="field"><label>Fiscal responsável</label><select id="checkFiscal" onchange="toggleFiscalOutro()"><option value="RICHARD BAPTISTE">RICHARD BAPTISTE</option><option value="CASSIO GABRIEL">CASSIO GABRIEL</option><option value="OUTROS">OUTROS</option></select></div>
+          </div>
+          <div class="form-row" style="margin-top:12px" id="checkFiscalOutroWrap">
+            <div class="field"><label>Nome do fiscal/outro responsável</label><input id="checkFiscalOutro" placeholder="Preencher somente se fiscal = OUTROS"></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label>Observação do check list</label><textarea id="checkObs" placeholder="Ex.: abertura conferida, fechamento validado, divergência encontrada, item separado para nova contagem..."></textarea></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+            <button class="btn success" onclick="salvarChecklist()">✅ Finalizar Check List</button>
+            <button class="btn secondary" onclick="reiniciarChecklistForm()">🔄 Reiniciar tempo</button>
+            <button class="btn secondary" onclick="limparChecklistForm()">🧹 Limpar Campos</button>
+          </div>
+          </div>
+        </div>
+
+        <div class="section-title"><div><h2>Histórico de Check List</h2><p>Registros de abertura e fechamento com base usada, vendas, movimentações e resultado da conferência.</p></div></div>
+        <div class="toolbar">
+          <div class="filters">
+            <select id="filtroCheckCategoria" onchange="renderChecklist()"><option value="todos">Todas as categorias</option></select>
+            <select id="filtroCheckTipo" onchange="renderChecklist()"><option value="todos">Todos os tipos</option><option value="Abertura">Abertura</option><option value="Fechamento">Fechamento</option></select>
+          </div>
+          <button class="btn blue" onclick="exportarChecklistCSV()">📄 Exportar Check List</button>
+        </div>
+        <div class="table-wrap"><table id="checklistTable"></table></div>
+      </section>
+
+      <section class="page" id="page-categorias">
+        <div class="card category-panel">
+          <div class="section-title" style="margin-top:0">
+            <div>
+              <h2>📦 Controle por Categoria</h2>
+              <p>Consulta somente de inventário por categoria. Esta tela é apenas visualização: não edita, não lança venda, não mostra Check List e não mistura recebimento/DRM.</p>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-bottom:14px">
+            <div class="tabs" id="categoryTabs"></div>
+            <div class="filters">
+              <select id="filtroCategoriaControle" onchange="setActiveCategory(this.value)"></select>
+              <input id="filtroDia" type="number" min="1" max="31" placeholder="Filtrar dia do inventário">
+              <button class="btn secondary" onclick="limparFiltros()">Limpar filtro</button>
+            </div>
+          </div>
+          <div class="category-kpi" id="categoriaResumoCards"></div>
+          <div class="category-help" id="categoriaAjudaResumo">Selecione uma categoria para visualizar apenas os inventários registrados.</div>
+        </div>
+        <div class="table-wrap"><table id="categoryTable"></table></div>
+      </section>
+
+      <section class="page" id="page-relatorios">
+        <div class="card">
+          <div class="section-title" style="margin-top:0">
+            <div>
+              <h2>🧾 Relatório Mensal por Categoria</h2>
+              <p>Mostra do primeiro ao último dia do mês, mesmo quando não houver entrada, venda, inventário ou check list lançado.</p>
+            </div>
+            <div class="no-print" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end">
+              <button class="btn" onclick="imprimirRelatorioCategoria()">🖨️ Imprimir Relatório</button>
+              <button class="btn blue" onclick="exportarRelatorioCategoriaExcel()">📊 Exportar Excel</button>
+            </div>
+          </div>
+
+          <div class="toolbar no-print" style="margin-bottom:14px">
+            <div class="filters">
+              <select id="relatorioCategoria" onchange="renderReport()"></select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn secondary" onclick="exportarRelatorioCategoriaCSV()">📄 Exportar CSV</button>
+              <button class="btn secondary" onclick="exportarBackup()">⬇️ Backup JSON</button>
+              <label class="btn secondary" for="importFile">⬆️ Importar Backup</label>
+              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importarBackup(event)">
+            </div>
+          </div>
+
+          <div class="report-print-header" id="reportPrintHeader"></div>
+
+          <div class="report-summary">
+            <div class="mini"><span>Categoria</span><b id="rCategoria">—</b></div>
+            <div class="mini"><span>Dias no mês</span><b id="rDiasMes">0</b></div>
+            <div class="mini"><span>Recebidos</span><b id="rRecebidos">0</b></div>
+            <div class="mini"><span>DRM/Problemas</span><b id="rDrm">0</b></div>
+            <div class="mini"><span>Vendas</span><b id="rVendas">0</b></div>
+            <div class="mini"><span>Faltantes</span><b id="rFaltantes">0</b></div>
+            <div class="mini"><span>Último inventário</span><b id="rUltimoInventario">0</b></div>
+            <div class="mini"><span>Saldo estimado</span><b id="rSaldo">0</b></div>
+          </div>
+
+          <div class="report-note">
+            <strong>Leitura do relatório:</strong> a tabela sempre cobre o mês inteiro da categoria selecionada. Dias sem lançamento aparecem zerados para facilitar impressão, assinatura e conferência em Excel.
+          </div>
+
+          <div class="table-wrap"><table id="reportTable"></table></div>
+        </div>
+      </section>
+
+      <section class="page" id="page-config">
+        <div id="configContent"></div>
+      </section>
+    </main>
+  </div>
+
+
+  <div class="modal-backdrop" id="configModal" onclick="if(event.target===this) fecharModalConfig()">
+    <div class="modal" id="configModalContent" role="dialog" aria-modal="true" aria-labelledby="configModalTitle"></div>
+  </div>
+
+  <div class="toast" id="toast">Salvo com sucesso.</div>
+
+  <script>
+    const STORAGE_KEY = 'avenidaEstoqueProV2';
+    const SESSION_KEY = 'avenidaEstoqueSessionV2';
+    const TEAM_VERSION = 'v32-login-permissoes-categorias-2026-07-10';
+    const DEFAULT_LOGIN_USERS = [
+      {nome:'ALANA ARAUJO', cargo:'GERENTE DE LOJA', senha:'alana123'},
+      {nome:'CASSIO GABRIEL', cargo:'FISCAL 1', senha:'cassio123'},
+      {nome:'RICHARD BAPTISTE', cargo:'FISCAL 2', senha:'richard123'},
+      {nome:'JOAO PEDRO', cargo:'VISUAL MERCHANDISING', senha:'joao123'},
+      {nome:'KAILANY', cargo:'ADMINISTRATIVO', senha:'kailany123'}
+    ];
+    const DEFAULT_STATE = {
+      meta:{loja:'24',mes:mesAtualBR(),gerente:'ALANA',metaVendas:''},
+      funcionarios:['ALANA ARAUJO','CASSIO GABRIEL','RICHARD BAPTISTE','JOAO PEDRO','KAILANY'],
+      usuariosLogin:structuredClone(DEFAULT_LOGIN_USERS),
+      permissoes:{},
+      teamVersion: TEAM_VERSION,
+      categorias:[
+        {id:'malas',nome:'Malas',icone:'🧳'},
+        {id:'relogios',nome:'Relógios',icone:'⌚'},
+        {id:'capacetes',nome:'Capacetes',icone:'🪖'}
+      ],
+      records:{},
+      recebimentos:[],
+      inventarios:[],
+      checklists:[],
+      activeCategory:'malas',
+      theme:'light'
+    };
+
+    const MODULOS = [
+      ['dashboard','📊 Painel Geral'],
+      ['recebimento','📥 Recebimento de Mercadoria'],
+      ['inventario','🧮 Inventário'],
+      ['checklist','✅ Check List'],
+      ['categorias','📦 Controle por Categoria'],
+      ['relatorios','🧾 Relatórios'],
+      ['config','⚙️ Configurações']
+    ];
+
+    let state = carregarEstado();
+    let currentUser = null;
+
+    function carregarEstado(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return normalizarEstado(structuredClone(DEFAULT_STATE));
+        const parsed = JSON.parse(raw);
+        return normalizarEstado({...structuredClone(DEFAULT_STATE),...parsed});
+      }catch(e){
+        console.warn(e);
+        return normalizarEstado(structuredClone(DEFAULT_STATE));
+      }
+    }
+
+    function usuarioDesenvolvedor(usuario=currentUser){
+      return !!usuario && normalizarLogin(usuario.nome) === normalizarLogin('JOAO PEDRO');
+    }
+
+    function permissoesPadrao(nome){
+      if(normalizarLogin(nome) === normalizarLogin('JOAO PEDRO')){
+        return {...Object.fromEntries(MODULOS.map(([id])=>[id,true])), alterarSenha:true};
+      }
+      return {
+        dashboard:true, recebimento:true, inventario:true, checklist:true,
+        categorias:true, relatorios:true, config:false, alterarSenha:false
+      };
+    }
+
+    function normalizarEstado(s){
+      s.meta = aplicarMetadadosPadrao({...structuredClone(DEFAULT_STATE.meta), ...(s.meta || {})});
+      s.usuariosLogin = Array.isArray(s.usuariosLogin) && s.usuariosLogin.length ? s.usuariosLogin : structuredClone(DEFAULT_LOGIN_USERS);
+      s.usuariosLogin = s.usuariosLogin
+        .map(u=>({nome:String(u.nome||'').trim().toUpperCase(), cargo:String(u.cargo||'USUÁRIO').trim().toUpperCase(), senha:String(u.senha||'').trim()}))
+        .filter(u=>u.nome && u.senha)
+        .filter((u,i,arr)=>arr.findIndex(x=>normalizarLogin(x.nome)===normalizarLogin(u.nome))===i);
+      garantirDesenvolvedor(s);
+      s.permissoes = s.permissoes && typeof s.permissoes === 'object' ? s.permissoes : {};
+      s.usuariosLogin.forEach(u=>{
+        const chave=normalizarLogin(u.nome);
+        s.permissoes[chave]={...permissoesPadrao(u.nome),...(s.permissoes[chave]||{})};
+      });
+      // Os responsáveis operacionais são derivados automaticamente dos logins autorizados.
+      s.funcionarios = s.usuariosLogin.map(u=>u.nome);
+      s.permissoes[normalizarLogin('JOAO PEDRO')] = permissoesPadrao('JOAO PEDRO');
+      s.categorias = Array.isArray(s.categorias) && s.categorias.length ? s.categorias : structuredClone(DEFAULT_STATE.categorias);
+      s.categorias = s.categorias.map(c=>({id:String(c.id||slug(c.nome)).trim(),nome:String(c.nome||'Categoria').trim(),icone:String(c.icone||'📦').trim()||'📦'}));
+      s.records = s.records || {};
+      s.recebimentos = Array.isArray(s.recebimentos) ? s.recebimentos : [];
+      s.inventarios = Array.isArray(s.inventarios) ? s.inventarios : [];
+      s.checklists = Array.isArray(s.checklists) ? s.checklists : [];
+      s.categorias.forEach(cat=>{
+        if(!s.records[cat.id]) s.records[cat.id] = {};
+        for(let dia=1;dia<=31;dia++) getRecord(cat.id,dia,s);
+      });
+      if(!s.activeCategory || !s.categorias.some(c=>c.id===s.activeCategory)) s.activeCategory = s.categorias[0].id;
+      s.teamVersion = TEAM_VERSION;
+      return s;
+    }
+
+    function garantirDesenvolvedor(s){
+      const padrao = DEFAULT_LOGIN_USERS.find(u=>normalizarLogin(u.nome)===normalizarLogin('JOAO PEDRO')) || {nome:'JOAO PEDRO',cargo:'VISUAL MERCHANDISING',senha:'joao123'};
+      let dev = (s.usuariosLogin||[]).find(u=>normalizarLogin(u.nome)===normalizarLogin('JOAO PEDRO'));
+      if(!dev){
+        s.usuariosLogin.push({...padrao});
+      }else{
+        dev.nome='JOAO PEDRO';
+        dev.cargo=String(dev.cargo||padrao.cargo).toUpperCase();
+        dev.senha=String(dev.senha||padrao.senha);
+      }
+    }
+
+    function permissoesUsuario(nome=currentUser?.nome){
+      const chave=normalizarLogin(nome);
+      if(chave===normalizarLogin('JOAO PEDRO')) return permissoesPadrao('JOAO PEDRO');
+      return {...permissoesPadrao(nome),...(state.permissoes?.[chave]||{})};
+    }
+
+    function temPermissao(modulo){
+      return !!currentUser && !!permissoesUsuario(currentUser.nome)[modulo];
+    }
+
+    function getRecord(catId,dia,base=state){
+      if(!base.records[catId]) base.records[catId] = {};
+      if(!base.records[catId][dia]){
+        base.records[catId][dia] = {
+          hora:'', recebido:0,
+          vda_ab:0, dep_ab:0, def_ab:0, resp_ab:'',
+          vda_fc:0, dep_fc:0, def_fc:0, resp_fc:'',
+          obs:'',
+          lastUser:'', lastCargo:'', lastUpdated:''
+        };
+      }
+      return base.records[catId][dia];
+    }
+
+    function n(v){ return Number(v) || 0; }
+    function slug(str){
+      return String(str||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'categoria';
+    }
+    function hojeDia(){ return Math.min(31, Math.max(1, new Date().getDate())); }
+    function mesAtualBR(){
+      const agora = new Date();
+      const mes = agora.toLocaleDateString('pt-BR', { month:'long' });
+      return `${mes.charAt(0).toUpperCase()}${mes.slice(1)}/${agora.getFullYear()}`;
+    }
+    function aplicarMetadadosPadrao(s){
+      s.meta = s.meta || {};
+      if(!String(s.meta.loja || '').trim()) s.meta.loja = '24';
+      s.meta.mes = mesAtualBR();
+      if(!String(s.meta.gerente || '').trim()) s.meta.gerente = 'ALANA';
+      if(s.meta.metaVendas === undefined || s.meta.metaVendas === null) s.meta.metaVendas = '';
+      return s;
+    }
+
+    function resumoCategoria(catId){
+      const out = {recebido:0,vendas:0,defeitos:0,saldo:0,diasMov:0,vda_ab:0,vda_fc:0,def_ab:0,def_fc:0};
+      for(let dia=1;dia<=31;dia++){
+        const r = getRecord(catId,dia);
+        const vendas = n(r.vda_ab)+n(r.vda_fc);
+        const defeitos = n(r.def_ab)+n(r.def_fc);
+        const recebido = n(r.recebido);
+        out.recebido += recebido;
+        out.vda_ab += n(r.vda_ab); out.vda_fc += n(r.vda_fc);
+        out.def_ab += n(r.def_ab); out.def_fc += n(r.def_fc);
+        out.vendas += vendas;
+        out.defeitos += defeitos;
+        if(vendas || defeitos || recebido || n(r.dep_ab) || n(r.dep_fc) || r.obs) out.diasMov++;
+      }
+      out.saldo = out.recebido - out.vendas - out.defeitos;
+      return out;
+    }
+
+    function resumoGeral(){
+      const geral = {recebido:0,vendas:0,defeitos:0,saldo:0,diasMov:0,categoriaLider:null,categoriaDefeito:null};
+      let maiorVenda=-1, maiorDef=-1;
+      state.categorias.forEach(cat=>{
+        const r = resumoCategoria(cat.id);
+        geral.recebido += r.recebido;
+        geral.vendas += r.vendas;
+        geral.defeitos += r.defeitos;
+        geral.diasMov += r.diasMov;
+        if(r.vendas > maiorVenda){ maiorVenda = r.vendas; geral.categoriaLider = cat; }
+        if(r.defeitos > maiorDef){ maiorDef = r.defeitos; geral.categoriaDefeito = cat; }
+      });
+      geral.saldo = geral.recebido - geral.vendas - geral.defeitos;
+      return geral;
+    }
+
+    function usuarioPodeConfig(){
+      return temPermissao('config');
+    }
+
+    function aplicarPermissoes(){
+      if(!currentUser) return;
+      const perms = permissoesUsuario(currentUser.nome);
+      document.querySelectorAll('#nav button[data-page]').forEach(btn=>{
+        btn.style.display = perms[btn.dataset.page] ? 'flex' : 'none';
+      });
+      const ativa = document.querySelector('.page.active')?.id?.replace('page-','');
+      if(ativa && !perms[ativa]){
+        const destino = MODULOS.find(([id])=>perms[id])?.[0] || 'dashboard';
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+        document.getElementById('page-'+destino)?.classList.add('active');
+        document.querySelectorAll('#nav button[data-page]').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===destino));
+        const [titulo,subtitulo]=pageMeta(destino);
+        const tituloEl=document.getElementById('pageTitle'),subEl=document.getElementById('pageSubtitle');
+        if(tituloEl) tituloEl.textContent=titulo;
+        if(subEl) subEl.textContent=subtitulo;
+      }
+    }
+
+    function pageMeta(page){
+      const map = {
+        dashboard:['Painel Geral','Visão consolidada do mês, movimentações e alertas de estoque.'],
+        recebimento:['Recebimento de Mercadoria','Novo recebimento, novo DRM, divergências, avarias e ocorrências.'],
+        inventario:['Inventário','Contagem física das categorias cadastradas no sistema.'],
+        checklist:['Check List','Abertura, fechamento, horários e responsáveis com base no inventário.'],
+        categorias:['Controle por Categoria','Consulta de inventário das categorias cadastradas.'],
+        relatorios:['Relatórios','Resumo mensal para impressão, conferência e exportação.'],
+        config:['Configurações','Controle de login, permissões, categorias e segurança.']
+      };
+      return map[page] || map.dashboard;
+    }
+
+    function goPage(page){
+      fecharPaineisCriacao();
+      if(!temPermissao(page)){
+        toast('Você não possui permissão para acessar esta aba.');
+        page = MODULOS.find(([id])=>temPermissao(id))?.[0] || 'dashboard';
+      }
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('page-'+page).classList.add('active');
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active', b.dataset.page===page));
+      const [title,sub] = pageMeta(page);
+      document.getElementById('pageTitle').textContent = title;
+      document.getElementById('pageSubtitle').textContent = sub;
+      document.getElementById('sidebar').classList.remove('open');
+      atualizarTudo();
+    }
+
+    document.getElementById('nav').addEventListener('click', e=>{
+      const btn = e.target.closest('button[data-page]');
+      if(btn) goPage(btn.dataset.page);
+    });
+
+    function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); }
+    function toggleTema(){
+      document.body.classList.toggle('dark');
+      state.theme = document.body.classList.contains('dark') ? 'dark' : 'light';
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      atualizarTema();
+    }
+    function atualizarTema(){
+      const dark = state.theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      document.body.classList.toggle('dark', dark);
+      const themeBtn = document.getElementById('themeBtn');
+      if(themeBtn){
+        themeBtn.textContent = dark ? '☀️' : '🌙';
+        themeBtn.title = dark ? 'Ativar modo claro' : 'Ativar modo escuro';
+        themeBtn.setAttribute('aria-label', themeBtn.title);
+      }
+      document.documentElement.classList.remove('theme-booting');
+    }
+
+    function atualizarTopo(){
+      aplicarMetadadosPadrao(state);
+      document.getElementById('topLoja').textContent = state.meta.loja || '—';
+      document.getElementById('topMes').textContent = state.meta.mes || '—';
+      document.getElementById('topGerente').textContent = state.meta.gerente || '—';
+      document.getElementById('topUsuario').textContent = currentUser ? currentUser.nome : '—';
+      document.getElementById('topCargo').textContent = currentUser ? currentUser.cargo : '—';
+      document.getElementById('sideUserName').textContent = currentUser ? currentUser.nome : '—';
+      document.getElementById('sideUserRole').textContent = currentUser ? currentUser.cargo : '—';
+      aplicarPermissoes();
+    }
+
+    function renderDashboard(){
+      const g = resumoGeral();
+      document.getElementById('mVendas').textContent = g.vendas;
+      document.getElementById('mRecebidos').textContent = g.recebido;
+      document.getElementById('mDefeitos').textContent = g.defeitos;
+      document.getElementById('mSaldo').textContent = g.saldo;
+      if(document.getElementById('rVendas')) document.getElementById('rVendas').textContent = g.vendas;
+      if(document.getElementById('rRecebidos')) document.getElementById('rRecebidos').textContent = g.recebido;
+      if(document.getElementById('rDefeitos')) document.getElementById('rDefeitos').textContent = g.defeitos;
+      if(document.getElementById('rSaldo')) document.getElementById('rSaldo').textContent = g.saldo;
+      document.getElementById('categoriaLider').textContent = g.categoriaLider ? `${g.categoriaLider.icone} ${g.categoriaLider.nome}` : '—';
+      document.getElementById('categoriaDefeito').textContent = g.categoriaDefeito ? `${g.categoriaDefeito.icone} ${g.categoriaDefeito.nome}` : '—';
+      document.getElementById('taxaDefeito').textContent = g.vendas ? `${((g.defeitos/g.vendas)*100).toFixed(1)}%` : '0%';
+      document.getElementById('diasMovimento').textContent = g.diasMov;
+
+      const meta = n(state.meta.metaVendas);
+      const alerta = document.getElementById('alertaPrincipal');
+      if(g.defeitos > 0 && g.vendas && g.defeitos/g.vendas > 0.05){
+        alerta.innerHTML = '<div>🚨</div><div><strong>Atenção aos defeitos.</strong><p>A taxa de defeito está acima de 5% das vendas. Vale conferir categoria, fornecedor ou manuseio.</p></div>';
+      }else if(meta && g.vendas >= meta){
+        alerta.innerHTML = '<div>🏆</div><div><strong>Meta batida!</strong><p>O total de vendas já alcançou ou superou a meta configurada para o mês.</p></div>';
+      }else if(g.vendas === 0 && g.recebido === 0){
+        alerta.innerHTML = '<div>💡</div><div><strong>Sistema pronto para operação.</strong><p>Use Recebimento de Mercadoria para entradas e DRM. Vendas e defeitos continuam no controle por categoria.</p></div>';
+      }else{
+        alerta.innerHTML = '<div>✅</div><div><strong>Controle atualizado.</strong><p>Os dados do mês foram consolidados automaticamente no painel e no relatório.</p></div>';
+      }
+
+      let rows = `<thead><tr><th>Categoria</th><th>Recebidos</th><th>Vendas</th><th>Defeitos</th><th>Saldo Estimado</th><th>Dias com Movimento</th><th>Status</th></tr></thead><tbody>`;
+      state.categorias.forEach(cat=>{
+        const r = resumoCategoria(cat.id);
+        const status = statusCategoria(r);
+        rows += `<tr><td><strong>${cat.icone} ${cat.nome}</strong></td><td>${r.recebido}</td><td>${r.vendas}</td><td>${r.defeitos}</td><td>${r.saldo}</td><td>${r.diasMov}</td><td>${status}</td></tr>`;
+      });
+      rows += `</tbody>`;
+      document.getElementById('dashTable').innerHTML = rows;
+    }
+
+    function statusCategoria(r){
+      if(r.defeitos > 0 && r.vendas && r.defeitos/r.vendas > .05) return '<span class="status-pill bad">Atenção</span>';
+      if(r.saldo < 0) return '<span class="status-pill warn">Conferir saldo</span>';
+      if(r.vendas || r.recebido) return '<span class="status-pill ok">OK</span>';
+      return '<span class="status-pill neutral">Sem movimento</span>';
+    }
+
+    function renderQuick(){
+      const catSel = document.getElementById('quickCategoria');
+      if(!catSel) return;
+      const oldCat = catSel.value || state.activeCategory;
+      catSel.innerHTML = state.categorias.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      catSel.value = state.categorias.some(c=>c.id===oldCat) ? oldCat : state.activeCategory;
+
+      const respSel = document.getElementById('quickResp');
+      const oldResp = respSel.value;
+      respSel.innerHTML = `<option value="">Selecione</option>` + state.funcionarios.map(f=>`<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+      respSel.value = oldResp || (currentUser ? currentUser.nome : '');
+      if(!document.getElementById('quickDia').value) document.getElementById('quickDia').value = hojeDia();
+      renderQuickPreview();
+    }
+
+    ['quickCategoria','quickDia','quickTurno'].forEach(id=>{
+      document.addEventListener('change', e=>{ if(e.target && e.target.id === id) carregarLancamentoRapido(); });
+    });
+
+    function carregarLancamentoRapido(){
+      const cat = document.getElementById('quickCategoria').value || state.activeCategory;
+      const dia = Math.min(31,Math.max(1,n(document.getElementById('quickDia').value)||hojeDia()));
+      const turno = document.getElementById('quickTurno').value;
+      const r = getRecord(cat,dia);
+      document.getElementById('quickRecebidos').value = r.recebido || '';
+      document.getElementById('quickVendas').value = r[`vda_${turno}`] || '';
+      document.getElementById('quickDeposito').value = r[`dep_${turno}`] || '';
+      document.getElementById('quickDefeitos').value = r[`def_${turno}`] || '';
+      document.getElementById('quickResp').value = r[`resp_${turno}`] || '';
+      document.getElementById('quickObs').value = r.obs || '';
+      renderQuickPreview();
+    }
+
+    function limparQuickForm(){
+      ['quickRecebidos','quickVendas','quickDeposito','quickDefeitos','quickObs'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('quickResp').value='';
+      renderQuickPreview();
+    }
+
+    function salvarLancamentoRapido(){
+      const cat = document.getElementById('quickCategoria').value || state.activeCategory;
+      const dia = Math.min(31,Math.max(1,n(document.getElementById('quickDia').value)||hojeDia()));
+      const turno = document.getElementById('quickTurno').value;
+      const r = getRecord(cat,dia);
+      r.hora = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      r.recebido = n(document.getElementById('quickRecebidos').value);
+      r[`vda_${turno}`] = n(document.getElementById('quickVendas').value);
+      r[`dep_${turno}`] = n(document.getElementById('quickDeposito').value);
+      r[`def_${turno}`] = n(document.getElementById('quickDefeitos').value);
+      r[`resp_${turno}`] = document.getElementById('quickResp').value || (currentUser ? currentUser.nome : '');
+      r.obs = document.getElementById('quickObs').value.trim();
+      marcarAuditoria(r);
+      state.activeCategory = cat;
+      salvarEstado();
+    }
+
+    function renderQuickPreview(){
+      const cat = document.getElementById('quickCategoria').value || state.activeCategory;
+      const dia = Math.min(31,Math.max(1,n(document.getElementById('quickDia').value)||hojeDia()));
+      const catObj = state.categorias.find(c=>c.id===cat) || state.categorias[0];
+      const r = getRecord(cat,dia);
+      const vendas = n(r.vda_ab)+n(r.vda_fc);
+      const defeitos = n(r.def_ab)+n(r.def_fc);
+      document.getElementById('quickPreview').innerHTML = `
+        <thead><tr><th>Categoria</th><th>Dia</th><th>Recebidos</th><th>Venda Abertura</th><th>Venda Fechamento</th><th>Total Vendas</th><th>Total Defeitos</th><th>Saldo</th><th>Obs.</th><th>Última edição</th></tr></thead>
+        <tbody><tr><td><strong>${catObj.icone} ${catObj.nome}</strong></td><td>${dia}</td><td>${n(r.recebido)}</td><td>${n(r.vda_ab)}</td><td>${n(r.vda_fc)}</td><td>${vendas}</td><td>${defeitos}</td><td>${n(r.recebido)-vendas-defeitos}</td><td>${escapeHtml(r.obs) || '—'}</td><td>${auditLabel(r)}</td></tr></tbody>`;
+    }
+
+
+    function nomeCategoria(id){
+      const cat = state.categorias.find(c=>c.id===id);
+      return cat ? cat.nome : String(id || '—');
+    }
+    function categoriaLabel(id){
+      const cat = state.categorias.find(c=>c.id===id);
+      return cat ? `${cat.icone} ${cat.nome}` : escapeHtml(id || '—');
+    }
+    function hojeISO(){ return new Date().toISOString().slice(0,10); }
+    function idMovimento(prefix){ return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2,8)}`; }
+    function dataDia(dataISO){
+      const dia = Number(String(dataISO || '').slice(8,10));
+      return Math.min(31, Math.max(1, dia || hojeDia()));
+    }
+    function opcoesCategorias(selectId, selected=''){
+      const el = document.getElementById(selectId); if(!el) return;
+      el.innerHTML = state.categorias.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      el.value = state.categorias.some(c=>c.id===selected) ? selected : (state.activeCategory || state.categorias[0].id);
+    }
+    function opcoesFiltroCategorias(selectId){
+      const el = document.getElementById(selectId); if(!el) return;
+      const old = el.value || 'todos';
+      el.innerHTML = `<option value="todos">Todas as categorias</option>` + state.categorias.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      el.value = old;
+    }
+
+
+    function categoriasPrincipais(){
+      return [...state.categorias];
+    }
+    function opcoesCategoriasPrincipais(selectId, selected=''){
+      const el = document.getElementById(selectId); if(!el) return;
+      const cats = categoriasPrincipais();
+      el.innerHTML = cats.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      el.value = cats.some(c=>c.id===selected) ? selected : (cats[0]?.id || state.activeCategory);
+    }
+    function opcoesFiltroCategoriasPrincipais(selectId){
+      const el = document.getElementById(selectId); if(!el) return;
+      const old = el.value || 'todos';
+      const cats = categoriasPrincipais();
+      el.innerHTML = `<option value="todos">Todas as categorias</option>` + cats.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      el.value = old;
+    }
+
+    function switchRecebimentoTab(tab){
+      const panel = document.getElementById(`rec-tab-${tab}`);
+      const jaAberto = !!panel?.classList.contains('active');
+      document.querySelectorAll('#recebimentoSubtabs .subtab-btn').forEach(btn=>btn.classList.remove('active'));
+      document.querySelectorAll('#page-recebimento .subtab-panel').forEach(item=>item.classList.remove('active'));
+      if(jaAberto) return;
+      const btn = document.querySelector(`#recebimentoSubtabs .subtab-btn[data-rec-tab="${tab}"]`);
+      if(btn) btn.classList.add('active');
+      if(panel) panel.classList.add('active');
+      if(tab === 'drm') renderDRMForm();
+      if(tab === 'recebimento') renderRecebimentoForm();
+      panel?.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function toggleInventarioForm(){
+      const panel = document.getElementById('inventarioFormPanel');
+      const btn = document.getElementById('novoInventarioBtn');
+      if(!panel) return;
+      const abrir = !panel.classList.contains('active');
+      panel.classList.toggle('active', abrir);
+      btn?.classList.toggle('active', abrir);
+      if(abrir){
+        renderInventarioForm();
+        panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }
+    }
+
+    function toggleChecklistForm(){
+      const panel = document.getElementById('checklistFormPanel');
+      const btn = document.getElementById('novoChecklistBtn');
+      if(!panel) return;
+      const abrir = !panel.classList.contains('active');
+      panel.classList.toggle('active', abrir);
+      btn?.classList.toggle('active', abrir);
+      if(abrir){
+        checklistFinalizado = false;
+        const inicio = document.getElementById('checkHoraInicio');
+        const fim = document.getElementById('checkHoraFim');
+        if(inicio) inicio.value = horaCompletaBR();
+        if(fim) fim.value = horaCompletaBR();
+        renderChecklistForm();
+        panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }else{
+        if(checklistTimer) clearInterval(checklistTimer);
+        checklistTimer = null;
+      }
+    }
+
+    function fecharPaineisCriacao(){
+      document.querySelectorAll('#page-recebimento .subtab-panel').forEach(panel=>panel.classList.remove('active'));
+      document.querySelectorAll('#recebimentoSubtabs .subtab-btn').forEach(btn=>btn.classList.remove('active'));
+      document.getElementById('inventarioFormPanel')?.classList.remove('active');
+      document.getElementById('novoInventarioBtn')?.classList.remove('active');
+      document.getElementById('checklistFormPanel')?.classList.remove('active');
+      document.getElementById('novoChecklistBtn')?.classList.remove('active');
+      if(checklistTimer) clearInterval(checklistTimer);
+      checklistTimer = null;
+    }
+
+    function renderRecebimentoForm(){
+      opcoesCategorias('recCategoria', document.getElementById('recCategoria')?.value || state.activeCategory);
+      opcoesFiltroCategorias('filtroRecCategoria');
+      if(!document.getElementById('recData')?.value) document.getElementById('recData').value = hojeISO();
+      if(!document.getElementById('recResp')?.value && currentUser) document.getElementById('recResp').value = currentUser.nome;
+      renderDRMForm();
+    }
+
+    function renderDRMForm(){
+      opcoesCategorias('drmCategoria', document.getElementById('drmCategoria')?.value || state.activeCategory);
+      if(!document.getElementById('drmData')?.value) document.getElementById('drmData').value = hojeISO();
+      if(!document.getElementById('drmResp')?.value && currentUser) document.getElementById('drmResp').value = currentUser.nome;
+    }
+
+    function limparRecebimentoForm(){
+      ['recQtd','recDoc','recVolume','recObs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      const status = document.getElementById('recStatus'); if(status) status.value = 'Recebido OK';
+      const destino = document.getElementById('recDestino'); if(destino) destino.value = 'Estoque loja';
+      const data = document.getElementById('recData'); if(data) data.value = hojeISO();
+      const resp = document.getElementById('recResp'); if(resp) resp.value = currentUser ? currentUser.nome : '';
+      renderRecebimentoForm();
+    }
+
+    function limparDRMForm(){
+      ['drmQtd','drmNumero','drmDoc','drmObs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      const motivo = document.getElementById('drmMotivo'); if(motivo) motivo.value = 'Divergência de quantidade';
+      const status = document.getElementById('drmStatus'); if(status) status.value = 'DRM necessário';
+      const data = document.getElementById('drmData'); if(data) data.value = hojeISO();
+      const resp = document.getElementById('drmResp'); if(resp) resp.value = currentUser ? currentUser.nome : '';
+      renderDRMForm();
+    }
+
+    function salvarRecebimento(){
+      const categoria = document.getElementById('recCategoria').value;
+      const data = document.getElementById('recData').value || hojeISO();
+      const qtd = n(document.getElementById('recQtd').value);
+      const status = document.getElementById('recStatus').value;
+      const doc = document.getElementById('recDoc').value.trim();
+      const volume = document.getElementById('recVolume').value.trim();
+      const destino = document.getElementById('recDestino').value;
+      const responsavel = document.getElementById('recResp').value.trim() || (currentUser ? currentUser.nome : '');
+      const obs = document.getElementById('recObs').value.trim();
+      if(!categoria){ toast('Selecione a categoria da mercadoria.'); return; }
+      if(qtd <= 0){ toast('Informe a quantidade recebida.'); return; }
+      const detalhes = [volume ? `Volume/Caixa: ${volume}` : '', destino ? `Destino: ${destino}` : '', obs].filter(Boolean).join(' | ');
+      const item = {id:idMovimento('REC'), tipo:'Recebimento', data, categoria, qtd, qtdDrm:0, status, doc, drm:'', responsavel, obs:detalhes, lastUser:'', lastCargo:'', lastUpdated:''};
+      marcarAuditoria(item);
+      state.recebimentos.unshift(item);
+      const dia = dataDia(data);
+      const r = getRecord(categoria, dia);
+      r.recebido = n(r.recebido) + qtd;
+      r.hora = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      r.obs = [r.obs, `Recebimento: ${qtd} un. ${status}${doc ? ` | Doc: ${doc}` : ''}${detalhes ? ` | ${detalhes}` : ''}`].filter(Boolean).join(' / ');
+      r.resp_ab = r.resp_ab || responsavel;
+      marcarAuditoria(r);
+      state.activeCategory = categoria;
+      limparRecebimentoForm();
+      salvarEstado();
+      toast('Recebimento registrado e somado ao controle diário ✅');
+    }
+
+    function salvarDRM(){
+      const categoria = document.getElementById('drmCategoria').value;
+      const data = document.getElementById('drmData').value || hojeISO();
+      const qtdDrm = n(document.getElementById('drmQtd').value);
+      const drm = document.getElementById('drmNumero').value.trim();
+      const doc = document.getElementById('drmDoc').value.trim();
+      const motivo = document.getElementById('drmMotivo').value;
+      const status = document.getElementById('drmStatus').value;
+      const responsavel = document.getElementById('drmResp').value.trim() || (currentUser ? currentUser.nome : '');
+      const obs = document.getElementById('drmObs').value.trim();
+      if(!categoria){ toast('Selecione a categoria do DRM.'); return; }
+      if(qtdDrm <= 0){ toast('Informe a quantidade em DRM.'); return; }
+      const detalhes = [motivo ? `Motivo: ${motivo}` : '', obs].filter(Boolean).join(' | ');
+      const item = {id:idMovimento('DRM'), tipo:'DRM', data, categoria, qtd:0, qtdDrm, status, doc, drm, responsavel, obs:detalhes, lastUser:'', lastCargo:'', lastUpdated:''};
+      marcarAuditoria(item);
+      state.recebimentos.unshift(item);
+      const dia = dataDia(data);
+      const r = getRecord(categoria, dia);
+      r.def_ab = n(r.def_ab) + qtdDrm;
+      r.hora = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      r.obs = [r.obs, `DRM: ${qtdDrm} un. ${status}${drm ? ` | Nº: ${drm}` : ''}${doc ? ` | Doc: ${doc}` : ''}${detalhes ? ` | ${detalhes}` : ''}`].filter(Boolean).join(' / ');
+      r.resp_ab = r.resp_ab || responsavel;
+      marcarAuditoria(r);
+      state.activeCategory = categoria;
+      limparDRMForm();
+      salvarEstado();
+      toast('DRM registrado e somado aos defeitos/problemas do controle diário ✅');
+    }
+
+    function renderRecebimentos(){
+      const table = document.getElementById('recebimentosTable'); if(!table) return;
+      const filtroCat = document.getElementById('filtroRecCategoria')?.value || 'todos';
+      const filtroTipo = document.getElementById('filtroRecTipo')?.value || 'todos';
+      const filtroStatus = document.getElementById('filtroRecStatus')?.value || 'todos';
+      const lista = state.recebimentos.filter(item=> {
+        const tipo = item.tipo || (n(item.qtdDrm) > 0 && !n(item.qtd) ? 'DRM' : 'Recebimento');
+        return (filtroCat==='todos' || item.categoria===filtroCat) && (filtroTipo==='todos' || tipo===filtroTipo) && (filtroStatus==='todos' || item.status===filtroStatus);
+      });
+      let totalQtd=0,totalDrm=0;
+      let html = `<thead><tr><th colspan="12">📥 Recebimentos de Mercadoria e DRM</th></tr><tr class="subhead"><th>Tipo</th><th>Data</th><th>Categoria</th><th>Qtd Recebida</th><th>Qtd DRM/Problema</th><th>Situação</th><th>Documento</th><th>Nº DRM</th><th>Responsável</th><th>Acontecimento</th><th>Última edição</th><th>Ação</th></tr></thead><tbody>`;
+      if(!lista.length){
+        html += `<tr><td colspan="12" class="empty">Nenhum recebimento ou DRM registrado ainda.</td></tr>`;
+      }else{
+        lista.forEach(item=>{
+          const tipo = item.tipo || (n(item.qtdDrm) > 0 && !n(item.qtd) ? 'DRM' : 'Recebimento');
+          totalQtd += n(item.qtd); totalDrm += n(item.qtdDrm);
+          const statusClass = item.status === 'Recebido OK' ? 'ok' : (String(item.status).includes('DRM') ? 'bad' : 'warn');
+          const tipoClass = tipo === 'DRM' ? 'bad' : 'ok';
+          html += `<tr><td><span class="status-pill ${tipoClass}">${escapeHtml(tipo)}</span></td><td>${escapeHtml(item.data || '—')}</td><td><strong>${categoriaLabel(item.categoria)}</strong></td><td>${n(item.qtd)}</td><td>${n(item.qtdDrm)}</td><td><span class="status-pill ${statusClass}">${escapeHtml(item.status)}</span></td><td>${escapeHtml(item.doc || '—')}</td><td>${escapeHtml(item.drm || '—')}</td><td>${escapeHtml(item.responsavel || '—')}</td><td>${escapeHtml(item.obs || '—')}</td><td>${auditLabel(item)}</td><td><button class="btn danger" onclick="removerRecebimento('${item.id}')">Remover</button></td></tr>`;
+        });
+      }
+      html += `<tr class="total-row"><td>TOTAL</td><td></td><td></td><td>${totalQtd}</td><td>${totalDrm}</td><td colspan="7"></td></tr></tbody>`;
+      table.innerHTML = html;
+    }
+
+    function removerRecebimento(id){
+      const item = state.recebimentos.find(x=>x.id===id); if(!item) return;
+      if(confirm('Remover este registro do histórico? O controle diário não será recalculado automaticamente.')){
+        state.recebimentos = state.recebimentos.filter(x=>x.id!==id);
+        salvarEstado();
+      }
+    }
+
+
+    function ultimoInventarioCategoria(categoria){
+      const lista = state.inventarios
+        .filter(item=>item.categoria===categoria)
+        .sort((a,b)=> String(b.createdAt || b.data || '').localeCompare(String(a.createdAt || a.data || '')));
+      return lista[0] || null;
+    }
+    function totalInventarioItem(item){
+      if(!item) return 0;
+      const area = n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+      const deposito = n(item.deposito !== undefined ? item.deposito : item.bons);
+      return n(item.total !== undefined ? item.total : area + deposito);
+    }
+    function calcularTotalInventarioForm(){
+      const area = n(document.getElementById('invAreaVendas')?.value);
+      const deposito = n(document.getElementById('invDeposito')?.value);
+      const totalEl = document.getElementById('invTotal');
+      if(totalEl) totalEl.value = area + deposito;
+    }
+    function totalRecebidoDiaCategoria(categoria, data){
+      return state.recebimentos
+        .filter(item=> item.categoria === categoria && item.data === data && (item.tipo || 'Recebimento') === 'Recebimento')
+        .reduce((sum,item)=> sum + n(item.qtd), 0);
+    }
+    function totalDrmDiaCategoria(categoria, data){
+      return state.recebimentos
+        .filter(item=> item.categoria === categoria && item.data === data && ((item.tipo || '') === 'DRM' || n(item.qtdDrm) > 0))
+        .reduce((sum,item)=> sum + n(item.qtdDrm), 0);
+    }
+    function aberturaChecklistDoDia(categoria, data){
+      const aberturas = state.checklists
+        .filter(item=> item.tipo === 'Abertura' && item.categoria === categoria && item.data === data)
+        .sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      return aberturas[0] || null;
+    }
+    function estoqueEsperadoChecklist(categoria, tipo='Abertura', data=hojeISO()){
+      if(tipo === 'Fechamento'){
+        const abertura = aberturaChecklistDoDia(categoria, data);
+        const recebidos = totalRecebidoDiaCategoria(categoria, data);
+        const drm = totalDrmDiaCategoria(categoria, data);
+        if(!abertura){
+          return {esperado:0, base:'Sem abertura lançada para esta data/categoria. Registre a abertura antes do fechamento.', abertura:0, recebidos, drm, temAbertura:false, tipoBase:'abertura'};
+        }
+        const aberturaQtd = n(abertura.contagem);
+        const esperado = aberturaQtd + recebidos - drm;
+        return {esperado, base:`Abertura ${abertura.horaInicio || ''}: ${aberturaQtd} un. • Recebimentos do dia: +${recebidos} • DRM/problemas: -${drm}`, abertura:aberturaQtd, recebidos, drm, temAbertura:true, tipoBase:'abertura'};
+      }
+      const inv = ultimoInventarioCategoria(categoria);
+      if(!inv) return {esperado:0, base:'Sem inventário lançado para esta categoria.', abertura:0, recebidos:0, drm:0, temAbertura:true, tipoBase:'inventario'};
+      const total = totalInventarioItem(inv);
+      return {esperado:total, base:`Último inventário: ${inv.data || 'sem data'} • Total de itens: ${total} un.`, abertura:0, recebidos:0, drm:0, temAbertura:true, tipoBase:'inventario'};
+    }
+    function renderInventarioForm(){
+      opcoesCategoriasPrincipais('invCategoria', document.getElementById('invCategoria')?.value || state.activeCategory);
+      opcoesFiltroCategoriasPrincipais('filtroInvCategoria');
+      const dataEl = document.getElementById('invData');
+      if(dataEl && !dataEl.value) dataEl.value = hojeISO();
+      const respEl = document.getElementById('invResp');
+      if(respEl && !respEl.value && currentUser) respEl.value = currentUser.nome;
+      calcularTotalInventarioForm();
+    }
+    function limparInventarioForm(){
+      ['invAreaVendas','invDeposito','invTotal','invReferencia','invObs'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; });
+      const data = document.getElementById('invData'); if(data) data.value = hojeISO();
+      const resp = document.getElementById('invResp'); if(resp) resp.value = currentUser ? currentUser.nome : '';
+      calcularTotalInventarioForm();
+      renderInventarioForm();
+    }
+    function salvarInventario(){
+      const categoria = document.getElementById('invCategoria').value;
+      const data = document.getElementById('invData').value || hojeISO();
+      const areaVendas = n(document.getElementById('invAreaVendas').value);
+      const deposito = n(document.getElementById('invDeposito').value);
+      const total = areaVendas + deposito;
+      const referencia = document.getElementById('invReferencia').value.trim();
+      const responsavel = document.getElementById('invResp').value.trim() || (currentUser ? currentUser.nome : '');
+      const obs = document.getElementById('invObs').value.trim();
+      if(!categoria){ toast('Selecione a categoria do inventário.'); return; }
+      if(!document.getElementById('invAreaVendas').value && !document.getElementById('invDeposito').value){ toast('Informe a quantidade da área de vendas ou do depósito.'); return; }
+      const item = {id:idMovimento('INV'), data, createdAt:new Date().toISOString(), categoria, areaVendas, deposito, total, fisico:total, bons:deposito, referencia, responsavel, obs, lastUser:'', lastCargo:'', lastUpdated:''};
+      marcarAuditoria(item);
+      state.inventarios.unshift(item);
+      limparInventarioForm();
+      salvarEstado();
+      toast('Inventário salvo com sucesso ✅');
+    }
+    function renderInventario(){
+      const table = document.getElementById('inventarioTable'); if(!table) return;
+      const filtroCat = document.getElementById('filtroInvCategoria')?.value || 'todos';
+      const lista = state.inventarios.filter(item=> (filtroCat==='todos' || item.categoria===filtroCat));
+      let html = `<thead><tr><th colspan="10">🧮 Histórico de Inventários</th></tr><tr class="subhead"><th>Data</th><th>Categoria</th><th>Área de vendas</th><th>Depósito</th><th>Total de itens</th><th>Referência</th><th>Responsável</th><th>Observação</th><th>Última edição</th><th>Ação</th></tr></thead><tbody>`;
+      if(!lista.length){
+        html += `<tr><td colspan="10" class="empty">Nenhum inventário registrado ainda.</td></tr>`;
+      }else{
+        lista.forEach(item=>{
+          const area = n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+          const deposito = n(item.deposito !== undefined ? item.deposito : item.bons);
+          const total = totalInventarioItem(item);
+          html += `<tr><td>${escapeHtml(item.data || '—')}</td><td><strong>${categoriaLabel(item.categoria)}</strong></td><td>${area}</td><td>${deposito}</td><td><strong>${total}</strong></td><td>${escapeHtml(item.referencia || '—')}</td><td>${escapeHtml(item.responsavel || '—')}</td><td>${escapeHtml(item.obs || '—')}</td><td>${auditLabel(item)}</td><td><button class="btn danger" onclick="removerInventario('${item.id}')">Remover</button></td></tr>`;
+        });
+      }
+      html += `</tbody>`;
+      table.innerHTML = html;
+    }
+    function removerInventario(id){
+      if(confirm('Remover este inventário do histórico?')){
+        state.inventarios = state.inventarios.filter(x=>x.id!==id);
+        salvarEstado();
+      }
+    }
+
+    let checklistTimer = null;
+    let checklistFinalizado = false;
+    function horaCompletaBR(){ return new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'}); }
+    function renderChecklistForm(){
+      opcoesCategoriasPrincipais('checkCategoria', document.getElementById('checkCategoria')?.value || state.activeCategory);
+      opcoesFiltroCategoriasPrincipais('filtroCheckCategoria');
+      const dataEl = document.getElementById('checkData');
+      if(dataEl && !dataEl.value) dataEl.value = hojeISO();
+      const inicioEl = document.getElementById('checkHoraInicio');
+      if(inicioEl && !inicioEl.value) inicioEl.value = horaCompletaBR();
+      toggleFiscalOutro();
+      atualizarModoChecklist(false);
+      if(!checklistFinalizado) iniciarChecklistTimer();
+    }
+    function iniciarChecklistTimer(){
+      const fimEl = document.getElementById('checkHoraFim'); if(!fimEl) return;
+      if(checklistTimer) clearInterval(checklistTimer);
+      fimEl.value = horaCompletaBR();
+      checklistTimer = setInterval(()=>{
+        const active = document.getElementById('page-checklist')?.classList.contains('active');
+        if(active && document.getElementById('checkHoraFim')) document.getElementById('checkHoraFim').value = horaCompletaBR();
+      }, 1000);
+    }
+    function atualizarModoChecklist(limparVendas=true){
+      const tipo = document.getElementById('checkTipo')?.value || 'Abertura';
+      const vendasWrap = document.getElementById('checkVendasWrap');
+      const vendasEl = document.getElementById('checkVendas');
+      const esperadoLabel = document.getElementById('checkEsperadoLabel');
+      const contagemLabel = document.getElementById('checkContagemLabel');
+      if(tipo === 'Abertura'){
+        if(vendasWrap) vendasWrap.style.display = 'none';
+        if(vendasEl) vendasEl.value = '0';
+        if(esperadoLabel) esperadoLabel.innerHTML = 'Estoque esperado <small>(último inventário)</small>';
+        if(contagemLabel) contagemLabel.innerHTML = 'Contagem da abertura';
+      }else{
+        if(vendasWrap) vendasWrap.style.display = '';
+        if(vendasEl && limparVendas && vendasEl.value === '0') vendasEl.value = '';
+        if(esperadoLabel) esperadoLabel.innerHTML = 'Estoque esperado no fechamento';
+        if(contagemLabel) contagemLabel.innerHTML = 'Contagem de fechamento';
+      }
+      atualizarEstoqueEsperadoChecklist();
+    }
+    function atualizarEstoqueEsperadoChecklist(){
+      atualizarFaltanteChecklist();
+    }
+    function calcularConferenciaChecklist(){
+      const categoria = document.getElementById('checkCategoria')?.value || state.activeCategory;
+      const tipo = document.getElementById('checkTipo')?.value || 'Abertura';
+      const data = document.getElementById('checkData')?.value || hojeISO();
+      const baseInfo = estoqueEsperadoChecklist(categoria, tipo, data);
+      const contagemRaw = document.getElementById('checkContagem')?.value;
+      const vendasRaw = document.getElementById('checkVendas')?.value;
+      const contagem = n(contagemRaw);
+      const vendas = tipo === 'Fechamento' ? n(vendasRaw) : 0;
+      const esperadoFinal = tipo === 'Fechamento' ? n(baseInfo.esperado) - vendas : n(baseInfo.esperado);
+      const faltante = esperadoFinal - contagem;
+      const preenchido = tipo === 'Fechamento' ? (contagemRaw !== '' || vendasRaw !== '') : (contagemRaw !== '');
+      return {tipo, data, categoria, baseInfo, esperadoBase:n(baseInfo.esperado), esperado:n(esperadoFinal), contagem, vendas, faltante, preenchido};
+    }
+    function atualizarFaltanteChecklist(){
+      const conf = calcularConferenciaChecklist();
+      const faltanteEl = document.getElementById('checkFaltante');
+      const statusEl = document.getElementById('checkStatusConferencia');
+      const esperadoEl = document.getElementById('checkEsperado');
+      const baseEl = document.getElementById('checkBaseDetalhe');
+      if(esperadoEl){
+        if(conf.tipo === 'Fechamento') esperadoEl.value = `${conf.esperado} un. — esperado após descontar vendas`;
+        else esperadoEl.value = `${conf.esperado} un. — ${conf.baseInfo.base}`;
+      }
+      if(baseEl){
+        if(conf.tipo === 'Fechamento'){
+          const cls = conf.baseInfo.temAbertura ? 'neutral' : 'bad';
+          baseEl.className = `conference-note ${cls}`;
+          baseEl.textContent = conf.baseInfo.temAbertura
+            ? `Base do fechamento: ${conf.baseInfo.base}. Fórmula atual: (${conf.esperadoBase} - vendas ${conf.vendas}) = ${conf.esperado} item(ns) esperados no fechamento.`
+            : conf.baseInfo.base;
+        }else{
+          baseEl.className = 'conference-note neutral';
+          baseEl.textContent = `Base da abertura: ${conf.baseInfo.base}. Fórmula: estoque esperado do inventário - contagem da abertura.`;
+        }
+      }
+      if(!faltanteEl) return;
+      faltanteEl.classList.remove('result-ok','result-bad','result-neutral');
+      if(conf.tipo === 'Fechamento' && !conf.baseInfo.temAbertura){
+        faltanteEl.value = 'Sem abertura';
+        faltanteEl.classList.add('result-bad');
+        if(statusEl){ statusEl.className = 'conference-note bad'; statusEl.textContent = 'Não é possível validar o fechamento sem uma abertura registrada para a mesma data e categoria.'; }
+        return;
+      }
+      if(!conf.preenchido){
+        faltanteEl.value = '';
+        faltanteEl.classList.add('result-neutral');
+        if(statusEl){ statusEl.className = 'conference-note neutral'; statusEl.textContent = conf.tipo === 'Fechamento' ? 'Informe a contagem de fechamento e as vendas para calcular o faltante.' : 'Informe a contagem da abertura para calcular a divergência.'; }
+        return;
+      }
+      if(conf.faltante > 0){
+        faltanteEl.value = `${conf.faltante} faltando`;
+        faltanteEl.classList.add('result-bad');
+        if(statusEl){ statusEl.className = 'conference-note bad'; statusEl.textContent = conf.tipo === 'Fechamento' ? `Atenção: faltam ${conf.faltante} item(ns) no fechamento. Confira vendas, abertura e contagem final.` : `Atenção: faltam ${conf.faltante} item(ns) já na abertura. Isso indica divergência antes do dia começar.`; }
+      }else if(conf.faltante < 0){
+        faltanteEl.value = `Sobra de ${Math.abs(conf.faltante)}`;
+        faltanteEl.classList.add('result-ok');
+        if(statusEl){ statusEl.className = 'conference-note ok'; statusEl.textContent = `Sem falta. Existe sobra de ${Math.abs(conf.faltante)} item(ns) em relação ao esperado.`; }
+      }else{
+        faltanteEl.value = 'OK — sem falta';
+        faltanteEl.classList.add('result-ok');
+        if(statusEl){ statusEl.className = 'conference-note ok'; statusEl.textContent = conf.tipo === 'Fechamento' ? 'Fechamento correto: abertura + recebimentos - DRM - vendas bate com a contagem final.' : 'Abertura correta: inventário bate com a contagem inicial.'; }
+      }
+    }
+    function toggleFiscalOutro(){
+      const sel = document.getElementById('checkFiscal');
+      const wrap = document.getElementById('checkFiscalOutroWrap');
+      if(wrap) wrap.style.display = sel && sel.value === 'OUTROS' ? '' : 'none';
+    }
+    function reiniciarChecklistForm(){
+      const inicio = document.getElementById('checkHoraInicio');
+      const fim = document.getElementById('checkHoraFim');
+      checklistFinalizado = false;
+      if(inicio) inicio.value = horaCompletaBR();
+      if(fim) fim.value = horaCompletaBR();
+      iniciarChecklistTimer();
+      toast('Tempo do check list reiniciado ⏱️');
+    }
+    function limparChecklistForm(){
+      ['checkLider','checkFiscalOutro','checkObs','checkContagem','checkVendas','checkFaltante'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+      const tipo = document.getElementById('checkTipo'); if(tipo) tipo.value = 'Abertura';
+      const fiscal = document.getElementById('checkFiscal'); if(fiscal) fiscal.value = 'RICHARD BAPTISTE';
+      const data = document.getElementById('checkData'); if(data) data.value = hojeISO();
+      reiniciarChecklistForm();
+      renderChecklistForm();
+    }
+    function salvarChecklist(){
+      const categoria = document.getElementById('checkCategoria').value;
+      const tipo = document.getElementById('checkTipo').value;
+      const data = document.getElementById('checkData').value || hojeISO();
+      const conferencia = calcularConferenciaChecklist();
+      const horaInicio = document.getElementById('checkHoraInicio').value || horaCompletaBR();
+      const horaFim = horaCompletaBR();
+      const lider = document.getElementById('checkLider').value.trim();
+      const fiscalBase = document.getElementById('checkFiscal').value;
+      const fiscalOutro = document.getElementById('checkFiscalOutro').value.trim();
+      const fiscal = fiscalBase === 'OUTROS' ? (fiscalOutro || 'OUTROS') : fiscalBase;
+      const obs = document.getElementById('checkObs').value.trim();
+      if(!categoria){ toast('Selecione a categoria do check list.'); return; }
+      if(document.getElementById('checkContagem').value === ''){ toast(tipo === 'Fechamento' ? 'Informe a contagem de fechamento.' : 'Informe a contagem da abertura.'); return; }
+      if(tipo === 'Fechamento' && !conferencia.baseInfo.temAbertura){ toast('Registre a abertura desta data/categoria antes de finalizar o fechamento.'); return; }
+      if(tipo === 'Fechamento' && document.getElementById('checkVendas').value === ''){ toast('Informe as vendas. Use 0 se não vendeu nada.'); return; }
+      if(!lider){ toast('Informe o líder responsável.'); return; }
+      if(fiscalBase === 'OUTROS' && !fiscalOutro){ toast('Informe o nome do fiscal em OUTROS.'); return; }
+      const statusConferencia = conferencia.faltante > 0 ? 'FALTANDO' : (conferencia.faltante < 0 ? 'SOBRA' : 'OK');
+      const item = {id:idMovimento('CHK'), data, createdAt:new Date().toISOString(), tipo, categoria, estoqueBase:conferencia.esperadoBase, esperado:conferencia.esperado, baseEsperado:conferencia.baseInfo.base, aberturaUsada:conferencia.baseInfo.temAbertura ? n(conferencia.baseInfo.abertura) : '', recebimentosDia:n(conferencia.baseInfo.recebidos), drmDia:n(conferencia.baseInfo.drm), contagem:conferencia.contagem, vendas:conferencia.vendas, faltante:conferencia.faltante, statusConferencia, horaInicio, horaFim, lider, fiscal, obs, lastUser:'', lastCargo:'', lastUpdated:''};
+      checklistFinalizado = true;
+      if(checklistTimer) clearInterval(checklistTimer);
+      marcarAuditoria(item);
+      state.checklists.unshift(item);
+      document.getElementById('checkHoraFim').value = horaFim;
+      salvarEstado();
+      toast(conferencia.faltante > 0 ? 'Check List salvo com faltante ⚠️' : 'Check List finalizado sem falta ✅');
+    }
+    function checklistStatusPill(item){
+      if(item.contagem === undefined && item.vendas === undefined && item.faltante === undefined) return '<span class="status-pill neutral">Sem conferência</span>';
+      const faltante = n(item.faltante !== undefined ? item.faltante : n(item.esperado) - n(item.contagem) - n(item.vendas));
+      if(faltante > 0) return `<span class="status-pill bad">Faltam ${faltante}</span>`;
+      if(faltante < 0) return `<span class="status-pill ok">Sobra ${Math.abs(faltante)}</span>`;
+      return '<span class="status-pill ok">OK</span>';
+    }
+    function checklistFaltanteLabel(item){
+      if(item.contagem === undefined && item.vendas === undefined && item.faltante === undefined) return '—';
+      const faltante = n(item.faltante !== undefined ? item.faltante : n(item.esperado) - n(item.contagem) - n(item.vendas));
+      if(faltante > 0) return `${faltante} faltando`;
+      if(faltante < 0) return `Sobra de ${Math.abs(faltante)}`;
+      return '0';
+    }
+    function renderChecklist(){
+      const table = document.getElementById('checklistTable'); if(!table) return;
+      const filtroCat = document.getElementById('filtroCheckCategoria')?.value || 'todos';
+      const filtroTipo = document.getElementById('filtroCheckTipo')?.value || 'todos';
+      const lista = state.checklists.filter(item=> (filtroCat==='todos' || item.categoria===filtroCat) && (filtroTipo==='todos' || item.tipo===filtroTipo));
+      let html = `<thead><tr><th colspan="18">✅ Histórico de Check List</th></tr><tr class="subhead"><th>Data</th><th>Tipo</th><th>Categoria</th><th>Estoque base</th><th>Receb.</th><th>DRM</th><th>Vendas</th><th>Esperado final</th><th>Contagem</th><th>Faltante</th><th>Status</th><th>Base usada</th><th>Início</th><th>Término</th><th>Líder</th><th>Fiscal</th><th>Observação</th><th>Última edição</th></tr></thead><tbody>`;
+      if(!lista.length){
+        html += `<tr><td colspan="18" class="empty">Nenhum check list registrado ainda.</td></tr>`;
+      }else{
+        lista.forEach(item=>{
+          const estoqueBase = item.estoqueBase !== undefined ? n(item.estoqueBase) : n(item.esperado);
+          html += `<tr><td>${escapeHtml(item.data || '—')}</td><td><span class="status-pill ok">${escapeHtml(item.tipo || '—')}</span></td><td><strong>${categoriaLabel(item.categoria)}</strong></td><td>${estoqueBase}</td><td>${n(item.recebimentosDia)}</td><td>${n(item.drmDia)}</td><td>${item.vendas === undefined ? '—' : n(item.vendas)}</td><td>${n(item.esperado)}</td><td>${item.contagem === undefined ? '—' : n(item.contagem)}</td><td>${escapeHtml(checklistFaltanteLabel(item))}</td><td>${checklistStatusPill(item)}</td><td>${escapeHtml(item.baseEsperado || '—')}</td><td>${escapeHtml(item.horaInicio || '—')}</td><td>${escapeHtml(item.horaFim || '—')}</td><td>${escapeHtml(item.lider || '—')}</td><td>${escapeHtml(item.fiscal || '—')}</td><td>${escapeHtml(item.obs || '—')}</td><td>${auditLabel(item)}</td></tr>`;
+        });
+      }
+      html += `</tbody>`;
+      table.innerHTML = html;
+    }
+
+    function exportarRecebimentosCSV(){
+      const linhas = [['Tipo','Data','Categoria','Quantidade Recebida','Qtd DRM/Problema','Situacao','Documento','DRM','Responsavel','Acontecimento','Usuario','Cargo','Atualizado']];
+      state.recebimentos.forEach(item=>linhas.push([item.tipo || (n(item.qtdDrm)>0 && !n(item.qtd) ? 'DRM' : 'Recebimento'), item.data,nomeCategoria(item.categoria),item.qtd,item.qtdDrm,item.status,item.doc,item.drm,item.responsavel,item.obs,item.lastUser,item.lastCargo,item.lastUpdated]));
+      downloadText(linhas.map(row=>row.map(csvCell).join(';')).join('\n'), `recebimentos-drm-${dataArquivo()}.csv`, 'text/csv;charset=utf-8');
+      toast('Recebimentos e DRM exportados 📄');
+    }
+
+    function exportarInventarioCSV(){
+      const linhas = [['Data','Categoria','Area de Vendas','Deposito','Total de Itens','Referencia','Responsavel','Observacao','Usuario','Cargo','Atualizado']];
+      state.inventarios.forEach(item=>{
+        const area = n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+        const deposito = n(item.deposito !== undefined ? item.deposito : item.bons);
+        const total = totalInventarioItem(item);
+        linhas.push([item.data,nomeCategoria(item.categoria),area,deposito,total,item.referencia,item.responsavel,item.obs,item.lastUser,item.lastCargo,item.lastUpdated]);
+      });
+      downloadText(linhas.map(row=>row.map(csvCell).join(';')).join('\n'), `inventario-${dataArquivo()}.csv`, 'text/csv;charset=utf-8');
+      toast('Inventário exportado 📄');
+    }
+    function exportarChecklistCSV(){
+      const linhas = [['Data','Tipo','Categoria','Estoque Base','Recebimentos Dia','DRM Dia','Vendas','Esperado Final','Contagem','Faltante','Status Conferencia','Base Usada','Hora Inicio','Hora Termino','Lider','Fiscal','Observacao','Usuario','Cargo','Atualizado']];
+      state.checklists.forEach(item=>linhas.push([item.data,item.tipo,nomeCategoria(item.categoria),item.estoqueBase ?? item.esperado ?? '',item.recebimentosDia ?? '',item.drmDia ?? '',item.vendas ?? '',item.esperado ?? '',item.contagem ?? '',item.faltante ?? '',item.statusConferencia || '',item.baseEsperado,item.horaInicio,item.horaFim,item.lider,item.fiscal,item.obs,item.lastUser,item.lastCargo,item.lastUpdated]));
+      downloadText(linhas.map(row=>row.map(csvCell).join(';')).join('\n'), `checklist-${dataArquivo()}.csv`, 'text/csv;charset=utf-8');
+      toast('Check List exportado 📄');
+    }
+
+
+
+    function renderCategoryFilterSelect(){
+      const el = document.getElementById('filtroCategoriaControle');
+      if(!el) return;
+      const old = el.value || state.activeCategory;
+      const principais = categoriasPrincipais();
+      const lista = principais.length ? principais : state.categorias;
+      el.innerHTML = lista.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      el.value = lista.some(c=>c.id===old) ? old : (state.activeCategory || lista[0]?.id || '');
+    }
+
+    function dataISOFromDia(dia){
+      const agora = new Date();
+      const d = new Date(agora.getFullYear(), agora.getMonth(), dia);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function inventarioDoDiaCategoria(categoria, data){
+      const lista = state.inventarios
+        .filter(item=>item.categoria===categoria && item.data===data)
+        .sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      return lista[0] || null;
+    }
+
+    function checklistDoDiaCategoria(categoria, data, tipo){
+      const lista = state.checklists
+        .filter(item=>item.categoria===categoria && item.data===data && item.tipo===tipo)
+        .sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+      return lista[0] || null;
+    }
+
+    function ultimoChecklistCategoria(categoria, tipo){
+      const lista = state.checklists
+        .filter(item=>item.categoria===categoria && item.tipo===tipo)
+        .sort((a,b)=> String(b.createdAt || b.data || '').localeCompare(String(a.createdAt || a.data || '')));
+      return lista[0] || null;
+    }
+
+    function resumoControleCategoria(catId){
+      const lista = state.inventarios
+        .filter(item=>item.categoria===catId)
+        .sort((a,b)=> String(b.createdAt || b.data || '').localeCompare(String(a.createdAt || a.data || '')));
+      const ultimoInv = lista[0] || null;
+      const totais = lista.reduce((acc,item)=>{
+        acc.area += n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+        acc.deposito += n(item.deposito !== undefined ? item.deposito : item.bons);
+        acc.total += totalInventarioItem(item);
+        return acc;
+      }, {area:0, deposito:0, total:0});
+      return {lista, ultimoInv, totais, qtd:lista.length};
+    }
+
+    function renderCategoriaResumo(){
+      const wrap = document.getElementById('categoriaResumoCards');
+      const ajuda = document.getElementById('categoriaAjudaResumo');
+      if(!wrap) return;
+      const cat = state.categorias.find(c=>c.id===state.activeCategory) || state.categorias[0];
+      if(!cat){ wrap.innerHTML = ''; return; }
+      const info = resumoControleCategoria(cat.id);
+      const inv = info.ultimoInv;
+      const area = inv ? n(inv.areaVendas !== undefined ? inv.areaVendas : inv.fisico) : 0;
+      const deposito = inv ? n(inv.deposito !== undefined ? inv.deposito : inv.bons) : 0;
+      const totalInv = inv ? totalInventarioItem(inv) : 0;
+      wrap.innerHTML = `
+        <div class="mini"><span>Categoria</span><b>${cat.icone} ${escapeHtml(cat.nome)}</b><small>Consulta de inventário</small></div>
+        <div class="mini"><span>Último inventário</span><b>${totalInv}</b><small>${inv ? escapeHtml(inv.data || 'Sem data') : 'Sem inventário lançado'}</small></div>
+        <div class="mini"><span>Área de vendas</span><b>${area}</b><small>Última contagem registrada</small></div>
+        <div class="mini"><span>Depósito</span><b>${deposito}</b><small>Última contagem registrada</small></div>
+        <div class="mini"><span>Total de registros</span><b>${info.qtd}</b><small>Inventários dessa categoria</small></div>
+        <div class="mini"><span>Responsável</span><b>${inv ? escapeHtml(inv.responsavel || '—') : '—'}</b><small>Último inventário</small></div>
+        <div class="mini"><span>Referência</span><b>${inv ? escapeHtml(inv.referencia || '—') : '—'}</b><small>Documento/código interno</small></div>
+      `;
+      if(ajuda){
+        ajuda.innerHTML = `<strong>Leitura da categoria:</strong> esta tela mostra apenas dados lançados na aba Inventário. Para alterar qualquer valor, volte na aba Inventário e registre uma nova contagem.`;
+      }
+    }
+
+    function renderCategoryTabs(){
+      const principais = categoriasPrincipais();
+      const lista = principais.length ? principais : state.categorias;
+      document.getElementById('categoryTabs').innerHTML = lista.map(c=>`<button class="tab ${c.id===state.activeCategory?'active':''}" onclick="setActiveCategory('${c.id}')">${c.icone} ${c.nome}</button>`).join('');
+      renderCategoryFilterSelect();
+    }
+    function setActiveCategory(id){
+      if(!state.categorias.some(c=>c.id===id)) return;
+      state.activeCategory = id;
+      salvarEstado(true);
+      renderCategoryTabs();
+      renderCategoriaResumo();
+      renderCategoryTable();
+      renderQuick();
+    }
+    function limparFiltros(){
+      const filtroDia = document.getElementById('filtroDia');
+      if(filtroDia) filtroDia.value='';
+      const filtroCat = document.getElementById('filtroCategoriaControle');
+      if(filtroCat) filtroCat.value = state.activeCategory;
+      renderCategoryTable();
+    }
+    const filtroDiaControle = document.getElementById('filtroDia');
+    if(filtroDiaControle) filtroDiaControle.addEventListener('input', renderCategoryTable);
+
+    function renderCategoryTable(){
+      const catId = state.activeCategory;
+      const cat = state.categorias.find(c=>c.id===catId) || state.categorias[0];
+      const filtroDia = n(document.getElementById('filtroDia')?.value || 0);
+      renderCategoriaResumo();
+      if(!cat){ document.getElementById('categoryTable').innerHTML = ''; return; }
+      const lista = state.inventarios
+        .filter(item=> item.categoria === catId)
+        .filter(item=>{
+          if(!filtroDia) return true;
+          const dia = item.data ? Number(String(item.data).split('-')[2]) : 0;
+          return dia === filtroDia;
+        })
+        .sort((a,b)=> String(b.createdAt || b.data || '').localeCompare(String(a.createdAt || a.data || '')));
+
+      let html = `<thead><tr><th colspan="9">${cat.icone} ${cat.nome} — Consulta de Inventário</th></tr><tr class="subhead"><th>Data</th><th>Categoria</th><th>Área de vendas</th><th>Depósito</th><th>Total de itens</th><th>Referência</th><th>Responsável</th><th>Observação</th><th>Última edição</th></tr></thead><tbody>`;
+      if(!lista.length){
+        html += `<tr><td colspan="9" class="empty">Nenhum inventário registrado para esta categoria.</td></tr>`;
+      }else{
+        let totalArea = 0, totalDeposito = 0, totalItens = 0;
+        lista.forEach(item=>{
+          const area = n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+          const deposito = n(item.deposito !== undefined ? item.deposito : item.bons);
+          const total = totalInventarioItem(item);
+          totalArea += area;
+          totalDeposito += deposito;
+          totalItens += total;
+          html += `<tr>
+            <td>${escapeHtml(item.data || '—')}</td>
+            <td><strong>${categoriaLabel(item.categoria)}</strong></td>
+            <td class="calc">${area}</td>
+            <td class="calc">${deposito}</td>
+            <td class="calc"><strong>${total}</strong></td>
+            <td>${escapeHtml(item.referencia || '—')}</td>
+            <td>${escapeHtml(item.responsavel || '—')}</td>
+            <td style="text-align:left;min-width:260px">${escapeHtml(item.obs || '—')}</td>
+            <td>${auditLabel(item)}</td>
+          </tr>`;
+        });
+        html += `<tr class="total-row"><td>TOTAL DA CONSULTA</td><td></td><td>${totalArea}</td><td>${totalDeposito}</td><td>${totalItens}</td><td colspan="4"></td></tr>`;
+      }
+      html += `</tbody>`;
+      document.getElementById('categoryTable').innerHTML = html;
+      renderCategoryFilterSelect();
+    }
+
+    function updateManualVendas(catId,dia,value){
+      const r = getRecord(catId,dia);
+      r.vda_fc = n(value);
+      r.vda_ab = 0;
+      marcarAuditoria(r);
+      salvarEstado(true);
+      renderCategoryTable();
+      renderDashboard();
+      renderReport();
+    }
+
+    function updateManualDefeitos(catId,dia,value){
+      const r = getRecord(catId,dia);
+      r.def_fc = n(value);
+      r.def_ab = 0;
+      marcarAuditoria(r);
+      salvarEstado(true);
+      renderCategoryTable();
+      renderDashboard();
+      renderReport();
+    }
+
+    function selectFuncionario(value,onchange){
+      return `<select onchange="${onchange}"><option value="">Selecione</option>${state.funcionarios.map(f=>`<option value="${escapeHtml(f)}" ${f===value?'selected':''}>${escapeHtml(f)}</option>`).join('')}</select>`;
+    }
+
+    function updateCell(catId,dia,key,value){
+      const r = getRecord(catId,dia);
+      const numeric = ['recebido','vda_ab','dep_ab','def_ab','vda_fc','dep_fc','def_fc'];
+      r[key] = numeric.includes(key) ? n(value) : String(value||'').trim();
+      marcarAuditoria(r);
+      salvarEstado(true);
+      renderCategoryTable();
+      renderDashboard();
+      renderReport();
+      renderQuickPreview();
+    }
+
+    function getDiasNoMesAtual(){
+      const agora = new Date();
+      return new Date(agora.getFullYear(), agora.getMonth()+1, 0).getDate();
+    }
+
+    function dataISOAtualMesDia(dia){
+      const agora = new Date();
+      const y = agora.getFullYear();
+      const m = String(agora.getMonth()+1).padStart(2,'0');
+      const d = String(dia).padStart(2,'0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function dataBRFromISO(dataISO){
+      if(!dataISO) return '—';
+      const [y,m,d] = String(dataISO).split('-');
+      return (y && m && d) ? `${d}/${m}/${y}` : String(dataISO);
+    }
+
+    function categoriaRelatorioSelecionada(){
+      const sel = document.getElementById('relatorioCategoria');
+      const valor = sel?.value || state.activeCategory || state.categorias[0]?.id;
+      return state.categorias.find(c=>c.id===valor) || state.categorias[0];
+    }
+
+    function renderReportCategoryOptions(){
+      const sel = document.getElementById('relatorioCategoria');
+      if(!sel) return;
+      const old = sel.value || state.activeCategory;
+      sel.innerHTML = state.categorias.map(c=>`<option value="${c.id}">${c.icone} ${c.nome}</option>`).join('');
+      sel.value = state.categorias.some(c=>c.id===old) ? old : (state.activeCategory || state.categorias[0]?.id || '');
+    }
+
+    function inventariosDoDiaCategoria(categoria, data){
+      return state.inventarios
+        .filter(item=>item.categoria===categoria && item.data===data)
+        .sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    }
+
+    function checklistDoDiaCategoria(categoria, data, tipo){
+      return state.checklists
+        .filter(item=>item.categoria===categoria && item.data===data && (!tipo || item.tipo===tipo))
+        .sort((a,b)=> String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0] || null;
+    }
+
+    function recebimentosDoDiaCategoria(categoria, data){
+      return state.recebimentos.filter(item=>item.categoria===categoria && item.data===data && (item.tipo || 'Recebimento') === 'Recebimento');
+    }
+
+    function drmsDoDiaCategoria(categoria, data){
+      return state.recebimentos.filter(item=>item.categoria===categoria && item.data===data && ((item.tipo || '') === 'DRM' || n(item.qtdDrm) > 0));
+    }
+
+    function dadosRelatorioDia(categoria, dia){
+      const data = dataISOAtualMesDia(dia);
+      const recebimentos = recebimentosDoDiaCategoria(categoria, data);
+      const drms = drmsDoDiaCategoria(categoria, data);
+      const inventarios = inventariosDoDiaCategoria(categoria, data);
+      const inventario = inventarios[0] || null;
+      const abertura = checklistDoDiaCategoria(categoria, data, 'Abertura');
+      const fechamento = checklistDoDiaCategoria(categoria, data, 'Fechamento');
+      const r = getRecord(categoria, dia);
+      const recebido = recebimentos.reduce((sum,item)=>sum+n(item.qtd),0) || n(r.recebido);
+      const drm = drms.reduce((sum,item)=>sum+n(item.qtdDrm),0);
+      const area = inventario ? n(inventario.areaVendas !== undefined ? inventario.areaVendas : inventario.fisico) : 0;
+      const deposito = inventario ? n(inventario.deposito !== undefined ? inventario.deposito : inventario.bons) : 0;
+      const totalInv = inventario ? totalInventarioItem(inventario) : 0;
+      const vendasChecklist = fechamento ? n(fechamento.vendas) : 0;
+      const vendasControle = n(r.vda_ab)+n(r.vda_fc);
+      const vendas = vendasChecklist || vendasControle;
+      const faltante = fechamento ? n(fechamento.faltante) : 0;
+      const temMovimento = !!(recebido || drm || inventario || abertura || fechamento || vendas || faltante || r.obs);
+      let status = '<span class="status-pill neutral">Sem movimento</span>';
+      if(faltante > 0) status = '<span class="status-pill bad">Falta</span>';
+      else if(fechamento && faltante === 0) status = '<span class="status-pill ok">Fechou OK</span>';
+      else if(abertura) status = '<span class="status-pill neutral">Abertura lançada</span>';
+      else if(inventario) status = '<span class="status-pill ok">Inventário</span>';
+      else if(recebido || drm || vendas) status = '<span class="status-pill warn">Movimento</span>';
+      const obs = [
+        ...(recebimentos.map(item=>item.obs).filter(Boolean)),
+        ...(drms.map(item=>item.obs).filter(Boolean)),
+        inventario?.obs,
+        abertura?.obs,
+        fechamento?.obs,
+        r.obs
+      ].filter(Boolean).join(' | ');
+      return {dia,data,recebido,drm,area,deposito,totalInv,abertura,fechamento,vendas,faltante,status,obs,temMovimento,inventario};
+    }
+
+    function dadosRelatorioCategoria(){
+      const cat = categoriaRelatorioSelecionada();
+      const dias = getDiasNoMesAtual();
+      const rows = [];
+      for(let dia=1; dia<=dias; dia++) rows.push(dadosRelatorioDia(cat.id,dia));
+      return {cat,dias,rows};
+    }
+
+    function renderReport(){
+      renderReportCategoryOptions();
+      const {cat,dias,rows:allRows} = dadosRelatorioCategoria();
+      const rows = allRows;
+      const totalRecebido = allRows.reduce((s,r)=>s+r.recebido,0);
+      const totalDrm = allRows.reduce((s,r)=>s+r.drm,0);
+      const totalVendas = allRows.reduce((s,r)=>s+r.vendas,0);
+      const totalFaltante = allRows.reduce((s,r)=>s+r.faltante,0);
+      const ultimoInv = ultimoInventarioCategoria(cat.id);
+      const ultimoInvTotal = ultimoInv ? totalInventarioItem(ultimoInv) : 0;
+      const saldoEstimado = ultimoInvTotal + totalRecebido - totalDrm - totalVendas - totalFaltante;
+
+      document.getElementById('rCategoria').textContent = cat ? cat.nome : '—';
+      document.getElementById('rDiasMes').textContent = dias;
+      document.getElementById('rRecebidos').textContent = totalRecebido;
+      document.getElementById('rDrm').textContent = totalDrm;
+      document.getElementById('rVendas').textContent = totalVendas;
+      document.getElementById('rFaltantes').textContent = totalFaltante;
+      document.getElementById('rUltimoInventario').textContent = ultimoInvTotal;
+      document.getElementById('rSaldo').textContent = saldoEstimado;
+      document.getElementById('reportPrintHeader').innerHTML = `<h2>Relatório Mensal — ${escapeHtml(cat?.nome || 'Categoria')}</h2><p>Loja ${escapeHtml(state.meta.loja || '—')} • Mês ${escapeHtml(state.meta.mes || '—')} • Gerente ${escapeHtml(state.meta.gerente || '—')}<br>Período: ${dataBRFromISO(dataISOAtualMesDia(1))} até ${dataBRFromISO(dataISOAtualMesDia(dias))} • Emitido em ${new Date().toLocaleString('pt-BR')}</p>`;
+
+      let html = `<thead>
+        <tr><th colspan="15">${escapeHtml(cat?.icone || '')} ${escapeHtml(cat?.nome || 'Categoria')} — Relatório do mês completo</th></tr>
+        <tr class="subhead"><th>Dia</th><th>Data</th><th>Categoria</th><th>Recebimento</th><th>DRM</th><th>Área de vendas</th><th>Depósito</th><th>Total inventário</th><th>Abertura</th><th>Fechamento</th><th>Vendas</th><th>Faltante</th><th>Status</th><th>Observações</th><th>Última atualização</th></tr>
+      </thead><tbody>`;
+      if(!rows.length){
+        html += `<tr><td colspan="15" class="empty">Nenhum movimento encontrado para o filtro selecionado.</td></tr>`;
+      }else{
+        rows.forEach(r=>{
+          const invAudit = r.inventario ? auditLabel(r.inventario) : '';
+          const checkAudit = r.fechamento ? auditLabel(r.fechamento) : (r.abertura ? auditLabel(r.abertura) : '');
+          const audit = checkAudit || invAudit || '<span class="audit-note">—</span>';
+          html += `<tr class="${r.temMovimento ? '' : 'report-day-empty'}">
+            <td class="day-cell">${r.dia}</td>
+            <td>${dataBRFromISO(r.data)}</td>
+            <td><strong>${escapeHtml(cat?.nome || '')}</strong></td>
+            <td class="${r.recebido ? 'report-strong' : 'report-zero'}">${r.recebido}</td>
+            <td class="${r.drm ? 'report-strong' : 'report-zero'}">${r.drm}</td>
+            <td class="${r.area ? 'report-strong' : 'report-zero'}">${r.area}</td>
+            <td class="${r.deposito ? 'report-strong' : 'report-zero'}">${r.deposito}</td>
+            <td class="${r.totalInv ? 'report-strong' : 'report-zero'}">${r.totalInv}</td>
+            <td>${r.abertura ? n(r.abertura.contagem) : '<span class="report-zero">0</span>'}</td>
+            <td>${r.fechamento ? n(r.fechamento.contagem) : '<span class="report-zero">0</span>'}</td>
+            <td class="${r.vendas ? 'report-strong' : 'report-zero'}">${r.vendas}</td>
+            <td class="${r.faltante ? 'report-strong bad' : 'report-zero'}">${r.faltante}</td>
+            <td>${r.status}</td>
+            <td style="text-align:left;min-width:260px">${escapeHtml(r.obs || '—')}</td>
+            <td>${audit}</td>
+          </tr>`;
+        });
+        html += `<tr class="total-row"><td colspan="3">TOTAL DO PERÍODO</td><td>${totalRecebido}</td><td>${totalDrm}</td><td colspan="3">Último inventário: ${ultimoInvTotal}</td><td colspan="2"></td><td>${totalVendas}</td><td>${totalFaltante}</td><td colspan="3">Saldo estimado: ${saldoEstimado}</td></tr>`;
+      }
+      html += `</tbody>`;
+      document.getElementById('reportTable').innerHTML = html;
+    }
+
+    function renderEmployeeTable(){
+      const map = {};
+      state.funcionarios.forEach(f=>map[f]={vendas:0,defeitos:0,lancamentos:0});
+      state.categorias.forEach(cat=>{
+        for(let dia=1;dia<=31;dia++){
+          const r = getRecord(cat.id,dia);
+          if(r.resp_ab){ map[r.resp_ab] = map[r.resp_ab] || {vendas:0,defeitos:0,lancamentos:0}; map[r.resp_ab].vendas += n(r.vda_ab); map[r.resp_ab].defeitos += n(r.def_ab); map[r.resp_ab].lancamentos += (n(r.vda_ab)||n(r.def_ab)||n(r.dep_ab))?1:0; }
+          if(r.resp_fc){ map[r.resp_fc] = map[r.resp_fc] || {vendas:0,defeitos:0,lancamentos:0}; map[r.resp_fc].vendas += n(r.vda_fc); map[r.resp_fc].defeitos += n(r.def_fc); map[r.resp_fc].lancamentos += (n(r.vda_fc)||n(r.def_fc)||n(r.dep_fc))?1:0; }
+        }
+      });
+      let rows = `<thead><tr><th>Responsável</th><th>Vendas Registradas</th><th>Defeitos Registrados</th><th>Lançamentos</th></tr></thead><tbody>`;
+      Object.entries(map).sort((a,b)=>b[1].vendas-a[1].vendas).forEach(([nome,d])=>{
+        rows += `<tr><td><strong>${escapeHtml(nome)}</strong></td><td>${d.vendas}</td><td>${d.defeitos}</td><td>${d.lancamentos}</td></tr>`;
+      });
+      rows += `</tbody>`;
+      document.getElementById('employeeTable').innerHTML = rows;
+    }
+
+    function renderConfig(){
+      const el=document.getElementById('configContent');
+      if(!el) return;
+      if(!usuarioPodeConfig()){
+        el.innerHTML='<div class="config-locked">Configurações não liberadas para este usuário.</div>';
+        return;
+      }
+
+      if(!usuarioDesenvolvedor()){
+        const p=permissoesUsuario(currentUser.nome);
+        el.innerHTML=`
+          <div class="section-title"><div><h2>⚙️ Configurações</h2><p>Informações e recursos autorizados para sua sessão.</p></div></div>
+          <div class="card">
+            <div class="section-title" style="margin-top:0"><div><h2>${escapeHtml(currentUser.nome)}</h2><p>${escapeHtml(currentUser.cargo||'USUÁRIO AUTORIZADO')}</p></div></div>
+            <div class="permission-grid">
+              ${MODULOS.filter(([id])=>p[id]).map(([,nome])=>`<div class="permission-item">✅ ${nome}</div>`).join('')}
+              ${p.alterarSenha?'<div class="permission-item">✅ 🔑 Alterar a própria senha</div>':''}
+            </div>
+            ${p.alterarSenha?`<div class="config-actions" style="margin-top:16px"><button class="btn" onclick="abrirAlteracaoSenha('${normalizarLogin(currentUser.nome)}')">🔑 Alterar minha senha</button></div>`:'<p style="margin-top:16px;color:var(--muted);font-weight:750">A alteração de senha não foi liberada pelo administrador.</p>'}
+          </div>`;
+        return;
+      }
+
+      aplicarMetadadosPadrao(state);
+      const usuariosRows=state.usuariosLogin.map(u=>{
+        const chave=normalizarLogin(u.nome),dev=chave===normalizarLogin('JOAO PEDRO');
+        const liberadas=Object.entries(permissoesUsuario(u.nome)).filter(([id,v])=>v&&id!=='alterarSenha').length;
+        return `<tr>
+          <td><div class="config-user-name"><strong>${escapeHtml(u.nome)}</strong>${dev?'<span class="developer-badge">&lt;/&gt; DESENVOLVEDOR</span>':''}</div></td>
+          <td>${escapeHtml(u.cargo||'—')}</td>
+          <td><span class="config-password">••••••••</span></td>
+          <td>${dev?'Acesso integral':`${liberadas} módulos`}</td>
+          <td class="no-print"><div class="config-actions">
+            <button class="btn secondary" onclick="editarPermissoesUsuario('${chave}')" ${dev?'disabled':''}>⚙️ Permissões</button>
+            <button class="btn secondary" onclick="abrirAlteracaoSenha('${chave}')">🔑 Senha</button>
+            <button class="btn danger" onclick="removerUsuarioLogin('${chave}')" ${dev?'disabled':''}>Remover</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+      const categoriasHtml=state.categorias.map(c=>{
+        const qtdRec=state.recebimentos.filter(x=>x.categoria===c.id).length;
+        const qtdInv=state.inventarios.filter(x=>x.categoria===c.id).length;
+        const qtdCheck=state.checklists.filter(x=>x.categoria===c.id).length;
+        return `<div class="category-row"><div><h3>${escapeHtml(c.icone)} ${escapeHtml(c.nome)}</h3><p>ID: ${escapeHtml(c.id)} • ${qtdRec} recebimentos/DRM • ${qtdInv} inventários • ${qtdCheck} check lists</p></div><button class="btn danger" onclick="removerCategoria('${escapeHtml(c.id)}')" ${state.categorias.length<=1?'disabled':''}>Remover</button></div>`;
+      }).join('');
+
+      el.innerHTML=`
+        <div class="developer-panel card">
+          <div class="section-title" style="margin:0"><div><h2>&lt;/&gt; DESENVOLVEDOR</h2><p>JOÃO PEDRO • Acesso integral permanente ao sistema de estoque.</p></div><span class="developer-badge">NÍVEL MÁXIMO</span></div>
+        </div>
+
+        <div class="card" style="border:2px solid var(--amarelo-2)">
+          <div class="section-title" style="margin-top:0"><div><h2>🔐 Controle de login</h2><p>Adicione ou remova usuários autorizados. Depois configure individualmente as permissões de cada acesso.</p></div></div>
+          <div class="form-row three">
+            <div class="field"><label>Nome do usuário</label><input id="novoLoginNome" placeholder="Ex.: MARIA SILVA"></div>
+            <div class="field"><label>Cargo</label><input id="novoLoginCargo" placeholder="Ex.: FISCAL"></div>
+            <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" minlength="4" placeholder="Mínimo de 4 caracteres"></div>
+          </div>
+          <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Liberar novo login</button></div>
+          <div class="table-wrap" style="margin-top:16px"><table style="min-width:900px"><thead><tr><th>Usuário</th><th>Cargo</th><th>Senha</th><th>Acesso</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
+        </div>
+
+        <div class="category-config-grid">
+          <div class="card">
+            <div class="section-title" style="margin-top:0"><div><h2>📦 Controle de categorias</h2><p>Adicione ou remova categorias usadas no recebimento, inventário, check list e relatórios.</p></div></div>
+            <div class="form-row two">
+              <div class="field"><label>Nome da categoria</label><input id="novaCategoria" placeholder="Ex.: Mala, Relógio ou Capacete"></div>
+              <div class="field"><label>Ícone</label><input id="novoIcone" placeholder="Ex.: 🧳"></div>
+            </div>
+            <button class="btn" style="margin-top:14px" onclick="adicionarCategoria()">➕ Adicionar categoria</button>
+            <div class="category-list" style="margin-top:16px">${categoriasHtml}</div>
+          </div>
+
+          <div class="config-stack">
+            <div class="card">
+              <div class="section-title" style="margin-top:0"><div><h2>⚙️ Dados do mês</h2><p>Informações exibidas no topo e nos relatórios.</p></div></div>
+              <div class="form-row two"><div class="field"><label>Nº da loja</label><input id="cfgLoja" value="${escapeHtml(state.meta.loja||'')}"></div><div class="field"><label>Mês/Ano</label><input id="cfgMes" value="${escapeHtml(state.meta.mes||'')}" readonly></div></div>
+              <div class="form-row two" style="margin-top:12px"><div class="field"><label>Gerente</label><input id="cfgGerente" value="${escapeHtml(state.meta.gerente||'')}"></div><div class="field"><label>Meta mensal</label><input id="cfgMeta" type="number" min="0" value="${escapeHtml(state.meta.metaVendas||'')}"></div></div>
+              <button class="btn" style="margin-top:14px" onclick="salvarConfig()">💾 Salvar dados</button>
+            </div>
+            <div class="card">
+              <div class="section-title" style="margin-top:0"><div><h2>🛡️ Segurança dos dados</h2><p>Faça backup antes de remover informações ou limpar o mês.</p></div></div>
+              <div class="config-actions"><button class="btn secondary" onclick="exportarBackup()">⬇️ Baixar backup</button><button class="btn danger" onclick="limparMes()">🗑️ Limpar mês</button></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function salvarConfig(){
+      if(!usuarioDesenvolvedor()){ toast('Apenas JOAO PEDRO pode alterar os dados gerais.'); return; }
+      state.meta.loja = document.getElementById('cfgLoja').value.trim();
+      state.meta.mes = mesAtualBR();
+      state.meta.gerente = document.getElementById('cfgGerente').value.trim();
+      state.meta.metaVendas = document.getElementById('cfgMeta').value.trim();
+      salvarEstado();
+    }
+
+    function adicionarUsuarioLogin(){
+      if(!usuarioDesenvolvedor()){ toast('Controle de login exclusivo para JOAO PEDRO.'); return; }
+      const nome=String(document.getElementById('novoLoginNome')?.value||'').trim().toUpperCase();
+      const cargo=String(document.getElementById('novoLoginCargo')?.value||'USUÁRIO').trim().toUpperCase();
+      const senha=String(document.getElementById('novoLoginSenha')?.value||'').trim();
+      if(!nome){toast('Informe o nome do usuário.');return;}
+      if(senha.length<4){toast('A senha inicial deve ter pelo menos 4 caracteres.');return;}
+      const chave=normalizarLogin(nome);
+      if(state.usuariosLogin.some(u=>normalizarLogin(u.nome)===chave)){toast('Este usuário já possui login.');return;}
+      state.usuariosLogin.push({nome,cargo,senha});
+      state.permissoes[chave]=permissoesPadrao(nome);
+      if(!state.funcionarios.some(f=>normalizarLogin(f)===chave)) state.funcionarios.push(nome);
+      salvarEstado();
+      setTimeout(()=>editarPermissoesUsuario(chave),50);
+    }
+
+    function removerUsuarioLogin(chave){
+      if(!usuarioDesenvolvedor()){toast('Controle de login exclusivo para JOAO PEDRO.');return;}
+      chave=normalizarLogin(chave);
+      if(chave===normalizarLogin('JOAO PEDRO')){toast('O acesso do desenvolvedor não pode ser removido.');return;}
+      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave);
+      if(!u)return;
+      if(confirm(`Remover o acesso de ${u.nome}? Os registros já lançados continuarão salvos.`)){
+        state.usuariosLogin=state.usuariosLogin.filter(x=>normalizarLogin(x.nome)!==chave);
+        state.funcionarios=state.usuariosLogin.map(x=>x.nome);
+        delete state.permissoes[chave];
+        salvarEstado();
+      }
+    }
+
+    function editarPermissoesUsuario(chave){
+      if(!usuarioDesenvolvedor()){toast('Controle de permissões exclusivo para JOAO PEDRO.');return;}
+      chave=normalizarLogin(chave);
+      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
+      const dev=chave===normalizarLogin('JOAO PEDRO'),p=permissoesUsuario(u.nome);
+      document.getElementById('configModalContent').innerHTML=`
+        <div class="modal-head"><div><h2 id="configModalTitle">Permissões de ${escapeHtml(u.nome)}</h2><p>Determine quais abas e recursos aparecerão para este usuário.</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
+        ${dev?'<div class="developer-panel card"><h2>&lt;/&gt; DESENVOLVEDOR</h2><p>Acesso integral permanente. Estas permissões não podem ser removidas.</p></div>':''}
+        <div class="permission-grid">
+          ${MODULOS.map(([id,nome])=>`<label class="permission-item"><input type="checkbox" data-perm="${id}" ${p[id]?'checked':''} ${dev?'disabled':''}>${nome}</label>`).join('')}
+          <label class="permission-item"><input type="checkbox" data-perm="alterarSenha" ${p.alterarSenha?'checked':''} ${dev?'disabled':''}>🔑 Alterar a própria senha</label>
+        </div>
+        <p style="color:var(--muted);font-weight:750;margin:12px 0 0">Ao liberar a alteração de senha, a aba Configurações será habilitada automaticamente.</p>
+        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarPermissoesUsuario('${chave}')" ${dev?'disabled':''}>💾 Salvar permissões</button><button class="btn secondary" onclick="fecharModalConfig()">Fechar</button></div>`;
+      document.getElementById('configModal').classList.add('active');
+    }
+
+    function salvarPermissoesUsuario(chave){
+      if(!usuarioDesenvolvedor())return;
+      chave=normalizarLogin(chave);
+      if(chave===normalizarLogin('JOAO PEDRO'))return;
+      const perms={};
+      document.querySelectorAll('#configModalContent [data-perm]').forEach(input=>perms[input.dataset.perm]=input.checked);
+      if(perms.alterarSenha) perms.config=true;
+      if(!Object.values(perms).some(Boolean)) perms.dashboard=true;
+      state.permissoes[chave]={...permissoesPadrao(chave),...perms};
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      fecharModalConfig();
+      atualizarTudo();
+      toast('Permissões atualizadas ✅');
+    }
+
+    function abrirAlteracaoSenha(chave){
+      chave=normalizarLogin(chave);
+      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
+      const autorizado=usuarioDesenvolvedor() || (normalizarLogin(currentUser?.nome)===chave && permissoesUsuario(currentUser.nome).alterarSenha);
+      if(!autorizado){toast('Alteração de senha não autorizada.');return;}
+      document.getElementById('configModalContent').innerHTML=`
+        <div class="modal-head"><div><h2 id="configModalTitle">Alterar senha</h2><p>${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
+        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" minlength="4" placeholder="Mínimo de 4 caracteres"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" minlength="4" placeholder="Repita a senha"></div></div>
+        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarNovaSenha('${chave}')">💾 Salvar nova senha</button><button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button></div>`;
+      document.getElementById('configModal').classList.add('active');
+      setTimeout(()=>document.getElementById('novaSenhaUsuario')?.focus(),50);
+    }
+
+    function salvarNovaSenha(chave){
+      chave=normalizarLogin(chave);
+      const nova=String(document.getElementById('novaSenhaUsuario')?.value||'').trim();
+      const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'').trim();
+      if(nova.length<4){toast('A nova senha deve ter pelo menos 4 caracteres.');return;}
+      if(nova!==confirma){toast('As senhas não são iguais.');return;}
+      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
+      const autorizado=usuarioDesenvolvedor() || (normalizarLogin(currentUser?.nome)===chave && permissoesUsuario(currentUser.nome).alterarSenha);
+      if(!autorizado)return;
+      u.senha=nova;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      fecharModalConfig();
+      atualizarTudo();
+      toast('Senha alterada com sucesso 🔑');
+    }
+
+    function fecharModalConfig(){document.getElementById('configModal')?.classList.remove('active');}
+
+    function adicionarCategoria(){
+      if(!usuarioDesenvolvedor()){ toast('Controle de categorias exclusivo para JOAO PEDRO.'); return; }
+      const nome = document.getElementById('novaCategoria').value.trim();
+      const icone = document.getElementById('novoIcone').value.trim() || '📦';
+      if(!nome){ toast('Digite o nome da categoria.'); return; }
+      if(state.categorias.some(c=>normalizarLogin(c.nome)===normalizarLogin(nome))){toast('Esta categoria já está cadastrada.');return;}
+      let id = slug(nome), base = id, count = 2;
+      while(state.categorias.some(c=>c.id===id)){ id = `${base}-${count++}`; }
+      state.categorias.push({id,nome,icone});
+      state.records[id] = {};
+      for(let dia=1;dia<=31;dia++) getRecord(id,dia);
+      state.activeCategory = id;
+      salvarEstado();
+    }
+
+    function removerCategoria(id){
+      if(!usuarioDesenvolvedor()){toast('Controle de categorias exclusivo para JOAO PEDRO.');return;}
+      const cat = state.categorias.find(c=>c.id===id);
+      if(!cat) return;
+      if(state.categorias.length <= 1){ toast('O sistema precisa manter pelo menos uma categoria.'); return; }
+      const rec=state.recebimentos.filter(x=>x.categoria===id).length;
+      const inv=state.inventarios.filter(x=>x.categoria===id).length;
+      const checks=state.checklists.filter(x=>x.categoria===id).length;
+      const mensagem=(rec+inv+checks)>0
+        ? `A categoria "${cat.nome}" possui ${rec} recebimentos/DRM, ${inv} inventários e ${checks} check lists. Remover também apagará esses registros. Continuar?`
+        : `Remover a categoria "${cat.nome}"?`;
+      if(confirm(mensagem)){
+        state.categorias = state.categorias.filter(c=>c.id!==id);
+        delete state.records[id];
+        state.recebimentos=state.recebimentos.filter(x=>x.categoria!==id);
+        state.inventarios=state.inventarios.filter(x=>x.categoria!==id);
+        state.checklists=state.checklists.filter(x=>x.categoria!==id);
+        state.activeCategory = state.categorias[0].id;
+        salvarEstado();
+      }
+    }
+
+    function linhasRelatorioCategoria(){
+      const {cat,dias,rows} = dadosRelatorioCategoria();
+      const linhas = [
+        ['RELATÓRIO MENSAL POR CATEGORIA'],
+        ['Loja', state.meta.loja || ''],
+        ['Mês/Ano', state.meta.mes || ''],
+        ['Gerente', state.meta.gerente || ''],
+        ['Categoria', cat?.nome || ''],
+        ['Período', `${dataBRFromISO(dataISOAtualMesDia(1))} até ${dataBRFromISO(dataISOAtualMesDia(dias))}`],
+        [],
+        ['Dia','Data','Categoria','Recebimento','DRM','Área de Vendas','Depósito','Total Inventário','Abertura','Fechamento','Vendas','Faltante','Status','Observações']
+      ];
+      rows.forEach(r=>{
+        const statusTxt = r.status.replace(/<[^>]+>/g,'').trim();
+        linhas.push([r.dia,dataBRFromISO(r.data),cat?.nome || '',r.recebido,r.drm,r.area,r.deposito,r.totalInv,r.abertura ? n(r.abertura.contagem) : 0,r.fechamento ? n(r.fechamento.contagem) : 0,r.vendas,r.faltante,statusTxt,r.obs || '']);
+      });
+      linhas.push([],['Totais','','',rows.reduce((s,r)=>s+r.recebido,0),rows.reduce((s,r)=>s+r.drm,0),'','',ultimoInventarioCategoria(cat.id) ? totalInventarioItem(ultimoInventarioCategoria(cat.id)) : 0,'','',rows.reduce((s,r)=>s+r.vendas,0),rows.reduce((s,r)=>s+r.faltante,0),'','']);
+      return {cat,linhas};
+    }
+
+    function exportarRelatorioCategoriaCSV(){
+      const {cat,linhas} = linhasRelatorioCategoria();
+      downloadText(linhas.map(row=>row.map(csvCell).join(';')).join('\n'), `relatorio-${slug(cat?.nome || 'categoria')}-${dataArquivo()}.csv`, 'text/csv;charset=utf-8');
+      toast('CSV do relatório exportado 📄');
+    }
+
+    function exportarRelatorioCategoriaExcel(){
+      const {cat,dias,rows} = dadosRelatorioCategoria();
+      const totalRecebido = rows.reduce((s,r)=>s+r.recebido,0);
+      const totalDrm = rows.reduce((s,r)=>s+r.drm,0);
+      const totalVendas = rows.reduce((s,r)=>s+r.vendas,0);
+      const totalFaltante = rows.reduce((s,r)=>s+r.faltante,0);
+      const ultimoInv = ultimoInventarioCategoria(cat.id);
+      const ultimoInvTotal = ultimoInv ? totalInventarioItem(ultimoInv) : 0;
+      const saldo = ultimoInvTotal + totalRecebido - totalDrm - totalVendas - totalFaltante;
+      const linhas = rows.map(r=>`
+        <tr>
+          <td>${r.dia}</td><td>${dataBRFromISO(r.data)}</td><td>${escapeHtml(cat?.nome || '')}</td>
+          <td>${r.recebido}</td><td>${r.drm}</td><td>${r.area}</td><td>${r.deposito}</td><td>${r.totalInv}</td>
+          <td>${r.abertura ? n(r.abertura.contagem) : 0}</td><td>${r.fechamento ? n(r.fechamento.contagem) : 0}</td>
+          <td>${r.vendas}</td><td style="color:${r.faltante ? '#DC2626' : '#16A34A'};font-weight:bold">${r.faltante}</td><td>${r.status.replace(/<[^>]+>/g,'').trim()}</td><td>${escapeHtml(r.obs || '')}</td>
+        </tr>`).join('');
+      const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+        body{font-family:Arial,sans-serif;color:#111} h1{background:#291A1E;color:#F6C426;padding:14px;border-radius:8px;font-size:20px} .meta{margin:10px 0 14px;font-weight:bold}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}.card{border:1px solid #999;background:#FFF7DB;padding:8px;border-radius:8px}.card span{display:block;font-size:11px;color:#555;text-transform:uppercase}.card b{font-size:18px} table{border-collapse:collapse;width:100%;font-size:12px} th{background:#291A1E;color:#F6C426;border:1px solid #291A1E;padding:7px} td{border:1px solid #999;padding:6px;text-align:center} td:last-child{text-align:left} .total td{background:#FFF7DB;font-weight:bold}
+      </style></head><body>
+        <h1>Relatório Mensal por Categoria — ${escapeHtml(cat?.nome || '')}</h1>
+        <div class="meta">Loja ${escapeHtml(state.meta.loja || '')} • Mês ${escapeHtml(state.meta.mes || '')} • Gerente ${escapeHtml(state.meta.gerente || '')}<br>Período: ${dataBRFromISO(dataISOAtualMesDia(1))} até ${dataBRFromISO(dataISOAtualMesDia(dias))} • Emitido em ${new Date().toLocaleString('pt-BR')}</div>
+        <div class="cards"><div class="card"><span>Recebidos</span><b>${totalRecebido}</b></div><div class="card"><span>DRM</span><b>${totalDrm}</b></div><div class="card"><span>Vendas</span><b>${totalVendas}</b></div><div class="card"><span>Faltantes</span><b>${totalFaltante}</b></div><div class="card"><span>Saldo estimado</span><b>${saldo}</b></div></div>
+        <table><thead><tr><th>Dia</th><th>Data</th><th>Categoria</th><th>Recebimento</th><th>DRM</th><th>Área de Vendas</th><th>Depósito</th><th>Total Inventário</th><th>Abertura</th><th>Fechamento</th><th>Vendas</th><th>Faltante</th><th>Status</th><th>Observações</th></tr></thead><tbody>${linhas}<tr class="total"><td colspan="3">TOTAL</td><td>${totalRecebido}</td><td>${totalDrm}</td><td colspan="3">Último inventário: ${ultimoInvTotal}</td><td colspan="2"></td><td>${totalVendas}</td><td>${totalFaltante}</td><td colspan="2">Saldo estimado: ${saldo}</td></tr></tbody></table>
+      </body></html>`;
+      const blob = new Blob(['\ufeff', html], {type:'application/vnd.ms-excel;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-${slug(cat?.nome || 'categoria')}-${dataArquivo()}.xls`;
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      toast('Excel do relatório exportado 📊');
+    }
+
+    function imprimirRelatorioCategoria(){
+      renderReport();
+      window.print();
+    }
+
+    function exportarCSV(){
+      const linhas = [['Loja',state.meta.loja],['Mes/Ano',state.meta.mes],['Gerente',state.meta.gerente],[],['Categoria','Dia','Recebidos','Venda Abertura','Estoque Abertura','Defeito Abertura','Resp Abertura','Venda Fechamento','Estoque Fechamento','Defeito Fechamento','Resp Fechamento','Total Vendas','Total Defeitos','Observacao']];
+      state.categorias.forEach(cat=>{
+        for(let dia=1;dia<=31;dia++){
+          const r = getRecord(cat.id,dia); const vendas=n(r.vda_ab)+n(r.vda_fc); const defeitos=n(r.def_ab)+n(r.def_fc);
+          linhas.push([cat.nome,dia,n(r.recebido),n(r.vda_ab),n(r.dep_ab),n(r.def_ab),r.resp_ab,n(r.vda_fc),n(r.dep_fc),n(r.def_fc),r.resp_fc,vendas,defeitos,r.obs]);
+        }
+      });
+      linhas.push([],['RECEBIMENTOS E DRM'],['Tipo','Data','Categoria','Quantidade Recebida','Qtd DRM/Problema','Situação','Documento','DRM','Responsável','Ocorrência','Usuário','Cargo','Atualizado']);
+      state.recebimentos.forEach(item=>linhas.push([item.tipo || (n(item.qtdDrm)>0 && !n(item.qtd) ? 'DRM' : 'Recebimento'), item.data, nomeCategoria(item.categoria), item.qtd, item.qtdDrm, item.status, item.doc, item.drm, item.responsavel, item.obs, item.lastUser, item.lastCargo, item.lastUpdated]));
+      linhas.push([],['INVENTÁRIOS'],['Data','Categoria','Área de Vendas','Depósito','Total de Itens','Referência','Responsável','Observação','Usuário','Cargo','Atualizado']);
+      state.inventarios.forEach(item=>{
+        const area = n(item.areaVendas !== undefined ? item.areaVendas : item.fisico);
+        const deposito = n(item.deposito !== undefined ? item.deposito : item.bons);
+        const totalInv = totalInventarioItem(item);
+        linhas.push([item.data, nomeCategoria(item.categoria), area, deposito, totalInv, item.referencia, item.responsavel, item.obs, item.lastUser, item.lastCargo, item.lastUpdated]);
+      });
+      linhas.push([],['CHECK LIST'],['Data','Tipo','Categoria','Estoque Base','Recebimentos Dia','DRM Dia','Vendas','Esperado Final','Contagem','Faltante','Status','Base Usada','Hora Início','Hora Término','Líder','Fiscal','Observação','Usuário','Cargo','Atualizado']);
+      state.checklists.forEach(item=>linhas.push([item.data, item.tipo, nomeCategoria(item.categoria), item.estoqueBase ?? item.esperado ?? '', item.recebimentosDia ?? '', item.drmDia ?? '', item.vendas ?? '', item.esperado ?? '', item.contagem ?? '', item.faltante ?? '', item.statusConferencia || '', item.baseEsperado, item.horaInicio, item.horaFim, item.lider, item.fiscal, item.obs, item.lastUser, item.lastCargo, item.lastUpdated]));
+      downloadText(linhas.map(row=>row.map(csvCell).join(';')).join('\n'), `relatorio-estoque-${dataArquivo()}.csv`, 'text/csv;charset=utf-8');
+      toast('CSV exportado 📄');
+    }
+    function csvCell(v){ return `"${String(v??'').replace(/"/g,'""')}"`; }
+    function exportarBackup(){ downloadText(JSON.stringify(state,null,2), `backup-estoque-${dataArquivo()}.json`, 'application/json'); toast('Backup baixado ⬇️'); }
+    function importarBackup(evt){
+      const file = evt.target.files && evt.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{ const parsed = JSON.parse(reader.result); state = normalizarEstado(parsed); salvarEstado(); toast('Backup importado com sucesso ✅'); }
+        catch(e){ alert('Não foi possível importar o arquivo. Verifique se é um backup JSON válido.'); }
+        evt.target.value='';
+      };
+      reader.readAsText(file);
+    }
+    function limparMes(){
+      if(!usuarioDesenvolvedor()){ toast('Limpeza do mês exclusiva para JOAO PEDRO.'); return; }
+      if(confirm('Tem certeza que deseja apagar todos os lançamentos do mês? Faça backup antes de continuar.')){
+        state.records = {}; state.recebimentos = []; state.inventarios = []; state.checklists = []; state.categorias.forEach(c=>{ state.records[c.id] = {}; for(let d=1;d<=31;d++) getRecord(c.id,d); });
+        salvarEstado();
+      }
+    }
+
+    function downloadText(content, filename, type){
+      const blob = new Blob([content], {type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+    function dataArquivo(){ return new Date().toISOString().slice(0,10); }
+    function escapeHtml(value){
+      return String(value??'').replace(/[&<>'"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    }
+    function toast(msg){
+      const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show');
+      clearTimeout(window.__toastTimer); window.__toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+    }
+
+    function normalizarLogin(valor){
+      const chave = String(valor || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g,'')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g,'');
+
+      const aliases = {
+        RICHARDBAPTIST: 'RICHARDBAPTISTE',
+        RICHARD: 'RICHARDBAPTISTE',
+        CASSIO: 'CASSIOGABRIEL',
+        ALANA: 'ALANAARAUJO',
+        JOAO: 'JOAOPEDRO'
+      };
+      return aliases[chave] || chave;
+    }
+
+    function popularLoginUsers(){
+      const input = document.getElementById('loginUser');
+      if(input) input.placeholder = 'Digite seu nome cadastrado';
+    }
+
+    function fazerLogin(evt){
+      evt.preventDefault();
+      const nomeDigitado = normalizarLogin(document.getElementById('loginUser').value);
+      const senha = document.getElementById('loginSenha').value.trim();
+      const usuario = state.usuariosLogin.find(u=>normalizarLogin(u.nome)===nomeDigitado && String(u.senha)===senha);
+      const erro = document.getElementById('loginError');
+      if(!usuario){ erro.classList.add('show'); return; }
+      erro.classList.remove('show');
+      currentUser = {nome:usuario.nome,cargo:usuario.cargo};
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
+      document.getElementById('loginUser').value = usuario.nome;
+      document.getElementById('loginSenha').value='';
+      abrirSistema();
+      toast(`Bem-vindo, ${usuario.nome} ✅`);
+    }
+
+    function verificarSessao(){
+      popularLoginUsers();
+      try{
+        const raw = sessionStorage.getItem(SESSION_KEY);
+        if(raw){
+          const sess = JSON.parse(raw);
+          const usuario = state.usuariosLogin.find(u=>normalizarLogin(u.nome)===normalizarLogin(sess.nome));
+          if(usuario){ currentUser = {nome:usuario.nome,cargo:usuario.cargo}; abrirSistema(); return; }
+        }
+      }catch(e){ console.warn(e); }
+      mostrarLogin();
+    }
+
+    function abrirSistema(){
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+      atualizarTudo();
+      aplicarPermissoes();
+    }
+
+    function mostrarLogin(){
+      currentUser = null;
+      sessionStorage.removeItem(SESSION_KEY);
+      document.getElementById('appShell').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+      atualizarTema();
+      popularLoginUsers();
+      setTimeout(()=>document.getElementById('loginUser').focus(),50);
+    }
+
+    function logout(){
+      mostrarLogin();
+      document.getElementById('loginUser').value='';
+      document.getElementById('loginSenha').value='';
+      toast('Sessão encerrada.');
+    }
+
+    function marcarAuditoria(record){
+      if(!currentUser) return;
+      record.lastUser = currentUser.nome;
+      record.lastCargo = currentUser.cargo;
+      record.lastUpdated = new Date().toLocaleString('pt-BR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    }
+
+    function auditLabel(record){
+      if(!record.lastUser) return '<span class="audit-note">—</span>';
+      return `<span class="audit-note">${escapeHtml(record.lastUser)} • ${escapeHtml(record.lastCargo||'')}<br>${escapeHtml(record.lastUpdated||'')}</span>`;
+    }
+
+    function atualizarTudo(){
+      atualizarTema(); atualizarTopo(); renderDashboard(); renderQuick(); renderRecebimentoForm(); renderRecebimentos(); renderInventarioForm(); renderInventario(); if(document.getElementById('page-checklist')?.classList.contains('active') && document.getElementById('checklistFormPanel')?.classList.contains('active')) renderChecklistForm(); renderChecklist(); renderCategoryTabs(); renderCategoryTable(); renderReport(); renderConfig();
+    }
+
+    window.addEventListener('load',()=>{
+      atualizarTema();
+      verificarSessao();
+    });
+  </script>
+</body>
+</html>
