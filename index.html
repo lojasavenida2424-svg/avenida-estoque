@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida V32</title>
+  <title>Assistência Gerencial de Estoque - Avenida Online V34</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -24,7 +24,7 @@
     html.theme-booting *, html.theme-booting *::before, html.theme-booting *::after { transition:none!important; }
 
 
-    /* ===== V32: CONTROLE DE LOGIN, PERMISSÕES E CATEGORIAS ===== */
+    /* ===== V34: CONTROLE DE LOGIN, PERMISSÕES E CATEGORIAS ===== */
     .developer-panel{
       position:relative;overflow:hidden;border:1px solid rgba(246,196,38,.58)!important;
       background:linear-gradient(135deg,rgba(246,196,38,.16),var(--surface))!important;
@@ -187,6 +187,11 @@
     .toast{position:fixed;right:22px;bottom:22px;background:var(--preto-logo);color:var(--amarelo);border-radius:16px;padding:14px 16px;font-weight:950;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s;z-index:50}.toast.show{opacity:1;transform:none}
 
     .mobile-menu{display:none}
+
+    .sync-status{font-weight:950;transition:.2s}
+    .sync-status.online{background:var(--green-bg);color:var(--green);border-color:color-mix(in srgb,var(--green) 36%,var(--border))}
+    .sync-status.syncing{background:var(--orange-bg);color:var(--orange);border-color:color-mix(in srgb,var(--orange) 36%,var(--border))}
+    .sync-status.offline{background:var(--red-bg);color:var(--red);border-color:color-mix(in srgb,var(--red) 36%,var(--border))}
 
     @media(max-width:1080px){.grid.cards{grid-template-columns:repeat(2,1fr)}.grid.two,.grid.three{grid-template-columns:1fr}.form-row,.form-row.two,.form-row.three{grid-template-columns:1fr 1fr}.report-summary{grid-template-columns:repeat(2,1fr)}.category-kpi{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:760px){body{display:block}.category-kpi{grid-template-columns:1fr}.sidebar{transform:translateX(-105%);transition:.25s;position:fixed}.sidebar.open{transform:none}.main{margin-left:0;width:100%;padding:14px}.topbar{position:relative;top:0;align-items:flex-start;flex-direction:column;padding:16px 72px 16px 16px}.top-actions{justify-content:flex-start}.header-logout{top:16px;right:16px;transform:none}.header-logout:hover{transform:scale(1.04)}.mobile-menu{display:inline-flex}.grid.cards,.report-summary{grid-template-columns:1fr}.form-row,.form-row.two,.form-row.three{grid-template-columns:1fr}.title-block h1{font-size:1.2rem}.chip{white-space:normal}.table-wrap{border-radius:12px}table{font-size:.8rem}}
@@ -559,6 +564,7 @@
       #recebimentoSubtabs .subtab-btn { width: 100%; }
     }
   </style>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <script>
@@ -575,24 +581,24 @@
           <div class="brand-mark">AV</div>
           <div>
             <h1>Assistência Gerencial de Estoque</h1>
-            <p>Avenida V21 • Acesso operacional</p>
+            <p>Avenida V21 • Sistema online</p>
           </div>
         </div>
       </div>
       <div class="login-body">
         <div class="field">
-          <label>Usuário</label>
-          <input id="loginUser" type="text" placeholder="Digite seu nome cadastrado" autocomplete="username" autocapitalize="characters" spellcheck="false">
+          <label>E-mail</label>
+          <input id="loginUser" type="email" placeholder="Digite o e-mail cadastrado no Supabase" autocomplete="username" inputmode="email" spellcheck="false">
         </div>
         <div class="field">
           <label>Senha</label>
           <input id="loginSenha" type="password" placeholder="Digite sua senha" autocomplete="current-password">
         </div>
         <button class="btn login-submit" style="width:100%;margin-top:4px" type="submit">Entrar no Sistema</button>
-        <div class="login-error" id="loginError">Usuário não encontrado ou senha incorreta. Confira o nome cadastrado e a senha.</div>
+        <div class="login-error" id="loginError">E-mail ou senha incorretos. Confira os dados e tente novamente.</div>
         <div class="login-hint">
           <strong>Acesso individual</strong>
-          Digite seu nome cadastrado e sua senha para acessar o controle de estoque.
+          Digite o e-mail cadastrado no Supabase e sua senha para acessar o controle de estoque online.
         </div>
       </div>
     </form>
@@ -645,6 +651,7 @@
           <span class="chip">Gerente: <strong id="topGerente">—</strong></span>
           <span class="chip">Usuário: <strong id="topUsuario">—</strong></span>
           <span class="chip">Cargo: <strong id="topCargo">—</strong></span>
+          <span class="chip sync-status" id="syncStatus">☁️ Conectando...</span>
           <button class="btn secondary top-print" onclick="window.print()">🖨️ Imprimir</button>
           <button class="header-theme theme-btn" id="themeBtn" onclick="toggleTema()" title="Alternar tema" aria-label="Alternar tema">🌙</button>
           <button class="header-logout" onclick="logout()" title="Sair do sistema" aria-label="Sair do sistema"><span aria-hidden="true">⏻</span><span class="sr-only">Sair</span></button>
@@ -947,19 +954,43 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const SESSION_KEY = 'avenidaEstoqueSessionV2';
-    const TEAM_VERSION = 'v32-login-permissoes-categorias-2026-07-10';
-    const DEFAULT_LOGIN_USERS = [
-      {nome:'ALANA ARAUJO', cargo:'GERENTE DE LOJA', senha:'alana123'},
-      {nome:'CASSIO GABRIEL', cargo:'FISCAL 1', senha:'cassio123'},
-      {nome:'RICHARD BAPTISTE', cargo:'FISCAL 2', senha:'richard123'},
-      {nome:'JOAO PEDRO', cargo:'VISUAL MERCHANDISING', senha:'joao123'},
-      {nome:'KAILANY', cargo:'ADMINISTRATIVO', senha:'kailany123'}
-    ];
+    const TEAM_VERSION = 'v34-supabase-online-2026-07-10';
+    const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
+    const ONLINE_STATE_TABLE = 'avenida_estoque_state';
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        },
+        realtime: {
+          params: { eventsPerSecond: 8 }
+        }
+      }
+    );
+
+    // Cliente separado para o administrador criar novos acessos sem substituir a própria sessão.
+    const signupClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        }
+      }
+    );
+
     const DEFAULT_STATE = {
       meta:{loja:'24',mes:mesAtualBR(),gerente:'ALANA',metaVendas:''},
-      funcionarios:['ALANA ARAUJO','CASSIO GABRIEL','RICHARD BAPTISTE','JOAO PEDRO','KAILANY'],
-      usuariosLogin:structuredClone(DEFAULT_LOGIN_USERS),
+      funcionarios:[],
+      usuariosLogin:[],
       permissoes:{},
       teamVersion: TEAM_VERSION,
       categorias:[
@@ -987,6 +1018,15 @@
 
     let state = carregarEstado();
     let currentUser = null;
+    let currentProfile = null;
+    let currentAuthUser = null;
+    let realtimeChannel = null;
+    let syncTimer = null;
+    let syncInFlight = false;
+    let syncQueued = false;
+    let pendingRemoteSave = false;
+    let applyingRemoteState = false;
+    let lastCloudSignature = '';
 
     function carregarEstado(){
       try{
@@ -995,43 +1035,55 @@
         const parsed = JSON.parse(raw);
         return normalizarEstado({...structuredClone(DEFAULT_STATE),...parsed});
       }catch(e){
-        console.warn(e);
+        console.warn('Falha ao carregar o cache local:', e);
         return normalizarEstado(structuredClone(DEFAULT_STATE));
       }
     }
 
     function usuarioDesenvolvedor(usuario=currentUser){
-      return !!usuario && normalizarLogin(usuario.nome) === normalizarLogin('JOAO PEDRO');
+      if(!usuario || !currentUser) return false;
+      if(usuario.id && currentUser.id && usuario.id !== currentUser.id) {
+        return !!state.usuariosLogin.find(u=>u.id===usuario.id)?.isDeveloper;
+      }
+      return !!currentProfile?.is_developer;
     }
 
     function permissoesPadrao(nome){
-      if(normalizarLogin(nome) === normalizarLogin('JOAO PEDRO')){
-        return {...Object.fromEntries(MODULOS.map(([id])=>[id,true])), alterarSenha:true};
-      }
       return {
-        dashboard:true, recebimento:true, inventario:true, checklist:true,
-        categorias:true, relatorios:true, config:false, alterarSenha:false
+        dashboard:true,
+        recebimento:true,
+        inventario:true,
+        checklist:true,
+        categorias:true,
+        relatorios:true,
+        config:false,
+        alterarSenha:false
       };
     }
 
     function normalizarEstado(s){
       s.meta = aplicarMetadadosPadrao({...structuredClone(DEFAULT_STATE.meta), ...(s.meta || {})});
-      s.usuariosLogin = Array.isArray(s.usuariosLogin) && s.usuariosLogin.length ? s.usuariosLogin : structuredClone(DEFAULT_LOGIN_USERS);
+      s.usuariosLogin = Array.isArray(s.usuariosLogin) ? s.usuariosLogin : [];
       s.usuariosLogin = s.usuariosLogin
-        .map(u=>({nome:String(u.nome||'').trim().toUpperCase(), cargo:String(u.cargo||'USUÁRIO').trim().toUpperCase(), senha:String(u.senha||'').trim()}))
-        .filter(u=>u.nome && u.senha)
-        .filter((u,i,arr)=>arr.findIndex(x=>normalizarLogin(x.nome)===normalizarLogin(u.nome))===i);
-      garantirDesenvolvedor(s);
+        .map(u=>({
+          id:String(u.id||''),
+          nome:String(u.nome||u.full_name||'').trim().toUpperCase(),
+          cargo:String(u.cargo||u.job_title||'USUÁRIO').trim().toUpperCase(),
+          operador:String(u.operador||u.username||'').trim().toUpperCase(),
+          ativo:u.ativo !== false,
+          isDeveloper:!!u.isDeveloper
+        }))
+        .filter(u=>u.nome)
+        .filter((u,i,arr)=>arr.findIndex(x=>(u.id && x.id===u.id) || normalizarLogin(x.nome)===normalizarLogin(u.nome))===i);
+
       s.permissoes = s.permissoes && typeof s.permissoes === 'object' ? s.permissoes : {};
-      s.usuariosLogin.forEach(u=>{
-        const chave=normalizarLogin(u.nome);
-        s.permissoes[chave]={...permissoesPadrao(u.nome),...(s.permissoes[chave]||{})};
-      });
-      // Os responsáveis operacionais são derivados automaticamente dos logins autorizados.
-      s.funcionarios = s.usuariosLogin.map(u=>u.nome);
-      s.permissoes[normalizarLogin('JOAO PEDRO')] = permissoesPadrao('JOAO PEDRO');
+      s.funcionarios = s.usuariosLogin.filter(u=>u.ativo).map(u=>u.nome);
       s.categorias = Array.isArray(s.categorias) && s.categorias.length ? s.categorias : structuredClone(DEFAULT_STATE.categorias);
-      s.categorias = s.categorias.map(c=>({id:String(c.id||slug(c.nome)).trim(),nome:String(c.nome||'Categoria').trim(),icone:String(c.icone||'📦').trim()||'📦'}));
+      s.categorias = s.categorias.map(c=>({
+        id:String(c.id||slug(c.nome)).trim(),
+        nome:String(c.nome||'Categoria').trim(),
+        icone:String(c.icone||'📦').trim()||'📦'
+      }));
       s.records = s.records || {};
       s.recebimentos = Array.isArray(s.recebimentos) ? s.recebimentos : [];
       s.inventarios = Array.isArray(s.inventarios) ? s.inventarios : [];
@@ -1040,31 +1092,263 @@
         if(!s.records[cat.id]) s.records[cat.id] = {};
         for(let dia=1;dia<=31;dia++) getRecord(cat.id,dia,s);
       });
-      if(!s.activeCategory || !s.categorias.some(c=>c.id===s.activeCategory)) s.activeCategory = s.categorias[0].id;
+      if(!s.activeCategory || !s.categorias.some(c=>c.id===s.activeCategory)){
+        s.activeCategory = s.categorias[0]?.id || 'malas';
+      }
       s.teamVersion = TEAM_VERSION;
       return s;
     }
 
-    function garantirDesenvolvedor(s){
-      const padrao = DEFAULT_LOGIN_USERS.find(u=>normalizarLogin(u.nome)===normalizarLogin('JOAO PEDRO')) || {nome:'JOAO PEDRO',cargo:'VISUAL MERCHANDISING',senha:'joao123'};
-      let dev = (s.usuariosLogin||[]).find(u=>normalizarLogin(u.nome)===normalizarLogin('JOAO PEDRO'));
-      if(!dev){
-        s.usuariosLogin.push({...padrao});
-      }else{
-        dev.nome='JOAO PEDRO';
-        dev.cargo=String(dev.cargo||padrao.cargo).toUpperCase();
-        dev.senha=String(dev.senha||padrao.senha);
-      }
-    }
-
     function permissoesUsuario(nome=currentUser?.nome){
-      const chave=normalizarLogin(nome);
-      if(chave===normalizarLogin('JOAO PEDRO')) return permissoesPadrao('JOAO PEDRO');
-      return {...permissoesPadrao(nome),...(state.permissoes?.[chave]||{})};
+      const usuario = state.usuariosLogin.find(u=>
+        (currentUser?.id && u.id===currentUser.id && normalizarLogin(nome)===normalizarLogin(currentUser.nome))
+        || normalizarLogin(u.nome)===normalizarLogin(nome)
+      );
+      const chaveId = usuario?.id;
+      const chaveNome = normalizarLogin(usuario?.nome || nome);
+      const salvas = state.permissoes[chaveId] || state.permissoes[chaveNome] || {};
+      const p = {...permissoesPadrao(nome), ...salvas};
+      if(usuario?.isDeveloper || (currentUser?.id===usuario?.id && currentProfile?.is_developer)){
+        MODULOS.forEach(([id])=>p[id]=true);
+        p.alterarSenha=true;
+      }
+      return p;
     }
 
     function temPermissao(modulo){
       return !!currentUser && !!permissoesUsuario(currentUser.nome)[modulo];
+    }
+
+    function persistirCacheLocal(){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }catch(e){
+        console.warn('Falha ao salvar cache local:', e);
+      }
+    }
+
+    function estadoCompartilhavel(){
+      const clone = structuredClone(state);
+      delete clone.usuariosLogin;
+      delete clone.permissoes;
+      delete clone.funcionarios;
+      delete clone.theme;
+      delete clone.activeCategory;
+      clone.teamVersion = TEAM_VERSION;
+      return clone;
+    }
+
+    function assinaturaEstadoCompartilhavel(data=estadoCompartilhavel()){
+      try{return JSON.stringify(data);}catch(_){return String(Date.now());}
+    }
+
+    function definirStatusSync(tipo, texto){
+      const el=document.getElementById('syncStatus');
+      if(!el) return;
+      el.classList.remove('online','syncing','offline');
+      if(tipo) el.classList.add(tipo);
+      el.textContent=texto;
+    }
+
+    function salvarEstado(silent=false){
+      state = normalizarEstado(state);
+      persistirCacheLocal();
+      atualizarTudo();
+      if(!applyingRemoteState){
+        pendingRemoteSave = true;
+        agendarSincronizacao();
+        if(!silent) toast('Dados salvos. Sincronizando com a nuvem…');
+      }
+    }
+
+    function agendarSincronizacao(){
+      clearTimeout(syncTimer);
+      syncTimer=setTimeout(()=>sincronizarEstadoRemoto(),420);
+    }
+
+    async function sincronizarEstadoRemoto(){
+      if(!currentAuthUser || applyingRemoteState) return;
+      if(syncInFlight){
+        syncQueued=true;
+        return;
+      }
+      syncInFlight=true;
+      pendingRemoteSave=false;
+      definirStatusSync('syncing','☁️ Sincronizando…');
+      const compartilhado=estadoCompartilhavel();
+      const assinatura=assinaturaEstadoCompartilhavel(compartilhado);
+      try{
+        const {data,error}=await supabaseClient
+          .from(ONLINE_STATE_TABLE)
+          .upsert({
+            id:1,
+            data:compartilhado,
+            updated_by:currentAuthUser.id
+          },{onConflict:'id'})
+          .select('updated_at')
+          .single();
+        if(error) throw error;
+        lastCloudSignature=assinatura;
+        definirStatusSync('online','☁️ Online • sincronizado');
+      }catch(error){
+        console.error('Falha na sincronização:',error);
+        pendingRemoteSave=true;
+        definirStatusSync('offline','☁️ Offline • salvo neste aparelho');
+      }finally{
+        syncInFlight=false;
+        if(syncQueued || pendingRemoteSave){
+          syncQueued=false;
+          clearTimeout(syncTimer);
+          syncTimer=setTimeout(()=>sincronizarEstadoRemoto(),1000);
+        }
+      }
+    }
+
+    function aplicarEstadoCompartilhado(data){
+      if(!data || typeof data!=='object') return;
+      const temaLocal=state.theme;
+      const categoriaLocal=state.activeCategory;
+      const usuarios=state.usuariosLogin;
+      const permissoes=state.permissoes;
+      const funcionarios=state.funcionarios;
+
+      applyingRemoteState=true;
+      state=normalizarEstado({
+        ...structuredClone(DEFAULT_STATE),
+        ...data,
+        theme:temaLocal,
+        activeCategory:categoriaLocal
+      });
+      state.usuariosLogin=usuarios;
+      state.permissoes=permissoes;
+      state.funcionarios=funcionarios;
+      persistirCacheLocal();
+      atualizarTudo();
+      applyingRemoteState=false;
+    }
+
+    async function carregarEstadoCompartilhado(){
+      definirStatusSync('syncing','☁️ Carregando dados…');
+      const {data,error}=await supabaseClient
+        .from(ONLINE_STATE_TABLE)
+        .select('data,updated_at')
+        .eq('id',1)
+        .single();
+      if(error) throw error;
+
+      const remoto=data?.data;
+      if(remoto && typeof remoto==='object' && Object.keys(remoto).length){
+        lastCloudSignature=assinaturaEstadoCompartilhavel(remoto);
+        aplicarEstadoCompartilhado(remoto);
+        definirStatusSync('online','☁️ Online • dados carregados');
+      }else{
+        pendingRemoteSave=true;
+        await sincronizarEstadoRemoto();
+      }
+    }
+
+    function linhaPermissoesParaApp(row={}){
+      return {
+        dashboard:row.dashboard !== false,
+        recebimento:row.recebimento !== false,
+        inventario:row.inventario !== false,
+        checklist:row.checklist !== false,
+        categorias:row.categorias !== false,
+        relatorios:row.relatorios !== false,
+        config:!!row.config,
+        alterarSenha:!!row.alterar_senha
+      };
+    }
+
+    async function carregarDiretorioOnline(){
+      const [{data:profiles,error:profilesError},{data:permissions,error:permissionsError}] = await Promise.all([
+        supabaseClient
+          .from('profiles')
+          .select('id,username,full_name,job_title,active,is_developer')
+          .order('full_name',{ascending:true}),
+        supabaseClient
+          .from('user_permissions')
+          .select('user_id,dashboard,recebimento,inventario,checklist,categorias,relatorios,config,alterar_senha')
+      ]);
+      if(profilesError) throw profilesError;
+      if(permissionsError) throw permissionsError;
+
+      const meuPerfil=(profiles||[]).find(p=>p.id===currentAuthUser?.id);
+      if(!meuPerfil || !meuPerfil.active){
+        throw new Error('Seu acesso está inativo ou o perfil não foi encontrado.');
+      }
+
+      currentProfile=meuPerfil;
+      currentUser={
+        id:meuPerfil.id,
+        nome:String(meuPerfil.full_name||meuPerfil.username||'USUÁRIO').toUpperCase(),
+        cargo:String(meuPerfil.job_title||'USUÁRIO').toUpperCase(),
+        operador:String(meuPerfil.username||'').toUpperCase(),
+        email:currentAuthUser?.email||''
+      };
+
+      const permissionsById=Object.fromEntries((permissions||[]).map(p=>[p.user_id,p]));
+      state.usuariosLogin=(profiles||[]).map(p=>({
+        id:p.id,
+        nome:String(p.full_name||p.username||'USUÁRIO').toUpperCase(),
+        cargo:String(p.job_title||'USUÁRIO').toUpperCase(),
+        operador:String(p.username||'').toUpperCase(),
+        ativo:p.active!==false,
+        isDeveloper:!!p.is_developer
+      }));
+
+      state.permissoes={};
+      state.usuariosLogin.forEach(u=>{
+        const p=linhaPermissoesParaApp(permissionsById[u.id]||{});
+        if(u.isDeveloper){
+          MODULOS.forEach(([id])=>p[id]=true);
+          p.alterarSenha=true;
+        }
+        state.permissoes[u.id]=p;
+        state.permissoes[normalizarLogin(u.nome)]=p;
+      });
+      state.funcionarios=state.usuariosLogin.filter(u=>u.ativo).map(u=>u.nome);
+      persistirCacheLocal();
+    }
+
+    function encerrarRealtime(){
+      if(realtimeChannel){
+        supabaseClient.removeChannel(realtimeChannel);
+        realtimeChannel=null;
+      }
+    }
+
+    function iniciarRealtime(){
+      encerrarRealtime();
+      realtimeChannel=supabaseClient
+        .channel('avenida-estoque-online')
+        .on(
+          'postgres_changes',
+          {event:'*',schema:'public',table:ONLINE_STATE_TABLE,filter:'id=eq.1'},
+          payload=>{
+            const remoto=payload?.new?.data;
+            if(!remoto || typeof remoto!=='object') return;
+            const assinatura=assinaturaEstadoCompartilhavel(remoto);
+            if(assinatura===lastCloudSignature || assinatura===assinaturaEstadoCompartilhavel()) return;
+            lastCloudSignature=assinatura;
+            aplicarEstadoCompartilhado(remoto);
+            definirStatusSync('online','☁️ Online • atualização recebida');
+          }
+        )
+        .on(
+          'postgres_changes',
+          {event:'*',schema:'public',table:'profiles'},
+          async ()=>{try{await carregarDiretorioOnline();atualizarTudo();}catch(e){console.warn(e);}}
+        )
+        .on(
+          'postgres_changes',
+          {event:'*',schema:'public',table:'user_permissions'},
+          async ()=>{try{await carregarDiretorioOnline();atualizarTudo();aplicarPermissoes();}catch(e){console.warn(e);}}
+        )
+        .subscribe(status=>{
+          if(status==='SUBSCRIBED') definirStatusSync('online','☁️ Online • tempo real');
+          if(status==='CHANNEL_ERROR' || status==='TIMED_OUT') definirStatusSync('offline','☁️ Conexão instável');
+        });
     }
 
     function getRecord(catId,dia,base=state){
@@ -2277,17 +2561,19 @@
 
       aplicarMetadadosPadrao(state);
       const usuariosRows=state.usuariosLogin.map(u=>{
-        const chave=normalizarLogin(u.nome),dev=chave===normalizarLogin('JOAO PEDRO');
+        const dev=!!u.isDeveloper;
         const liberadas=Object.entries(permissoesUsuario(u.nome)).filter(([id,v])=>v&&id!=='alterarSenha').length;
+        const proprio=u.id===currentAuthUser?.id;
         return `<tr>
+          <td><strong>${escapeHtml(u.operador||'—')}</strong></td>
           <td><div class="config-user-name"><strong>${escapeHtml(u.nome)}</strong>${dev?'<span class="developer-badge">&lt;/&gt; DESENVOLVEDOR</span>':''}</div></td>
           <td>${escapeHtml(u.cargo||'—')}</td>
-          <td><span class="config-password">••••••••</span></td>
+          <td>${u.ativo?'<span class="status-pill ok">ATIVO</span>':'<span class="status-pill bad">INATIVO</span>'}</td>
           <td>${dev?'Acesso integral':`${liberadas} módulos`}</td>
           <td class="no-print"><div class="config-actions">
-            <button class="btn secondary" onclick="editarPermissoesUsuario('${chave}')" ${dev?'disabled':''}>⚙️ Permissões</button>
-            <button class="btn secondary" onclick="abrirAlteracaoSenha('${chave}')">🔑 Senha</button>
-            <button class="btn danger" onclick="removerUsuarioLogin('${chave}')" ${dev?'disabled':''}>Remover</button>
+            <button class="btn secondary" onclick="editarPermissoesUsuario('${u.id}')" ${dev?'disabled':''}>⚙️ Permissões</button>
+            ${proprio?`<button class="btn secondary" onclick="abrirAlteracaoSenha('${u.id}')">🔑 Minha senha</button>`:''}
+            <button class="${u.ativo?'btn danger':'btn success'}" onclick="alternarStatusUsuario('${u.id}')" ${dev?'disabled':''}>${u.ativo?'Desativar':'Reativar'}</button>
           </div></td>
         </tr>`;
       }).join('');
@@ -2305,14 +2591,20 @@
         </div>
 
         <div class="card" style="border:2px solid var(--amarelo-2)">
-          <div class="section-title" style="margin-top:0"><div><h2>🔐 Controle de login</h2><p>Adicione ou remova usuários autorizados. Depois configure individualmente as permissões de cada acesso.</p></div></div>
-          <div class="form-row three">
+          <div class="section-title" style="margin-top:0"><div><h2>🔐 Controle de login online</h2><p>Crie acessos vinculados ao Supabase Auth, controle os módulos permitidos e desative usuários sem apagar os registros históricos.</p></div></div>
+          <div class="form-row">
+            <div class="field"><label>E-mail de acesso</label><input id="novoLoginEmail" type="email" placeholder="usuario@empresa.com"></div>
+            <div class="field"><label>Operador</label><input id="novoLoginOperador" placeholder="Ex.: 133"></div>
             <div class="field"><label>Nome do usuário</label><input id="novoLoginNome" placeholder="Ex.: MARIA SILVA"></div>
             <div class="field"><label>Cargo</label><input id="novoLoginCargo" placeholder="Ex.: FISCAL"></div>
-            <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" minlength="4" placeholder="Mínimo de 4 caracteres"></div>
           </div>
-          <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Liberar novo login</button></div>
-          <div class="table-wrap" style="margin-top:16px"><table style="min-width:900px"><thead><tr><th>Usuário</th><th>Cargo</th><th>Senha</th><th>Acesso</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
+          <div class="form-row two" style="margin-top:12px">
+            <div class="field"><label>Senha inicial</label><input id="novoLoginSenha" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div>
+            <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" minlength="6" placeholder="Repita a senha"></div>
+          </div>
+          <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
+          <div class="category-help">Caso a confirmação de e-mail esteja habilitada no Supabase, o novo usuário precisará confirmar o endereço antes do primeiro acesso.</div>
+          <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
         <div class="category-config-grid">
@@ -2350,95 +2642,158 @@
       salvarEstado();
     }
 
-    function adicionarUsuarioLogin(){
-      if(!usuarioDesenvolvedor()){ toast('Controle de login exclusivo para JOAO PEDRO.'); return; }
+    async function adicionarUsuarioLogin(){
+      if(!usuarioDesenvolvedor()){ toast('Controle de login exclusivo para o administrador.'); return; }
+      const email=String(document.getElementById('novoLoginEmail')?.value||'').trim().toLowerCase();
+      const operador=String(document.getElementById('novoLoginOperador')?.value||'').trim().toUpperCase();
       const nome=String(document.getElementById('novoLoginNome')?.value||'').trim().toUpperCase();
       const cargo=String(document.getElementById('novoLoginCargo')?.value||'USUÁRIO').trim().toUpperCase();
-      const senha=String(document.getElementById('novoLoginSenha')?.value||'').trim();
-      if(!nome){toast('Informe o nome do usuário.');return;}
-      if(senha.length<4){toast('A senha inicial deve ter pelo menos 4 caracteres.');return;}
-      const chave=normalizarLogin(nome);
-      if(state.usuariosLogin.some(u=>normalizarLogin(u.nome)===chave)){toast('Este usuário já possui login.');return;}
-      state.usuariosLogin.push({nome,cargo,senha});
-      state.permissoes[chave]=permissoesPadrao(nome);
-      if(!state.funcionarios.some(f=>normalizarLogin(f)===chave)) state.funcionarios.push(nome);
-      salvarEstado();
-      setTimeout(()=>editarPermissoesUsuario(chave),50);
-    }
+      const senha=String(document.getElementById('novoLoginSenha')?.value||'');
+      const confirmar=String(document.getElementById('novoLoginSenhaConfirmar')?.value||'');
 
-    function removerUsuarioLogin(chave){
-      if(!usuarioDesenvolvedor()){toast('Controle de login exclusivo para JOAO PEDRO.');return;}
-      chave=normalizarLogin(chave);
-      if(chave===normalizarLogin('JOAO PEDRO')){toast('O acesso do desenvolvedor não pode ser removido.');return;}
-      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave);
-      if(!u)return;
-      if(confirm(`Remover o acesso de ${u.nome}? Os registros já lançados continuarão salvos.`)){
-        state.usuariosLogin=state.usuariosLogin.filter(x=>normalizarLogin(x.nome)!==chave);
-        state.funcionarios=state.usuariosLogin.map(x=>x.nome);
-        delete state.permissoes[chave];
-        salvarEstado();
+      if(!email || !email.includes('@')){toast('Informe um e-mail válido.');return;}
+      if(!operador){toast('Informe o número ou código do operador.');return;}
+      if(!nome){toast('Informe o nome do usuário.');return;}
+      if(senha.length<6){toast('A senha inicial deve ter pelo menos 6 caracteres.');return;}
+      if(senha!==confirmar){toast('As senhas não são iguais.');return;}
+      if(state.usuariosLogin.some(u=>normalizarLogin(u.operador)===normalizarLogin(operador))){
+        toast('Este operador já está cadastrado.');
+        return;
+      }
+
+      definirStatusSync('syncing','☁️ Criando usuário…');
+      const {data,error}=await signupClient.auth.signUp({
+        email,
+        password:senha,
+        options:{
+          data:{
+            username:operador,
+            full_name:nome,
+            job_title:cargo
+          }
+        }
+      });
+      if(error){
+        definirStatusSync('online','☁️ Online');
+        toast(`Não foi possível criar o acesso: ${error.message}`);
+        return;
+      }
+
+      await new Promise(resolve=>setTimeout(resolve,700));
+      try{
+        await carregarDiretorioOnline();
+        atualizarTudo();
+        const criado=state.usuariosLogin.find(u=>u.id===data?.user?.id)
+          || state.usuariosLogin.find(u=>normalizarLogin(u.operador)===normalizarLogin(operador));
+        toast(data?.session
+          ? 'Acesso online criado com sucesso ✅'
+          : 'Usuário criado. Aguarde a confirmação do e-mail, se exigida. ✅'
+        );
+        if(criado && !criado.isDeveloper) setTimeout(()=>editarPermissoesUsuario(criado.id),80);
+      }catch(e){
+        console.error(e);
+        toast('Usuário criado, mas a lista ainda não foi atualizada. Recarregue em alguns segundos.');
+      }finally{
+        definirStatusSync('online','☁️ Online • tempo real');
       }
     }
 
-    function editarPermissoesUsuario(chave){
-      if(!usuarioDesenvolvedor()){toast('Controle de permissões exclusivo para JOAO PEDRO.');return;}
-      chave=normalizarLogin(chave);
-      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
-      const dev=chave===normalizarLogin('JOAO PEDRO'),p=permissoesUsuario(u.nome);
+    async function alternarStatusUsuario(userId){
+      if(!usuarioDesenvolvedor()){toast('Controle de login exclusivo para o administrador.');return;}
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u) return;
+      if(u.isDeveloper){toast('O acesso do desenvolvedor não pode ser desativado.');return;}
+      const novoStatus=!u.ativo;
+      const acao=novoStatus?'reativar':'desativar';
+      if(!confirm(`${acao.charAt(0).toUpperCase()+acao.slice(1)} o acesso de ${u.nome}?`)) return;
+
+      const {error}=await supabaseClient
+        .from('profiles')
+        .update({active:novoStatus})
+        .eq('id',userId);
+      if(error){toast(`Não foi possível ${acao}: ${error.message}`);return;}
+      await carregarDiretorioOnline();
+      atualizarTudo();
+      toast(novoStatus?'Acesso reativado ✅':'Acesso desativado ✅');
+    }
+
+    function removerUsuarioLogin(userId){
+      return alternarStatusUsuario(userId);
+    }
+
+    function editarPermissoesUsuario(userId){
+      if(!usuarioDesenvolvedor()){toast('Controle de permissões exclusivo para o administrador.');return;}
+      const u=state.usuariosLogin.find(x=>x.id===userId); if(!u)return;
+      const dev=!!u.isDeveloper,p=permissoesUsuario(u.nome);
       document.getElementById('configModalContent').innerHTML=`
-        <div class="modal-head"><div><h2 id="configModalTitle">Permissões de ${escapeHtml(u.nome)}</h2><p>Determine quais abas e recursos aparecerão para este usuário.</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
+        <div class="modal-head"><div><h2 id="configModalTitle">Permissões de ${escapeHtml(u.nome)}</h2><p>Operador ${escapeHtml(u.operador||'—')} • Determine quais módulos aparecerão para este usuário.</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
         ${dev?'<div class="developer-panel card"><h2>&lt;/&gt; DESENVOLVEDOR</h2><p>Acesso integral permanente. Estas permissões não podem ser removidas.</p></div>':''}
         <div class="permission-grid">
           ${MODULOS.map(([id,nome])=>`<label class="permission-item"><input type="checkbox" data-perm="${id}" ${p[id]?'checked':''} ${dev?'disabled':''}>${nome}</label>`).join('')}
           <label class="permission-item"><input type="checkbox" data-perm="alterarSenha" ${p.alterarSenha?'checked':''} ${dev?'disabled':''}>🔑 Alterar a própria senha</label>
         </div>
         <p style="color:var(--muted);font-weight:750;margin:12px 0 0">Ao liberar a alteração de senha, a aba Configurações será habilitada automaticamente.</p>
-        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarPermissoesUsuario('${chave}')" ${dev?'disabled':''}>💾 Salvar permissões</button><button class="btn secondary" onclick="fecharModalConfig()">Fechar</button></div>`;
+        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarPermissoesUsuario('${u.id}')" ${dev?'disabled':''}>💾 Salvar permissões</button><button class="btn secondary" onclick="fecharModalConfig()">Fechar</button></div>`;
       document.getElementById('configModal').classList.add('active');
     }
 
-    function salvarPermissoesUsuario(chave){
+    async function salvarPermissoesUsuario(userId){
       if(!usuarioDesenvolvedor())return;
-      chave=normalizarLogin(chave);
-      if(chave===normalizarLogin('JOAO PEDRO'))return;
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u || u.isDeveloper)return;
       const perms={};
       document.querySelectorAll('#configModalContent [data-perm]').forEach(input=>perms[input.dataset.perm]=input.checked);
       if(perms.alterarSenha) perms.config=true;
       if(!Object.values(perms).some(Boolean)) perms.dashboard=true;
-      state.permissoes[chave]={...permissoesPadrao(chave),...perms};
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+
+      const payload={
+        user_id:userId,
+        dashboard:!!perms.dashboard,
+        recebimento:!!perms.recebimento,
+        inventario:!!perms.inventario,
+        checklist:!!perms.checklist,
+        categorias:!!perms.categorias,
+        relatorios:!!perms.relatorios,
+        config:!!perms.config,
+        alterar_senha:!!perms.alterarSenha
+      };
+      const {error}=await supabaseClient
+        .from('user_permissions')
+        .upsert(payload,{onConflict:'user_id'});
+      if(error){toast(`Não foi possível salvar as permissões: ${error.message}`);return;}
+
+      await carregarDiretorioOnline();
       fecharModalConfig();
       atualizarTudo();
-      toast('Permissões atualizadas ✅');
+      toast('Permissões atualizadas no Supabase ✅');
     }
 
-    function abrirAlteracaoSenha(chave){
-      chave=normalizarLogin(chave);
-      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
-      const autorizado=usuarioDesenvolvedor() || (normalizarLogin(currentUser?.nome)===chave && permissoesUsuario(currentUser.nome).alterarSenha);
-      if(!autorizado){toast('Alteração de senha não autorizada.');return;}
+    function abrirAlteracaoSenha(userId){
+      const u=state.usuariosLogin.find(x=>x.id===userId); if(!u)return;
+      const proprio=userId===currentAuthUser?.id;
+      const autorizado=proprio && (usuarioDesenvolvedor() || permissoesUsuario(currentUser.nome).alterarSenha);
+      if(!autorizado){
+        toast('Por segurança, somente o próprio usuário pode alterar a senha nesta tela.');
+        return;
+      }
       document.getElementById('configModalContent').innerHTML=`
-        <div class="modal-head"><div><h2 id="configModalTitle">Alterar senha</h2><p>${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
-        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" minlength="4" placeholder="Mínimo de 4 caracteres"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" minlength="4" placeholder="Repita a senha"></div></div>
-        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarNovaSenha('${chave}')">💾 Salvar nova senha</button><button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button></div>`;
+        <div class="modal-head"><div><h2 id="configModalTitle">Alterar minha senha</h2><p>${escapeHtml(u.nome)} • ${escapeHtml(u.cargo)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
+        <div class="form-row two"><div class="field"><label>Nova senha</label><input id="novaSenhaUsuario" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div><div class="field"><label>Confirmar senha</label><input id="confirmarSenhaUsuario" type="password" minlength="6" placeholder="Repita a senha"></div></div>
+        <div class="config-actions" style="margin-top:16px"><button class="btn" onclick="salvarNovaSenha('${userId}')">💾 Salvar nova senha</button><button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button></div>`;
       document.getElementById('configModal').classList.add('active');
       setTimeout(()=>document.getElementById('novaSenhaUsuario')?.focus(),50);
     }
 
-    function salvarNovaSenha(chave){
-      chave=normalizarLogin(chave);
-      const nova=String(document.getElementById('novaSenhaUsuario')?.value||'').trim();
-      const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'').trim();
-      if(nova.length<4){toast('A nova senha deve ter pelo menos 4 caracteres.');return;}
+    async function salvarNovaSenha(userId){
+      if(userId!==currentAuthUser?.id){toast('Alteração de senha não autorizada.');return;}
+      const nova=String(document.getElementById('novaSenhaUsuario')?.value||'');
+      const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'');
+      if(nova.length<6){toast('A nova senha deve ter pelo menos 6 caracteres.');return;}
       if(nova!==confirma){toast('As senhas não são iguais.');return;}
-      const u=state.usuariosLogin.find(x=>normalizarLogin(x.nome)===chave); if(!u)return;
-      const autorizado=usuarioDesenvolvedor() || (normalizarLogin(currentUser?.nome)===chave && permissoesUsuario(currentUser.nome).alterarSenha);
-      if(!autorizado)return;
-      u.senha=nova;
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+      const {error}=await supabaseClient.auth.updateUser({password:nova});
+      if(error){toast(`Não foi possível alterar a senha: ${error.message}`);return;}
       fecharModalConfig();
-      atualizarTudo();
-      toast('Senha alterada com sucesso 🔑');
+      toast('Senha alterada com sucesso no Supabase 🔑');
     }
 
     function fecharModalConfig(){document.getElementById('configModal')?.classList.remove('active');}
@@ -2618,36 +2973,77 @@
     }
 
     function popularLoginUsers(){
-      const input = document.getElementById('loginUser');
-      if(input) input.placeholder = 'Digite seu nome cadastrado';
+      const input=document.getElementById('loginUser');
+      if(input) input.placeholder='Digite o e-mail cadastrado no Supabase';
     }
 
-    function fazerLogin(evt){
+    async function fazerLogin(evt){
       evt.preventDefault();
-      const nomeDigitado = normalizarLogin(document.getElementById('loginUser').value);
-      const senha = document.getElementById('loginSenha').value.trim();
-      const usuario = state.usuariosLogin.find(u=>normalizarLogin(u.nome)===nomeDigitado && String(u.senha)===senha);
-      const erro = document.getElementById('loginError');
-      if(!usuario){ erro.classList.add('show'); return; }
+      const email=String(document.getElementById('loginUser').value||'').trim().toLowerCase();
+      const senha=String(document.getElementById('loginSenha').value||'');
+      const erro=document.getElementById('loginError');
+      if(!email || !senha){
+        erro.textContent='Informe o e-mail e a senha.';
+        erro.classList.add('show');
+        return;
+      }
+
       erro.classList.remove('show');
-      currentUser = {nome:usuario.nome,cargo:usuario.cargo};
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify(currentUser));
-      document.getElementById('loginUser').value = usuario.nome;
-      document.getElementById('loginSenha').value='';
-      abrirSistema();
-      toast(`Bem-vindo, ${usuario.nome} ✅`);
+      const botao=evt.submitter || evt.target.querySelector('button[type="submit"]');
+      if(botao){botao.disabled=true;botao.textContent='Entrando…';}
+      definirStatusSync('syncing','☁️ Autenticando…');
+
+      const {data,error}=await supabaseClient.auth.signInWithPassword({email,password:senha});
+      if(error || !data?.session){
+        erro.textContent='E-mail ou senha incorretos, ou o usuário ainda não confirmou o e-mail.';
+        erro.classList.add('show');
+        definirStatusSync('offline','☁️ Não conectado');
+        if(botao){botao.disabled=false;botao.textContent='Entrar no Sistema';}
+        return;
+      }
+
+      try{
+        await inicializarSessaoOnline(data.session);
+        document.getElementById('loginSenha').value='';
+        toast(`Bem-vindo, ${currentUser.nome} ✅`);
+      }catch(e){
+        console.error(e);
+        await supabaseClient.auth.signOut();
+        erro.textContent=e?.message || 'Não foi possível carregar o perfil deste usuário.';
+        erro.classList.add('show');
+        mostrarLogin();
+      }finally{
+        if(botao){botao.disabled=false;botao.textContent='Entrar no Sistema';}
+      }
     }
 
-    function verificarSessao(){
+    async function inicializarSessaoOnline(session){
+      currentAuthUser=session?.user||null;
+      if(!currentAuthUser) throw new Error('Sessão inválida.');
+      definirStatusSync('syncing','☁️ Carregando perfil…');
+      await carregarDiretorioOnline();
+      await carregarEstadoCompartilhado();
+      iniciarRealtime();
+      abrirSistema();
+    }
+
+    async function verificarSessao(){
       popularLoginUsers();
-      try{
-        const raw = sessionStorage.getItem(SESSION_KEY);
-        if(raw){
-          const sess = JSON.parse(raw);
-          const usuario = state.usuariosLogin.find(u=>normalizarLogin(u.nome)===normalizarLogin(sess.nome));
-          if(usuario){ currentUser = {nome:usuario.nome,cargo:usuario.cargo}; abrirSistema(); return; }
+      const {data,error}=await supabaseClient.auth.getSession();
+      if(error){
+        console.warn(error);
+        mostrarLogin();
+        return;
+      }
+      if(data?.session){
+        try{
+          await inicializarSessaoOnline(data.session);
+          return;
+        }catch(e){
+          console.error(e);
+          await supabaseClient.auth.signOut();
         }
-      }catch(e){ console.warn(e); }
+      }
       mostrarLogin();
     }
 
@@ -2659,16 +3055,21 @@
     }
 
     function mostrarLogin(){
-      currentUser = null;
-      sessionStorage.removeItem(SESSION_KEY);
+      currentUser=null;
+      currentProfile=null;
+      currentAuthUser=null;
+      encerrarRealtime();
       document.getElementById('appShell').classList.add('hidden');
       document.getElementById('loginScreen').classList.remove('hidden');
       atualizarTema();
       popularLoginUsers();
-      setTimeout(()=>document.getElementById('loginUser').focus(),50);
+      definirStatusSync('offline','☁️ Não conectado');
+      setTimeout(()=>document.getElementById('loginUser')?.focus(),50);
     }
 
-    function logout(){
+    async function logout(){
+      definirStatusSync('syncing','☁️ Encerrando sessão…');
+      await supabaseClient.auth.signOut();
       mostrarLogin();
       document.getElementById('loginUser').value='';
       document.getElementById('loginSenha').value='';
@@ -2691,9 +3092,22 @@
       atualizarTema(); atualizarTopo(); renderDashboard(); renderQuick(); renderRecebimentoForm(); renderRecebimentos(); renderInventarioForm(); renderInventario(); if(document.getElementById('page-checklist')?.classList.contains('active') && document.getElementById('checklistFormPanel')?.classList.contains('active')) renderChecklistForm(); renderChecklist(); renderCategoryTabs(); renderCategoryTable(); renderReport(); renderConfig();
     }
 
-    window.addEventListener('load',()=>{
+    window.addEventListener('online',()=>{
+      definirStatusSync('syncing','☁️ Reconectando…');
+      if(currentAuthUser){
+        pendingRemoteSave=true;
+        agendarSincronizacao();
+        iniciarRealtime();
+      }
+    });
+
+    window.addEventListener('offline',()=>{
+      definirStatusSync('offline','☁️ Offline • salvo neste aparelho');
+    });
+
+    window.addEventListener('load',async()=>{
       atualizarTema();
-      verificarSessao();
+      await verificarSessao();
     });
   </script>
 </body>
