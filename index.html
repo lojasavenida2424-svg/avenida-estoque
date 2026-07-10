@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Assistência Gerencial de Estoque - Avenida Online V38</title>
+  <title>Assistência Gerencial de Estoque - Avenida Online V39</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,7 +1161,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v38-login-operador-senha-livre-2026-07-10';
+    const TEAM_VERSION = 'v39-criacao-sem-email-edge-function-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
@@ -1182,19 +1182,6 @@
         },
         realtime: {
           params: { eventsPerSecond: 8 }
-        }
-      }
-    );
-
-    // Cliente separado para o administrador criar novos acessos sem substituir a própria sessão.
-    const signupClient = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_PUBLISHABLE_KEY,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
         }
       }
     );
@@ -2820,7 +2807,7 @@
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" placeholder="Repita a senha" autocomplete="new-password"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso online</button></div>
-          <div class="category-help">O usuário fará login somente pelo código de operador. Nenhum e-mail precisa ser informado. A senha pode ter qualquer quantidade de caracteres.</div>
+          <div class="category-help">O usuário fará login somente pelo código de operador. O cadastro é criado diretamente no servidor, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -2872,12 +2859,6 @@
       if(!nome){toast('Informe o nome do usuário.');return;}
       if(!cargo){toast('Selecione o cargo do usuário.');return;}
 
-      const operadorEmail=operador
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g,'')
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]/g,'-');
-      const email=`operador.${operadorEmail}@login.avenidaestoque.com.br`;
       if(senha===''){toast('Digite uma senha para o usuário.');return;}
       if(senha!==confirmar){toast('As senhas não são iguais.');return;}
       if(state.usuariosLogin.some(u=>normalizarLogin(u.operador)===normalizarLogin(operador))){
@@ -2886,37 +2867,54 @@
       }
 
       definirStatusSync('syncing','☁️ Criando usuário…');
-      const {data,error}=await signupClient.auth.signUp({
-        email,
-        password:senhaInterna(senha),
-        options:{
-          data:{
-            username:operador,
-            full_name:nome,
-            job_title:cargo
-          }
-        }
-      });
-      if(error){
-        definirStatusSync('online','☁️ Online');
-        toast(`Não foi possível criar o acesso: ${error.message}`);
-        return;
-      }
 
-      await new Promise(resolve=>setTimeout(resolve,700));
       try{
+        const {data,error}=await supabaseClient.functions.invoke('create-stock-user',{
+          body:{
+            operador,
+            nome,
+            cargo,
+            senha
+          }
+        });
+
+        if(error){
+          let detalhe=error.message || 'Erro desconhecido';
+          try{
+            const contexto=await error.context?.json?.();
+            detalhe=contexto?.error || contexto?.message || detalhe;
+          }catch(_){}
+          throw new Error(detalhe);
+        }
+
+        if(!data?.success){
+          throw new Error(data?.error || 'O acesso não foi criado.');
+        }
+
+        await new Promise(resolve=>setTimeout(resolve,500));
         await carregarDiretorioOnline();
         atualizarTudo();
-        const criado=state.usuariosLogin.find(u=>u.id===data?.user?.id)
-          || state.usuariosLogin.find(u=>normalizarLogin(u.operador)===normalizarLogin(operador));
-        toast(data?.session
-          ? 'Acesso online criado com sucesso ✅'
-          : 'Acesso online criado com sucesso ✅'
+
+        const criado=state.usuariosLogin.find(
+          u=>u.id===data.user_id
+            || normalizarLogin(u.operador)===normalizarLogin(operador)
         );
-        if(criado && !criado.isDeveloper) setTimeout(()=>editarPermissoesUsuario(criado.id),80);
+
+        toast('Acesso online criado sem envio de e-mail ✅');
+
+        document.getElementById('novoLoginOperador').value='';
+        document.getElementById('novoLoginNome').value='';
+        document.getElementById('novoLoginCargo').value='';
+        document.getElementById('novoLoginSenha').value='';
+        document.getElementById('novoLoginSenhaConfirmar').value='';
+
+        if(criado && !criado.isDeveloper){
+          setTimeout(()=>editarPermissoesUsuario(criado.id),80);
+        }
       }catch(e){
         console.error(e);
-        toast('Usuário criado, mas a lista ainda não foi atualizada. Recarregue em alguns segundos.');
+        const mensagem=String(e?.message||'Não foi possível criar o acesso.');
+        toast(`Não foi possível criar o acesso: ${mensagem}`);
       }finally{
         definirStatusSync('online','☁️ Online • tempo real');
       }
