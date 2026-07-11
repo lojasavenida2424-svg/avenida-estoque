@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avenida Estoque Online V41 — Controle de Senhas</title>
+  <title>Avenida Estoque Online V42 — Edição de Operadores</title>
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -1161,7 +1161,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v41-desenvolvedor-altera-senhas-2026-07-10';
+    const TEAM_VERSION = 'v42-edicao-operadores-2026-07-10';
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
     const ONLINE_STATE_TABLE = 'avenida_estoque_state';
@@ -2769,6 +2769,7 @@
           <td>${u.ativo?'<span class="status-pill ok">ATIVO</span>':'<span class="status-pill bad">INATIVO</span>'}</td>
           <td>${dev?'Acesso integral':`${liberadas} módulos`}</td>
           <td class="no-print"><div class="config-actions">
+            <button class="btn secondary" onclick="abrirEdicaoUsuario('${u.id}')">✏️ Editar</button>
             <button class="btn secondary" onclick="editarPermissoesUsuario('${u.id}')" ${dev?'disabled':''}>⚙️ Permissões</button>
             <button class="btn secondary" onclick="abrirAlteracaoSenha('${u.id}')">${proprio?'🔑 Minha senha':'🔑 Alterar senha'}</button>
             <button class="${u.ativo?'btn danger':'btn success'}" onclick="alternarStatusUsuario('${u.id}')" ${dev?'disabled':''}>${u.ativo?'Desativar':'Reativar'}</button>
@@ -2785,7 +2786,7 @@
 
       el.innerHTML=`
         <div class="developer-panel card">
-          <div class="section-title" style="margin:0"><div><h2>&lt;/&gt; DESENVOLVEDOR</h2><p>JOÃO PEDRO • Acesso integral permanente ao sistema de estoque.</p></div><span class="developer-badge">NÍVEL MÁXIMO</span></div>
+          <div class="section-title" style="margin:0"><div><h2>&lt;/&gt; DESENVOLVEDOR</h2><p>${escapeHtml(currentUser.nome)} • Acesso integral permanente ao sistema de estoque.</p></div><span class="developer-badge">NÍVEL MÁXIMO</span></div>
         </div>
 
         <div class="card" style="border:2px solid var(--amarelo-2)">
@@ -2807,7 +2808,7 @@
             <div class="field"><label>Confirmar senha</label><input id="novoLoginSenhaConfirmar" type="password" placeholder="Repita a senha" autocomplete="new-password"></div>
           </div>
           <div class="config-actions" style="margin-top:14px"><button class="btn" onclick="adicionarUsuarioLogin()">➕ Criar acesso no servidor</button></div>
-          <div class="category-help"><strong>VERSÃO V41 • CADASTRO E SENHAS PELO SERVIDOR</strong><br>O usuário fará login somente pelo código de operador. A criação e a redefinição administrativa de senhas acontecem pela Edge Function <code>create-stock-user</code>, sem solicitar ou enviar e-mail. A senha só não pode ficar vazia.</div>
+          <div class="category-help"><strong>VERSÃO V42 • CADASTRO, EDIÇÃO E SENHAS</strong><br>O usuário fará login somente pelo código de operador. A criação e a redefinição administrativa de senhas acontecem pelo servidor. O desenvolvedor também pode editar operador, nome e cargo. A senha só não pode ficar vazia.</div>
           <div class="table-wrap" style="margin-top:16px"><table style="min-width:1050px"><thead><tr><th>Operador</th><th>Usuário</th><th>Cargo</th><th>Status</th><th>Permissões</th><th>Ações</th></tr></thead><tbody>${usuariosRows}</tbody></table></div>
         </div>
 
@@ -2838,7 +2839,7 @@
     }
 
     function salvarConfig(){
-      if(!usuarioDesenvolvedor()){ toast('Apenas JOAO PEDRO pode alterar os dados gerais.'); return; }
+      if(!usuarioDesenvolvedor()){ toast('Apenas o desenvolvedor pode alterar os dados gerais.'); return; }
       state.meta.loja = document.getElementById('cfgLoja').value.trim();
       state.meta.mes = mesAtualBR();
       state.meta.gerente = document.getElementById('cfgGerente').value.trim();
@@ -2915,6 +2916,164 @@
         console.error(e);
         const mensagem=String(e?.message||'Não foi possível criar o acesso.');
         toast(`Não foi possível criar o acesso: ${mensagem}`);
+      }finally{
+        definirStatusSync('online','☁️ Online • tempo real');
+      }
+    }
+
+    function abrirEdicaoUsuario(userId){
+      if(!usuarioDesenvolvedor()){
+        toast('Edição de operadores exclusiva para o desenvolvedor.');
+        return;
+      }
+
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u){
+        toast('Usuário não encontrado.');
+        return;
+      }
+
+      const operadorProtegido=!!u.isDeveloper;
+      const cargos=[
+        'GERENTE',
+        'FISCAL',
+        'ADMINISTRATIVO',
+        'VISUAL MERCHANDISING',
+        'ASSESSOR'
+      ];
+
+      const opcoesCargo=cargos.map(cargo=>
+        `<option value="${cargo}" ${u.cargo===cargo?'selected':''}>${cargo}</option>`
+      ).join('');
+
+      document.getElementById('configModalContent').innerHTML=`
+        <div class="modal-head">
+          <div>
+            <h2 id="configModalTitle">Editar operador</h2>
+            <p>Altere o código de acesso, o nome exibido e o cargo do usuário.</p>
+          </div>
+          <button class="icon-btn" onclick="fecharModalConfig()">✕</button>
+        </div>
+
+        ${operadorProtegido?`
+          <div class="developer-panel card">
+            <h2>&lt;/&gt; DESENVOLVEDOR</h2>
+            <p>O código do operador desenvolvedor é protegido e continuará como 133.</p>
+          </div>
+        `:''}
+
+        <div class="form-row three">
+          <div class="field">
+            <label>Código do operador</label>
+            <input
+              id="editarUsuarioOperador"
+              value="${escapeHtml(u.operador||'')}"
+              ${operadorProtegido?'readonly':''}
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="field">
+            <label>Nome do usuário</label>
+            <input
+              id="editarUsuarioNome"
+              value="${escapeHtml(u.nome||'')}"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="field">
+            <label>Cargo</label>
+            <select id="editarUsuarioCargo">
+              ${opcoesCargo}
+            </select>
+          </div>
+        </div>
+
+        <div class="config-actions" style="margin-top:16px">
+          <button class="btn" onclick="salvarEdicaoUsuario('${u.id}')">💾 Salvar alterações</button>
+          <button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button>
+        </div>`;
+
+      document.getElementById('configModal').classList.add('active');
+      setTimeout(()=>document.getElementById('editarUsuarioNome')?.focus(),50);
+    }
+
+    async function salvarEdicaoUsuario(userId){
+      if(!usuarioDesenvolvedor()){
+        toast('Edição de operadores exclusiva para o desenvolvedor.');
+        return;
+      }
+
+      const u=state.usuariosLogin.find(x=>x.id===userId);
+      if(!u){
+        toast('Usuário não encontrado.');
+        return;
+      }
+
+      const operador=u.isDeveloper
+        ? '133'
+        : String(document.getElementById('editarUsuarioOperador')?.value||'').trim().toUpperCase();
+
+      const nome=String(document.getElementById('editarUsuarioNome')?.value||'').trim().toUpperCase();
+      const cargo=String(document.getElementById('editarUsuarioCargo')?.value||'').trim().toUpperCase();
+
+      if(!operador){
+        toast('Informe o código do operador.');
+        return;
+      }
+
+      if(!/^[A-Z0-9._-]+$/.test(operador)){
+        toast('Use apenas letras, números, ponto, hífen ou sublinhado no operador.');
+        return;
+      }
+
+      if(!nome){
+        toast('Informe o nome do usuário.');
+        return;
+      }
+
+      if(!cargo){
+        toast('Selecione o cargo.');
+        return;
+      }
+
+      const operadorDuplicado=state.usuariosLogin.some(outro=>
+        outro.id!==userId
+        && normalizarLogin(outro.operador)===normalizarLogin(operador)
+      );
+
+      if(operadorDuplicado){
+        toast('Este código de operador já está sendo usado.');
+        return;
+      }
+
+      definirStatusSync('syncing','☁️ Atualizando operador…');
+
+      try{
+        const {error}=await supabaseClient
+          .from('profiles')
+          .update({
+            username:operador,
+            full_name:nome,
+            job_title:cargo
+          })
+          .eq('id',userId);
+
+        if(error){
+          if(error.code==='23505'){
+            throw new Error('Este código de operador já está sendo usado.');
+          }
+          throw error;
+        }
+
+        await carregarDiretorioOnline();
+        fecharModalConfig();
+        atualizarTudo();
+        toast('Dados do operador atualizados com sucesso ✅');
+      }catch(e){
+        console.error(e);
+        toast(`Não foi possível atualizar o operador: ${e?.message||'erro desconhecido'}`);
       }finally{
         definirStatusSync('online','☁️ Online • tempo real');
       }
@@ -3439,7 +3598,7 @@
       definirStatusSync('offline','☁️ Offline • salvo neste aparelho');
     });
 
-    console.info('AVENIDA ESTOQUE V41 — criação e redefinição de senhas via Edge Function create-stock-user');
+    console.info('AVENIDA ESTOQUE V42 — edição de operadores, criação e redefinição de senhas');
 
     window.addEventListener('load',async()=>{
       atualizarTema();
