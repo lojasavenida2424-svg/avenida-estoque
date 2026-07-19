@@ -1340,7 +1340,10 @@
             <select id="fiscFiltroStatus" onchange="renderFiscalizacao()"><option value="todos">Todos os status</option><option value="Em análise">Em análise</option><option value="Indício confirmado">Indício confirmado</option><option value="Finalizado">Finalizado</option></select>
             <select id="fiscFiltroFiscal" onchange="renderFiscalizacao()"><option value="todos">Todos os fiscais</option></select>
           </div>
-          <button class="btn blue" onclick="exportarFiscalizacaoCSV()">📄 Exportar Fiscalização</button>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn" onclick="imprimirRelatorioFiscalizacao()">🖨️ Imprimir relatório</button>
+            <button class="btn blue" onclick="exportarFiscalizacaoCSV()">📄 Exportar Fiscalização</button>
+          </div>
         </div>
         <div class="table-wrap"><table id="fiscalizacaoTable"></table></div>
       </section>
@@ -1428,7 +1431,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v59-indicios-multiplos-2026-07-18';
+    const TEAM_VERSION = 'v61-relatorio-fiscalizacao-impressao-2026-07-18';
     const DATA_VERSION = 44;
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
@@ -2985,11 +2988,36 @@
       return [...new Set(nomes.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
     }
 
+    function fiscaisCadastrados(){
+      return [...new Set(
+        (state.usuariosLogin||[])
+          .filter(usuario =>
+            usuario &&
+            usuario.ativo !== false &&
+            String(usuario.cargo||'').trim().toUpperCase() === 'FISCAL'
+          )
+          .map(usuario => String(usuario.nome||'').trim())
+          .filter(Boolean)
+      )].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    }
+
     function popularSelectFiscalizacao(id, incluirNaoInformado=false){
       const el=document.getElementById(id); if(!el) return;
       const atual=el.value;
-      const opcoes=funcionariosFiscalizacao();
-      el.innerHTML=(incluirNaoInformado?'<option value="">Não informado</option>':'<option value="">Selecione</option>')+opcoes.map(nome=>`<option value="${escapeHtml(nome)}">${escapeHtml(nome)}</option>`).join('');
+
+      // Regra exclusiva: "Fiscal do turno" mostra SOMENTE usuários ativos
+      // cadastrados no Controle de Login com Cargo = FISCAL.
+      const opcoes = id === 'fiscFiscalTurno'
+        ? fiscaisCadastrados()
+        : funcionariosFiscalizacao();
+
+      const rotuloVazio = id === 'fiscFiscalTurno'
+        ? (opcoes.length ? 'Selecione o fiscal' : 'Nenhum fiscal cadastrado')
+        : (incluirNaoInformado ? 'Não informado' : 'Selecione');
+
+      el.innerHTML=`<option value="">${rotuloVazio}</option>`+
+        opcoes.map(nome=>`<option value="${escapeHtml(nome)}">${escapeHtml(nome)}</option>`).join('');
+
       if(opcoes.includes(atual)) el.value=atual;
       else if(id==='fiscEncontradoPor' && currentUser?.nome && opcoes.includes(currentUser.nome)) el.value=currentUser.nome;
     }
@@ -3422,7 +3450,7 @@
       }).sort((a,b)=>`${b.data}T${b.hora}`.localeCompare(`${a.data}T${a.hora}`));
       const table=document.getElementById('fiscalizacaoTable'); if(!table) return;
       table.innerHTML=`<thead><tr><th>Data / hora</th><th>Provador</th><th>Etiquetas / itens</th><th>Valor estimado</th><th>Responsável provador</th><th>Fiscal do turno</th><th>Status</th><th>Registrado por</th><th class="no-print">Ações</th></tr></thead><tbody>${filtrada.length?filtrada.map(x=>`<tr>
-        <td><strong>${escapeHtml(dataBRFromISO(x.data))}</strong><br>${escapeHtml(x.hora||'—')}</td><td><strong>${escapeHtml(x.provador)}</strong></td><td>${n(x.quantidadeTotal)||((x.itens||[]).length)}<span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td><td><strong>${moedaBR(x.valorTotal)}</strong></td><td>${escapeHtml(x.responsavelProvador||'—')}</td><td>${escapeHtml(x.fiscalTurno||'—')}</td><td><span class="status-pill ${classeStatusFiscal(x.status)}">${escapeHtml(x.status||'Em análise')}</span></td><td>${auditLabel(x)}</td><td class="no-print"><div class="config-actions"><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">Remover</button></div></td>
+        <td><strong>${escapeHtml(dataBRFromISO(x.data))}</strong><br>${escapeHtml(x.hora||'—')}</td><td><strong>${escapeHtml(x.provador)}</strong></td><td>${n(x.quantidadeTotal)||((x.itens||[]).length)}<span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td><td><strong>${moedaBR(x.valorTotal)}</strong></td><td>${escapeHtml(x.responsavelProvador||'—')}</td><td>${escapeHtml(x.fiscalTurno||'—')}</td><td><span class="status-pill ${classeStatusFiscal(x.status)}">${escapeHtml(x.status||'Em análise')}</span></td><td>${auditLabel(x)}</td><td class="no-print"><div class="config-actions"><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">Remover</button></div></td>
       </tr>`).join(''):'<tr><td colspan="9" class="empty">Nenhuma ocorrência registrada para os filtros atuais.</td></tr>'}</tbody>`;
     }
 
@@ -3433,7 +3461,8 @@
       document.getElementById('configModalContent').innerHTML=`<div class="modal-head"><div><h2 id="configModalTitle">🛡️ Ocorrência ${escapeHtml(x.id)}</h2><p>${escapeHtml(dataBRFromISO(x.data))} às ${escapeHtml(x.hora)} • ${escapeHtml(x.provador)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
       <div class="fiscal-detail-grid"><div><small>Responsável pelo provador</small><strong>${escapeHtml(x.responsavelProvador||'—')}</strong></div><div><small>Fiscal do turno</small><strong>${escapeHtml(x.fiscalTurno||'—')}</strong></div><div><small>Encontrado por</small><strong>${escapeHtml(x.encontradoPor||'—')}</strong></div><div><small>Tipo de indício / problema relatado</small><strong>${escapeHtml(textoIndiciosFiscal(x)||'—')}</strong></div><div><small>Status</small><strong>${escapeHtml(x.status||'—')}</strong></div><div><small>Valor total estimado</small><strong>${moedaBR(x.valorTotal)}</strong></div></div>
       <div class="table-wrap"><table><thead><tr><th>Tipo etiqueta</th><th>Departamento</th><th>Cód. principal</th><th>Descrição</th><th>Cor</th><th>Tam.</th><th>Cód. barras</th><th>Valor</th><th>Cód. adicional</th><th>Data etiqueta</th><th>Qtd.</th><th>Subtotal</th></tr></thead><tbody>${itens||'<tr><td colspan="12" class="empty">Sem itens.</td></tr>'}</tbody></table></div>
-      <div class="category-help" style="margin-top:14px"><strong>Observações</strong><br>${escapeHtml(x.observacao||'Sem observações.')}</div>`;
+      <div class="category-help" style="margin-top:14px"><strong>Observações</strong><br>${escapeHtml(x.observacao||'Sem observações.')}</div>
+      <div class="config-actions" style="margin-top:14px;justify-content:flex-end"><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir relatório desta fiscalização</button></div>`;
       document.getElementById('configModal').classList.add('active');
     }
 
@@ -3453,6 +3482,189 @@
       lista.forEach(x=>(x.itens||[]).forEach(i=>linhas.push([x.id,x.data,x.hora,x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,textoIndiciosFiscal(x),x.status,i.codigoBarras,i.referencia,i.codigoCor||resumoCodigoFiscal(i).cor,i.codigoTamanho||resumoCodigoFiscal(i).tamanho,i.descricao,i.cor,i.tamanho,n(i.valor),i.codigoAuxiliar,dataEtiquetaFormatada(i.dataEtiqueta),Math.max(1,n(i.quantidade)),n(i.valor)*Math.max(1,n(i.quantidade)),x.observacao,x.lastUser])));
       const csv='\uFEFF'+linhas.map(row=>row.map(v=>`\"${String(v??'').replace(/\"/g,'\"\"')}\"`).join(';')).join('\n');
       downloadText(csv,`fiscalizacao-${state.activeMonth||mesChaveAtual()}.csv`,'text/csv;charset=utf-8');
+    }
+
+
+    function fiscalizacoesFiltradasAtuais(){
+      const lista=fiscalizacoesMesAtual();
+      const busca=String(document.getElementById('fiscFiltroBusca')?.value||'').trim().toLowerCase();
+      const status=document.getElementById('fiscFiltroStatus')?.value||'todos';
+      const fiscal=document.getElementById('fiscFiltroFiscal')?.value||'todos';
+      return lista.filter(x=>{
+        if(status!=='todos' && x.status!==status) return false;
+        if(fiscal!=='todos' && x.fiscalTurno!==fiscal) return false;
+        if(!busca) return true;
+        const texto=[x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,textoIndiciosFiscal(x),x.status,x.observacao,...(x.itens||[]).flatMap(i=>[i.referencia,i.codigoBarras,i.descricao,i.tamanho,i.cor,i.codigoAuxiliar,i.dataEtiqueta])].join(' ').toLowerCase();
+        return texto.includes(busca);
+      }).sort((a,b)=>`${b.data}T${b.hora}`.localeCompare(`${a.data}T${a.hora}`));
+    }
+
+    function escapePrintHtml(valor){
+      return String(valor??'').replace(/[&<>"']/g,caractere=>({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+      }[caractere]));
+    }
+
+    function descricaoFiltrosFiscalizacao(){
+      const partes=[];
+      const status=document.getElementById('fiscFiltroStatus')?.value||'todos';
+      const fiscal=document.getElementById('fiscFiltroFiscal')?.value||'todos';
+      const busca=String(document.getElementById('fiscFiltroBusca')?.value||'').trim();
+      if(status!=='todos') partes.push(`Status: ${status}`);
+      if(fiscal!=='todos') partes.push(`Fiscal: ${fiscal}`);
+      if(busca) partes.push(`Busca: "${busca}"`);
+      return partes.length?partes.join(' • '):'Sem filtros adicionais';
+    }
+
+    function htmlRelatorioFiscalizacao(lista, opcoes={}){
+      const individual=lista.length===1 && opcoes.individual;
+      const totalOcorrencias=lista.length;
+      const totalItens=lista.reduce((s,x)=>s+n(x.quantidadeTotal||((x.itens||[]).reduce((a,i)=>a+Math.max(1,n(i.quantidade)),0))),0);
+      const totalValor=lista.reduce((s,x)=>s+n(x.valorTotal),0);
+      const titulo=individual
+        ? `Relatório de Fiscalização — ${escapePrintHtml(lista[0]?.id||'Ocorrência')}`
+        : 'Relatório de Fiscalização';
+      const subtitulo=individual
+        ? `${escapePrintHtml(dataBRFromISO(lista[0]?.data||''))} às ${escapePrintHtml(lista[0]?.hora||'—')} • ${escapePrintHtml(lista[0]?.provador||'—')}`
+        : `Competência: ${escapePrintHtml(state.meta?.mes||state.activeMonth||mesChaveAtual())} • ${escapePrintHtml(descricaoFiltrosFiscalizacao())}`;
+
+      const blocos=lista.map((x,indice)=>{
+        const itens=(x.itens||[]).map(item=>normalizarItemFiscal(item));
+        const linhasItens=itens.length?itens.map((i,itemIndex)=>{
+          const qtd=Math.max(1,n(i.quantidade));
+          const subtotal=n(i.valor)*qtd;
+          const identificacao=[i.referencia,i.codigoBarras].filter(Boolean).map(escapePrintHtml).join('<br>');
+          const classificacao=[i.departamento,i.categoria,i.subcategoria].filter(Boolean).map(escapePrintHtml).join(' › ');
+          return `<tr>
+            <td>${itemIndex+1}</td>
+            <td><strong>${escapePrintHtml(i.descricao||'—')}</strong><small>${classificacao||'Sem classificação'}${i.tipoEtiqueta?` • Etiqueta ${escapePrintHtml(i.tipoEtiqueta)}`:''}</small></td>
+            <td>${identificacao||'—'}<small>${i.codigoAuxiliar?`Adicional: ${escapePrintHtml(i.codigoAuxiliar)}`:''}</small></td>
+            <td>${escapePrintHtml(i.cor||'—')}<br><small>Tam.: ${escapePrintHtml(i.tamanho||'—')}</small></td>
+            <td>${qtd}</td>
+            <td>${moedaBR(i.valor)}</td>
+            <td><strong>${moedaBR(subtotal)}</strong></td>
+          </tr>`;
+        }).join(''):'<tr><td colspan="7" class="empty">Sem itens registrados.</td></tr>';
+
+        return `<section class="ocorrencia">
+          <div class="ocorrencia-head">
+            <div>
+              <span class="numero">Ocorrência ${indice+1}</span>
+              <h2>${escapePrintHtml(x.id||'Sem ID')}</h2>
+              <p>${escapePrintHtml(dataBRFromISO(x.data||''))} às ${escapePrintHtml(x.hora||'—')} • ${escapePrintHtml(x.provador||'—')}</p>
+            </div>
+            <div class="status">${escapePrintHtml(x.status||'Em análise')}</div>
+          </div>
+
+          <div class="meta-grid">
+            <div><span>Responsável pelo provador</span><strong>${escapePrintHtml(x.responsavelProvador||'—')}</strong></div>
+            <div><span>Fiscal do turno</span><strong>${escapePrintHtml(x.fiscalTurno||'—')}</strong></div>
+            <div><span>Encontrado por</span><strong>${escapePrintHtml(x.encontradoPor||'—')}</strong></div>
+            <div><span>Tipos de indício / problema</span><strong>${escapePrintHtml(textoIndiciosFiscal(x)||'—')}</strong></div>
+          </div>
+
+          <table>
+            <thead><tr><th>#</th><th>Produto / descrição</th><th>Códigos / referência</th><th>Cor / tamanho</th><th>Qtd.</th><th>Valor unit.</th><th>Subtotal</th></tr></thead>
+            <tbody>${linhasItens}</tbody>
+          </table>
+
+          <div class="totais">
+            <span>Itens / etiquetas: <strong>${n(x.quantidadeTotal)||itens.reduce((s,i)=>s+Math.max(1,n(i.quantidade)),0)}</strong></span>
+            <span>Valor estimado: <strong>${moedaBR(x.valorTotal)}</strong></span>
+          </div>
+
+          <div class="observacao"><span>Observações da ocorrência</span><p>${escapePrintHtml(x.observacao||'Sem observações.')}</p></div>
+          <div class="auditoria">Registrado por: <strong>${escapePrintHtml(x.lastUser||x.encontradoPor||'—')}</strong>${x.lastUpdated?` • Atualizado em ${escapePrintHtml(x.lastUpdated)}`:''}</div>
+
+          ${individual?`<div class="assinaturas">
+            <div><span></span><strong>${escapePrintHtml(x.fiscalTurno||'Fiscal do turno')}</strong><small>Fiscal do turno</small></div>
+            <div><span></span><strong>${escapePrintHtml(x.responsavelProvador||'Responsável')}</strong><small>Responsável pelo provador</small></div>
+          </div>`:''}
+        </section>`;
+      }).join('');
+
+      return `<!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>${titulo}</title>
+        <style>
+          @page{size:A4 portrait;margin:10mm}
+          *{box-sizing:border-box}
+          body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#241F14;background:#fff;font-size:11px}
+          .cabecalho{border:2px solid #291A1E;border-radius:14px;overflow:hidden;margin-bottom:12px}
+          .cabecalho-top{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#FFCD09;padding:15px 18px;border-bottom:3px solid #291A1E}
+          .marca{display:flex;align-items:center;gap:11px}.logo{width:48px;height:42px;border-radius:11px;background:#291A1E;color:#FFCD09;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px}
+          .marca strong{display:block;font-size:16px}.marca small{font-size:10px;font-weight:bold}
+          .titulo{text-align:right}.titulo h1{margin:0;font-size:19px}.titulo p{margin:4px 0 0;font-weight:bold;font-size:10px}
+          .cabecalho-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;background:#FFFBEA}
+          .cabecalho-meta div{border:1px solid #E1C95E;border-radius:8px;padding:7px}.cabecalho-meta span{display:block;text-transform:uppercase;font-size:8px;font-weight:bold;color:#6F6958}.cabecalho-meta strong{display:block;margin-top:3px;font-size:12px}
+          .ocorrencia{border:1px solid #AAA;border-radius:12px;padding:11px;margin:0 0 12px;page-break-inside:auto}
+          .ocorrencia-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:2px solid #FFCD09;padding-bottom:8px;margin-bottom:9px}
+          .ocorrencia-head h2{margin:2px 0;font-size:15px}.ocorrencia-head p{margin:0;color:#555;font-weight:bold}.numero{font-size:8px;text-transform:uppercase;font-weight:bold;color:#777}
+          .status{border:1px solid #D9A900;background:#FFF6C9;border-radius:999px;padding:6px 9px;font-weight:bold;white-space:nowrap}
+          .meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:9px}
+          .meta-grid div{border:1px solid #CCC;border-radius:8px;padding:7px}.meta-grid span,.observacao span{display:block;text-transform:uppercase;font-size:8px;font-weight:bold;color:#666;margin-bottom:3px}.meta-grid strong{font-size:10.5px;line-height:1.3}
+          table{width:100%;border-collapse:collapse;font-size:9px}
+          th{background:#291A1E;color:#FFCD09;border:1px solid #291A1E;padding:6px 5px}
+          td{border:1px solid #AAA;padding:6px 5px;vertical-align:top}
+          td small{display:block;color:#666;margin-top:3px;line-height:1.25}
+          .totais{display:flex;justify-content:flex-end;gap:18px;padding:8px 2px 3px;font-size:10px}
+          .observacao{margin-top:8px;border:1px solid #CCC;border-radius:8px;padding:8px;background:#FAFAFA}.observacao p{margin:0;line-height:1.4;white-space:pre-wrap}
+          .auditoria{margin-top:6px;text-align:right;color:#666;font-size:8px}
+          .assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:35px;margin-top:30px;padding:0 18px 5px}
+          .assinaturas div{text-align:center}.assinaturas span{display:block;border-top:1px solid #222;margin-bottom:5px}.assinaturas strong,.assinaturas small{display:block}
+          .resumo-geral{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+          .resumo-geral div{border:1px solid #D9A900;background:#FFFBEA;border-radius:9px;padding:9px}.resumo-geral span{display:block;text-transform:uppercase;color:#6F6958;font-size:8px;font-weight:bold}.resumo-geral strong{display:block;font-size:16px;margin-top:3px}
+          .rodape{margin-top:8px;border-top:1px solid #AAA;padding-top:6px;text-align:center;color:#666;font-size:8px}
+          .empty{text-align:center;color:#777;padding:12px}
+          @media print{.ocorrencia{break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}}
+        </style>
+      </head>
+      <body>
+        <div class="cabecalho">
+          <div class="cabecalho-top">
+            <div class="marca"><div class="logo">AV</div><div><strong>Avenida Estoque</strong><small>Controle Interno • Fiscalização</small></div></div>
+            <div class="titulo"><h1>${titulo}</h1><p>${subtitulo}</p></div>
+          </div>
+          <div class="cabecalho-meta">
+            <div><span>Loja</span><strong>${escapePrintHtml(state.meta?.loja||'—')}</strong></div>
+            <div><span>Gerência</span><strong>${escapePrintHtml(state.meta?.gerente||'—')}</strong></div>
+            <div><span>Emitido em</span><strong>${escapePrintHtml(new Date().toLocaleString('pt-BR'))}</strong></div>
+          </div>
+        </div>
+
+        <div class="resumo-geral">
+          <div><span>Ocorrências</span><strong>${totalOcorrencias}</strong></div>
+          <div><span>Itens / etiquetas</span><strong>${totalItens}</strong></div>
+          <div><span>Valor estimado total</span><strong>${moedaBR(totalValor)}</strong></div>
+        </div>
+
+        ${blocos || '<div class="empty">Nenhuma ocorrência encontrada para os filtros atuais.</div>'}
+        <div class="rodape">Documento interno de fiscalização. Os registros representam indícios e valores estimados até a conclusão da apuração interna.</div>
+      </body></html>`;
+    }
+
+    function abrirJanelaImpressaoFiscalizacao(html){
+      const janela=window.open('','_blank','width=1100,height=820');
+      if(!janela){toast('O navegador bloqueou a janela de impressão. Libere pop-ups para este sistema.');return;}
+      janela.document.open();
+      janela.document.write(html);
+      janela.document.close();
+      janela.focus();
+      setTimeout(()=>{janela.print();},350);
+    }
+
+    function imprimirRelatorioFiscalizacao(){
+      const lista=fiscalizacoesFiltradasAtuais();
+      if(!lista.length){toast('Não há ocorrências para imprimir com os filtros atuais.');return;}
+      abrirJanelaImpressaoFiscalizacao(htmlRelatorioFiscalizacao(lista,{individual:false}));
+    }
+
+    function imprimirOcorrenciaFiscalizacao(id){
+      const registro=(state.fiscalizacoes||[]).find(x=>x.id===id);
+      if(!registro){toast('Ocorrência não encontrada.');return;}
+      abrirJanelaImpressaoFiscalizacao(htmlRelatorioFiscalizacao([{...registro,itens:(registro.itens||[]).map(item=>normalizarItemFiscal(item))}],{individual:true}));
     }
 
     function renderCategoryFilterSelect(){
