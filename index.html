@@ -564,6 +564,87 @@
       #recebimentoSubtabs .subtab-btn { width: 100%; }
     }
   </style>
+
+  <style id="fiscal-indicio-multiselect-v59">
+    .fiscal-indicio-field{
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:var(--surface-2);
+    }
+    .indicio-multi-hint{
+      color:var(--muted);
+      font-size:.72rem;
+      font-weight:850;
+      text-transform:none;
+      letter-spacing:0;
+    }
+    .indicio-multiselect{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:9px;
+      margin-top:3px;
+    }
+    .indicio-option{
+      display:flex!important;
+      align-items:center;
+      gap:9px;
+      min-height:43px;
+      margin:0!important;
+      padding:10px 11px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:var(--surface);
+      color:var(--text)!important;
+      font-size:.82rem!important;
+      font-weight:850!important;
+      text-transform:none!important;
+      letter-spacing:0!important;
+      cursor:pointer;
+      transition:.16s ease;
+    }
+    .indicio-option:hover{
+      border-color:var(--amarelo-2);
+      transform:translateY(-1px);
+    }
+    .indicio-option:has(input:checked){
+      border-color:var(--amarelo-2);
+      background:rgba(255,205,9,.14);
+      box-shadow:inset 0 0 0 1px rgba(217,169,0,.15);
+    }
+    .indicio-option input{
+      width:18px!important;
+      height:18px!important;
+      min-width:18px;
+      margin:0!important;
+      padding:0!important;
+      accent-color:var(--amarelo-2);
+      box-shadow:none!important;
+    }
+    .indicio-help{
+      display:block;
+      margin-top:9px;
+      color:var(--muted);
+      font-weight:750;
+      line-height:1.35;
+    }
+    body.dark .fiscal-indicio-field{
+      background:rgba(255,205,9,.025);
+      border-color:rgba(255,205,9,.16);
+    }
+    body.dark .indicio-option:has(input:checked){
+      background:rgba(255,205,9,.10);
+      color:#FFCD09!important;
+      border-color:rgba(255,205,9,.34);
+    }
+    @media(max-width:1080px){
+      .indicio-multiselect{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media(max-width:720px){
+      .indicio-multiselect{grid-template-columns:1fr}
+    }
+  </style>
+
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
   <style id="topbar-layout-fix-v35">
@@ -1196,11 +1277,26 @@
             <div class="field"><label>Provador onde foi encontrado</label><select id="fiscProvador"><option value="">Selecione</option><optgroup label="MASCULINO"><option value="Masculino 1">Masculino 1</option><option value="Masculino 2">Masculino 2</option><option value="Masculino 3">Masculino 3</option></optgroup><optgroup label="FEMININO"><option value="Feminino 1">Feminino 1</option><option value="Feminino 2">Feminino 2</option><option value="Feminino 3">Feminino 3</option><option value="Feminino 4">Feminino 4</option><option value="Feminino 5">Feminino 5</option><option value="Feminino 6">Feminino 6</option></optgroup></select></div>
             <div class="field"><label>Status da ocorrência</label><select id="fiscStatus" disabled><option value="Em análise">Em análise</option></select></div>
           </div>
-          <div class="form-row" style="margin-top:12px">
+          <div class="form-row three" style="margin-top:12px">
             <div class="field"><label>Responsável pelo provador</label><select id="fiscResponsavelProvador"></select></div>
             <div class="field"><label>Fiscal do turno</label><select id="fiscFiscalTurno"></select></div>
             <div class="field"><label>Quem encontrou</label><select id="fiscEncontradoPor"></select></div>
-            <div class="field"><label>Tipo de indício</label><select id="fiscEvidencia"><option>Etiqueta encontrada</option><option>Etiqueta rasgada</option><option>Sensor removido</option><option>Embalagem vazia</option><option>Cabide / acessório abandonado</option><option>Outro</option></select></div>
+          </div>
+
+          <div class="field fiscal-indicio-field" style="margin-top:14px">
+            <label>Tipo de indício / problema relatado <span class="indicio-multi-hint">— múltipla escolha</span></label>
+            <div class="indicio-multiselect" id="fiscEvidencia">
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Etiqueta encontrada" checked><span>Etiqueta encontrada</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Etiqueta rasgada / danificada"><span>Etiqueta rasgada / danificada</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Sensor removido"><span>Sensor removido</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Sensor danificado / violado"><span>Sensor danificado / violado</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Embalagem vazia"><span>Embalagem vazia</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Produto sem etiqueta"><span>Produto sem etiqueta</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Cabide / acessório abandonado"><span>Cabide / acessório abandonado</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Possível troca de etiqueta"><span>Possível troca de etiqueta</span></label>
+              <label class="indicio-option"><input type="checkbox" name="fiscEvidencia" value="Outro indício"><span>Outro indício</span></label>
+            </div>
+            <small class="indicio-help">Marque todos os problemas encontrados na mesma ocorrência. É possível selecionar mais de uma opção.</small>
           </div>
 
           <div class="section-title" style="margin-bottom:10px"><div><h2>🏷️ Etiquetas / itens encontrados</h2><p>Somente os conteúdos autorizados da etiqueta podem ser alterados. O código completo de 12 dígitos é separado automaticamente em 6 dígitos do produto, 3 da cor e 3 do tamanho, com atualização em tempo real.</p></div><button class="btn secondary" type="button" onclick="adicionarItemFiscalizacao()">＋ Adicionar etiqueta</button></div>
@@ -1332,7 +1428,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v57-fiscalizacao-final-estruturada-2026-07-14';
+    const TEAM_VERSION = 'v59-indicios-multiplos-2026-07-18';
     const DATA_VERSION = 44;
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
@@ -1602,7 +1698,9 @@
     }
 
     function senhaForte(valor){
-      return String(valor||'').length>=8;
+      // Não impõe quantidade mínima ou máxima de caracteres.
+      // A única regra do sistema é que a senha não esteja vazia.
+      return String(valor ?? '').length > 0;
     }
 
     function normalizarEstado(s){
@@ -3196,12 +3294,27 @@
       }).join('');
     }
 
+    function obterIndiciosSelecionados(){
+      return Array.from(document.querySelectorAll('input[name="fiscEvidencia"]:checked'))
+        .map(el=>String(el.value||'').trim())
+        .filter(Boolean);
+    }
+
+    function textoIndiciosFiscal(registro){
+      const lista=Array.isArray(registro?.evidencias)
+        ? registro.evidencias.map(v=>String(v||'').trim()).filter(Boolean)
+        : [];
+      if(lista.length) return lista.join(' • ');
+      return String(registro?.evidencia||'').trim();
+    }
+
     function limparFiscalizacaoForm(){
       const ids=['fiscProvador','fiscObs']; ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       const data=document.getElementById('fiscData'); if(data) data.value=hojeISO();
       const hora=document.getElementById('fiscHora'); if(hora) hora.value=new Date().toTimeString().slice(0,5);
       const status=document.getElementById('fiscStatus'); if(status) status.value='Em análise';
-      const evid=document.getElementById('fiscEvidencia'); if(evid) evid.selectedIndex=0;
+      const evidencias=document.querySelectorAll('input[name="fiscEvidencia"]');
+      evidencias.forEach((el,index)=>{el.checked=index===0;});
       ['fiscResponsavelProvador','fiscFiscalTurno'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       const encontrou=document.getElementById('fiscEncontradoPor'); if(encontrou) encontrou.value=currentUser?.nome||'';
       fiscalItensDraft=[]; garantirFiscalDraft(); renderFiscalItensDraft(); renderResumoEtiquetasFiscalizacao();
@@ -3237,14 +3350,17 @@
       const responsavelProvador=document.getElementById('fiscResponsavelProvador')?.value||'';
       const fiscalTurno=document.getElementById('fiscFiscalTurno')?.value||'';
       const encontradoPor=document.getElementById('fiscEncontradoPor')?.value||currentUser?.nome||'';
+      const evidencias=obterIndiciosSelecionados();
       const itens=itensFiscalValidos();
       if(!data || !hora || !provador){toast('Informe data, horário e o provador onde a ocorrência foi encontrada.');return;}
       if(!responsavelProvador || !fiscalTurno){toast('Informe o responsável pelo provador e o fiscal do turno.');return;}
+      if(!evidencias.length){toast('Selecione pelo menos um tipo de indício / problema relatado.');return;}
       if(!itens.length){toast('Adicione pelo menos uma etiqueta ou item com código, descrição, cor, tamanho, código de barras ou valor.');return;}
       const agora=new Date().toISOString();
       const ocorrencia={
         id:idMovimento('FISC'),data,hora,provador,responsavelProvador,fiscalTurno,encontradoPor,
-        evidencia:document.getElementById('fiscEvidencia')?.value||'Etiqueta encontrada',
+        evidencias:[...evidencias],
+        evidencia:evidencias.join(' | '),
         status:document.getElementById('fiscStatus')?.value||'Em análise',
         observacao:String(document.getElementById('fiscObs')?.value||'').trim(),itens,
         valorTotal:itens.reduce((soma,item)=>soma+n(item.valor)*Math.max(1,n(item.quantidade)),0),
@@ -3301,7 +3417,7 @@
         if(status!=='todos' && x.status!==status) return false;
         if(fiscal!=='todos' && x.fiscalTurno!==fiscal) return false;
         if(!busca) return true;
-        const texto=[x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,x.evidencia,x.status,x.observacao,...(x.itens||[]).flatMap(i=>[i.referencia,i.codigoBarras,i.descricao,i.tamanho,i.cor,i.codigoAuxiliar,i.dataEtiqueta])].join(' ').toLowerCase();
+        const texto=[x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,textoIndiciosFiscal(x),x.status,x.observacao,...(x.itens||[]).flatMap(i=>[i.referencia,i.codigoBarras,i.descricao,i.tamanho,i.cor,i.codigoAuxiliar,i.dataEtiqueta])].join(' ').toLowerCase();
         return texto.includes(busca);
       }).sort((a,b)=>`${b.data}T${b.hora}`.localeCompare(`${a.data}T${a.hora}`));
       const table=document.getElementById('fiscalizacaoTable'); if(!table) return;
@@ -3315,7 +3431,7 @@
       const itensNormalizados=(x.itens||[]).map(item=>normalizarItemFiscal(item));
       const itens=itensNormalizados.map(i=>`<tr><td>${escapeHtml(i.tipoEtiqueta||'BRANCA')}</td><td>${escapeHtml([i.departamento,i.categoria,i.subcategoria].filter(Boolean).join(' › ')||'—')}</td><td>${escapeHtml(i.referencia||'—')}</td><td>${escapeHtml(i.descricao||'—')}</td><td>${escapeHtml(i.cor||'—')}</td><td>${escapeHtml(i.tamanho||'—')}</td><td>${escapeHtml(i.codigoBarras||'—')}</td><td>${moedaBR(i.valor)}</td><td>${escapeHtml(i.codigoAuxiliar||'—')}</td><td>${escapeHtml(dataEtiquetaFormatada(i.dataEtiqueta))}</td><td>${Math.max(1,n(i.quantidade))}</td><td><strong>${moedaBR(n(i.valor)*Math.max(1,n(i.quantidade)))}</strong></td></tr>`).join('');
       document.getElementById('configModalContent').innerHTML=`<div class="modal-head"><div><h2 id="configModalTitle">🛡️ Ocorrência ${escapeHtml(x.id)}</h2><p>${escapeHtml(dataBRFromISO(x.data))} às ${escapeHtml(x.hora)} • ${escapeHtml(x.provador)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
-      <div class="fiscal-detail-grid"><div><small>Responsável pelo provador</small><strong>${escapeHtml(x.responsavelProvador||'—')}</strong></div><div><small>Fiscal do turno</small><strong>${escapeHtml(x.fiscalTurno||'—')}</strong></div><div><small>Encontrado por</small><strong>${escapeHtml(x.encontradoPor||'—')}</strong></div><div><small>Tipo de indício</small><strong>${escapeHtml(x.evidencia||'—')}</strong></div><div><small>Status</small><strong>${escapeHtml(x.status||'—')}</strong></div><div><small>Valor total estimado</small><strong>${moedaBR(x.valorTotal)}</strong></div></div>
+      <div class="fiscal-detail-grid"><div><small>Responsável pelo provador</small><strong>${escapeHtml(x.responsavelProvador||'—')}</strong></div><div><small>Fiscal do turno</small><strong>${escapeHtml(x.fiscalTurno||'—')}</strong></div><div><small>Encontrado por</small><strong>${escapeHtml(x.encontradoPor||'—')}</strong></div><div><small>Tipo de indício / problema relatado</small><strong>${escapeHtml(textoIndiciosFiscal(x)||'—')}</strong></div><div><small>Status</small><strong>${escapeHtml(x.status||'—')}</strong></div><div><small>Valor total estimado</small><strong>${moedaBR(x.valorTotal)}</strong></div></div>
       <div class="table-wrap"><table><thead><tr><th>Tipo etiqueta</th><th>Departamento</th><th>Cód. principal</th><th>Descrição</th><th>Cor</th><th>Tam.</th><th>Cód. barras</th><th>Valor</th><th>Cód. adicional</th><th>Data etiqueta</th><th>Qtd.</th><th>Subtotal</th></tr></thead><tbody>${itens||'<tr><td colspan="12" class="empty">Sem itens.</td></tr>'}</tbody></table></div>
       <div class="category-help" style="margin-top:14px"><strong>Observações</strong><br>${escapeHtml(x.observacao||'Sem observações.')}</div>`;
       document.getElementById('configModal').classList.add('active');
@@ -3334,7 +3450,7 @@
     function exportarFiscalizacaoCSV(){
       const lista=fiscalizacoesMesAtual();
       const linhas=[['ID','Data','Hora','Provador','Responsável pelo provador','Fiscal do turno','Encontrado por','Tipo de indício','Status','Código completo','Identificação produto','Código cor','Código tamanho','Produto/Descrição','Cor exibida','Tamanho exibido','Valor da etiqueta','Código adicional','Data da etiqueta','Quantidade','Subtotal','Observações','Registrado por']];
-      lista.forEach(x=>(x.itens||[]).forEach(i=>linhas.push([x.id,x.data,x.hora,x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,x.evidencia,x.status,i.codigoBarras,i.referencia,i.codigoCor||resumoCodigoFiscal(i).cor,i.codigoTamanho||resumoCodigoFiscal(i).tamanho,i.descricao,i.cor,i.tamanho,n(i.valor),i.codigoAuxiliar,dataEtiquetaFormatada(i.dataEtiqueta),Math.max(1,n(i.quantidade)),n(i.valor)*Math.max(1,n(i.quantidade)),x.observacao,x.lastUser])));
+      lista.forEach(x=>(x.itens||[]).forEach(i=>linhas.push([x.id,x.data,x.hora,x.provador,x.responsavelProvador,x.fiscalTurno,x.encontradoPor,textoIndiciosFiscal(x),x.status,i.codigoBarras,i.referencia,i.codigoCor||resumoCodigoFiscal(i).cor,i.codigoTamanho||resumoCodigoFiscal(i).tamanho,i.descricao,i.cor,i.tamanho,n(i.valor),i.codigoAuxiliar,dataEtiquetaFormatada(i.dataEtiqueta),Math.max(1,n(i.quantidade)),n(i.valor)*Math.max(1,n(i.quantidade)),x.observacao,x.lastUser])));
       const csv='\uFEFF'+linhas.map(row=>row.map(v=>`\"${String(v??'').replace(/\"/g,'\"\"')}\"`).join(';')).join('\n');
       downloadText(csv,`fiscalizacao-${state.activeMonth||mesChaveAtual()}.csv`,'text/csv;charset=utf-8');
     }
@@ -3837,7 +3953,7 @@
       if(!cargo){toast('Selecione o cargo do usuário.');return;}
 
       if(senha===''){toast('Digite uma senha para o usuário.');return;}
-      if(!senhaForte(senha)){toast('A senha precisa ter pelo menos 8 caracteres.');return;}
+      if(!senhaForte(senha)){toast('A senha não pode ficar vazia.');return;}
       if(senha!==confirmar){toast('As senhas não são iguais.');return;}
       if(state.usuariosLogin.some(u=>normalizarLogin(u.operador)===normalizarLogin(operador))){
         toast('Este operador já está cadastrado.');
@@ -4193,7 +4309,7 @@
       const confirma=String(document.getElementById('confirmarSenhaUsuario')?.value||'');
 
       if(nova===''){toast('Digite a nova senha.');return;}
-      if(!senhaForte(nova)){toast('A nova senha precisa ter pelo menos 8 caracteres.');return;}
+      if(!senhaForte(nova)){toast('A nova senha não pode ficar vazia.');return;}
       if(nova!==confirma){toast('As senhas não são iguais.');return;}
 
       definirStatusSync('syncing','☁️ Alterando senha…');
