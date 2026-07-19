@@ -4,6 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Avenida Estoque Online V46 — Fiscalização com Nova Conferência</title>
+  <!-- PWA / ÍCONES Estoque Avenida -->
+  <meta name="theme-color" content="#291A1E">
+  <meta name="application-name" content="Estoque Avenida">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Estoque Avenida">
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+
 
   <script>
     /* Aplica o tema antes da primeira pintura e impede o clarão no modo escuro. */
@@ -642,6 +656,163 @@
     }
     @media(max-width:720px){
       .indicio-multiselect{grid-template-columns:1fr}
+    }
+  </style>
+
+
+  <style id="fiscalizacao-table-refine-v64">
+    .fiscalizacao-history-wrap{
+      overflow:auto;
+      border-radius:18px;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table{
+      width:100%;
+      min-width:1480px;
+      table-layout:fixed;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:.84rem;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-data{width:78px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-provador{width:70px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-itens{width:205px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-valor{width:78px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-responsavel{width:120px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-fiscal{width:82px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-status{width:82px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-registro{width:170px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-acoes{width:188px}
+
+    #fiscalizacaoTable.fiscalizacao-history-table thead th{
+      top:0;
+      z-index:4;
+      padding:0;
+      border-right:1px solid rgba(255,205,9,.18);
+      border-bottom:1px solid rgba(255,205,9,.24);
+      background:linear-gradient(180deg,#320014 0%,#231018 100%);
+      color:#FFCD09;
+      font-weight:1000;
+      text-align:center;
+      vertical-align:middle;
+    }
+    body:not(.dark) #fiscalizacaoTable.fiscalizacao-history-table thead th{
+      background:linear-gradient(180deg,#3A1321 0%,#291A1E 100%);
+      color:#FFCD09;
+      border-right:1px solid rgba(255,205,9,.16);
+      border-bottom:1px solid rgba(217,169,0,.28);
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table thead th:first-child{
+      border-top-left-radius:16px;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table thead th:last-child{
+      border-top-right-radius:16px;
+      border-right:0;
+    }
+    .fisc-th{
+      min-height:58px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      line-height:1.12;
+      padding:12px 8px;
+      white-space:normal;
+      word-break:keep-all;
+    }
+
+    #fiscalizacaoTable.fiscalizacao-history-table tbody td{
+      vertical-align:middle;
+      text-align:center;
+      padding:10px 8px;
+      line-height:1.25;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table tbody td:last-child{
+      border-right:0;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table tbody tr:last-child td:first-child{
+      border-bottom-left-radius:16px;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table tbody tr:last-child td:last-child{
+      border-bottom-right-radius:16px;
+    }
+
+    .fisc-cell-date strong,
+    .fisc-cell-provador strong,
+    .fisc-cell-valor strong{
+      display:block;
+      font-size:.92rem;
+      line-height:1.12;
+    }
+    .fisc-cell-date small,
+    .fisc-cell-provador small,
+    .fisc-cell-registro small{
+      display:block;
+      margin-top:4px;
+      font-size:.72rem;
+      color:var(--muted);
+      line-height:1.18;
+      font-weight:850;
+    }
+    .fisc-cell-itens strong{
+      display:block;
+      font-size:1rem;
+      line-height:1;
+      margin-bottom:5px;
+    }
+    .fisc-cell-itens .audit-note{
+      margin-top:0;
+      font-size:.72rem;
+      line-height:1.2;
+      display:block;
+      white-space:normal;
+      word-break:break-word;
+    }
+    .fisc-cell-responsavel,
+    .fisc-cell-fiscal,
+    .fisc-cell-registro{
+      font-weight:900;
+      white-space:normal;
+      word-break:break-word;
+    }
+    .fisc-cell-registro{
+      font-size:.77rem;
+      line-height:1.24;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table .status-pill{
+      max-width:100%;
+      white-space:normal;
+      line-height:1.12;
+      padding:6px 10px;
+      min-height:30px;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table .config-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      justify-content:stretch;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table .config-actions .btn{
+      width:100%;
+      min-height:36px;
+      padding:9px 10px;
+      border-radius:12px;
+      font-size:.79rem;
+      box-shadow:none!important;
+      white-space:nowrap;
+    }
+    #fiscalizacaoTable.fiscalizacao-history-table .empty{
+      padding:18px 12px;
+      text-align:center;
+    }
+
+    @media(max-width:760px){
+      .fiscalizacao-history-wrap{border-radius:14px}
+      #fiscalizacaoTable.fiscalizacao-history-table{
+        min-width:1320px;
+      }
+      #fiscalizacaoTable.fiscalizacao-history-table .config-actions .btn{
+        font-size:.75rem;
+      }
     }
   </style>
 
@@ -1355,7 +1526,7 @@
             <button class="btn blue" onclick="exportarFiscalizacaoCSV()">📄 Exportar Fiscalização</button>
           </div>
         </div>
-        <div class="table-wrap"><table id="fiscalizacaoTable"></table></div>
+        <div class="table-wrap fiscalizacao-history-wrap"><table id="fiscalizacaoTable"></table></div>
       </section>
 
       <section class="page" id="page-categorias">
@@ -1441,7 +1612,7 @@
 
   <script>
     const STORAGE_KEY = 'avenidaEstoqueProV2';
-    const TEAM_VERSION = 'v63-edicao-relatorio-fiscalizacao-2026-07-18';
+    const TEAM_VERSION = 'v64-tabela-fiscalizacao-ajustada-2026-07-18';
     const DATA_VERSION = 44;
     const SUPABASE_URL = 'https://qkyifeteokbdreuqriqq.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lsRgeYNf2IY_P-OnlD5xpg_TW7034yT';
@@ -3574,8 +3745,31 @@
         return texto.includes(busca);
       }).sort((a,b)=>`${b.data}T${b.hora}`.localeCompare(`${a.data}T${a.hora}`));
       const table=document.getElementById('fiscalizacaoTable'); if(!table) return;
-      table.innerHTML=`<thead><tr><th>Data / hora</th><th>Provador</th><th>Etiquetas / itens</th><th>Valor estimado</th><th>Responsável provador</th><th>Fiscal do turno</th><th>Status</th><th>Registrado por</th><th class="no-print">Ações</th></tr></thead><tbody>${filtrada.length?filtrada.map(x=>`<tr>
-        <td><strong>${escapeHtml(dataBRFromISO(x.data))}</strong><br>${escapeHtml(x.hora||'—')}</td><td><strong>${escapeHtml(x.provador)}</strong></td><td>${n(x.quantidadeTotal)||((x.itens||[]).length)}<span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td><td><strong>${moedaBR(x.valorTotal)}</strong></td><td>${escapeHtml(x.responsavelProvador||'—')}</td><td>${escapeHtml(x.fiscalTurno||'—')}</td><td><span class="status-pill ${classeStatusFiscal(x.status)}">${escapeHtml(x.status||'Em análise')}</span></td><td>${auditLabel(x)}</td><td class="no-print"><div class="config-actions"><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button><button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">Remover</button></div></td>
+      table.className='fiscalizacao-history-table';
+      table.innerHTML=`<colgroup>
+        <col class="col-data"><col class="col-provador"><col class="col-itens"><col class="col-valor"><col class="col-responsavel"><col class="col-fiscal"><col class="col-status"><col class="col-registro"><col class="col-acoes">
+      </colgroup>
+      <thead><tr>
+        <th><div class="fisc-th">Data / hora</div></th>
+        <th><div class="fisc-th">Provador</div></th>
+        <th><div class="fisc-th">Etiquetas / itens</div></th>
+        <th><div class="fisc-th">Valor estimado</div></th>
+        <th><div class="fisc-th">Responsável provador</div></th>
+        <th><div class="fisc-th">Fiscal do turno</div></th>
+        <th><div class="fisc-th">Status</div></th>
+        <th><div class="fisc-th">Registrado por</div></th>
+        <th class="no-print"><div class="fisc-th">Ações</div></th>
+      </tr></thead>
+      <tbody>${filtrada.length?filtrada.map(x=>`<tr>
+        <td class="fisc-cell-date"><strong>${escapeHtml(dataBRFromISO(x.data))}</strong><small>${escapeHtml(x.hora||'—')}</small></td>
+        <td class="fisc-cell-provador"><strong>${escapeHtml((x.provador||'—').split(' ')[0]||x.provador||'—')}</strong><small>${escapeHtml((x.provador||'').split(' ').slice(1).join(' ')||'')}</small></td>
+        <td class="fisc-cell-itens"><strong>${n(x.quantidadeTotal)||((x.itens||[]).length)}</strong><span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td>
+        <td class="fisc-cell-valor"><strong>${moedaBR(x.valorTotal)}</strong></td>
+        <td class="fisc-cell-responsavel">${escapeHtml(x.responsavelProvador||'—')}</td>
+        <td class="fisc-cell-fiscal">${escapeHtml(x.fiscalTurno||'—')}</td>
+        <td><span class="status-pill ${classeStatusFiscal(x.status)}">${escapeHtml(x.status||'Em análise')}</span></td>
+        <td class="fisc-cell-registro">${auditLabel(x)}</td>
+        <td class="no-print"><div class="config-actions"><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button><button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">Remover</button></div></td>
       </tr>`).join(''):'<tr><td colspan="9" class="empty">Nenhuma ocorrência registrada para os filtros atuais.</td></tr>'}</tbody>`;
     }
 
@@ -5057,5 +5251,16 @@
       await verificarSessao();
     });
   </script>
+
+<script id="avenida-pwa-register">
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw-pwa.js').catch(err => {
+        console.warn('PWA Service Worker indisponível:', err);
+      });
+    });
+  }
+</script>
+
 </body>
 </html>

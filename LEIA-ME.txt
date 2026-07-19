@@ -1,0 +1,15 @@
+ESTOQUE AVENIDA — PACOTE PWA/GITHUB
+
+COPIE TODO O CONTEÚDO DESTA PASTA PARA A RAIZ DO REPOSITÓRIO:
+avenida-estoque
+
+Arquivos principais:
+- index.html (já atualizado)
+- manifest.webmanifest
+- sw-pwa.js
+- favicon.ico
+- favicon.svg
+- pasta icons/
+
+Substitua o index.html existente pelo deste pacote.
+Após publicar no GitHub Pages, use Ctrl+F5 para atualizar o cache.
