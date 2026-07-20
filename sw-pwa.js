@@ -1,13 +1,13 @@
 /* Avenida PWA Service Worker */
-const CACHE_NAME = 'avenida-pwa-shell-v1';
+const CACHE_NAME = 'avenida-estoque-pwa-shell-v3';
 const ASSETS = [
   './',
   './manifest.webmanifest',
-  './favicon.ico',
-  './favicon.svg',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png'
+  './estoque-favicon.ico',
+  './estoque-favicon.svg',
+  './icons/estoque-icon-192.png',
+  './icons/estoque-icon-512.png',
+  './icons/estoque-apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {

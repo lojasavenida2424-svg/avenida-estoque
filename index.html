@@ -2,8 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Avenida Estoque Online V46 — Fiscalização com Nova Conferência</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Avenida Estoque V66 — Cabeçalho Mobile</title>
   <!-- PWA / ÍCONES Estoque Avenida -->
   <meta name="theme-color" content="#291A1E">
   <meta name="application-name" content="Estoque Avenida">
@@ -11,11 +11,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Estoque Avenida">
-  <link rel="icon" href="./favicon.ico" sizes="any">
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="./icons/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="./icons/favicon-16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="icon" href="./estoque-favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="./estoque-favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="./icons/estoque-favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./icons/estoque-favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/estoque-apple-touch-icon.png">
   <link rel="manifest" href="./manifest.webmanifest">
 
 
@@ -1106,6 +1106,323 @@
     @media(max-width:720px){.fiscal-kpis{grid-template-columns:1fr}.fiscal-detail-grid{grid-template-columns:1fr}.fiscal-editor-layout{grid-template-columns:1fr}.fiscal-tag-card{max-width:100%}}
   </style>
 
+
+<style id="estoque-v65-mobile-pull-refresh">
+/* ============================================================
+   ESTOQUE V65 — MOBILE TRAVADO + PULL TO REFRESH
+   ============================================================ */
+
+html{
+  min-height:100%;
+  background:#FFFDF5;
+}
+html[data-theme="dark"]{
+  background:#101114;
+}
+
+@media (max-width:900px){
+  html,
+  body{
+    width:100% !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    overflow-x:hidden !important;
+    overscroll-behavior-x:none !important;
+    overscroll-behavior-y:none !important;
+    touch-action:pan-x pan-y;
+  }
+
+  body{
+    min-height:100vh !important;
+    min-height:100dvh !important;
+  }
+
+  /* Impede que qualquer área externa branca apareça em movimentos extremos. */
+  body:not(.dark){
+    background:
+      radial-gradient(circle at 78% 4%,rgba(255,205,9,.20),transparent 30%),
+      radial-gradient(circle at 92% 72%,rgba(246,196,38,.10),transparent 34%),
+      linear-gradient(145deg,#FFFDF5 0%,#FFFFFF 58%,#FFF9DD 100%) !important;
+  }
+
+  body.dark{
+    background:
+      radial-gradient(circle at 78% 3%,rgba(255,205,9,.065),transparent 28%),
+      radial-gradient(circle at 94% 68%,rgba(71,0,28,.18),transparent 35%),
+      linear-gradient(145deg,#0F1013 0%,#17181D 54%,#190A10 100%) !important;
+  }
+
+  #estoquePullRefresh{
+    position:fixed;
+    left:50%;
+    top:max(10px, env(safe-area-inset-top));
+    z-index:999999;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:184px;
+    max-width:calc(100vw - 34px);
+    padding:10px 15px;
+    border-radius:999px;
+    pointer-events:none;
+    opacity:0;
+    transform:translate(-50%,-90px) scale(.94);
+    transition:
+      transform .22s cubic-bezier(.2,.8,.2,1),
+      opacity .18s ease,
+      border-color .18s ease,
+      background .18s ease;
+    background:rgba(255,255,255,.96);
+    color:#241F14;
+    border:1px solid rgba(217,169,0,.36);
+    box-shadow:0 14px 34px rgba(62,48,0,.18);
+    -webkit-backdrop-filter:blur(16px) saturate(145%);
+    backdrop-filter:blur(16px) saturate(145%);
+    white-space:nowrap;
+  }
+
+  body.dark #estoquePullRefresh{
+    background:rgba(22,23,28,.96);
+    color:#FFF6CF;
+    border-color:rgba(255,205,9,.34);
+    box-shadow:0 14px 38px rgba(0,0,0,.45);
+  }
+
+  #estoquePullRefresh.visible{
+    opacity:1;
+  }
+
+  #estoquePullRefresh.ready{
+    border-color:rgba(255,205,9,.82);
+  }
+
+  #estoquePullRefresh.refreshing{
+    opacity:1;
+    transform:translate(-50%,0) scale(1);
+  }
+
+  #estoquePullRefresh.success{
+    border-color:rgba(34,197,94,.48);
+  }
+
+  #estoquePullRefresh.error{
+    border-color:rgba(239,68,68,.48);
+  }
+
+  .estoque-pull-icon{
+    width:30px;
+    height:30px;
+    flex:0 0 30px;
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    color:#8A6800;
+    background:rgba(255,205,9,.16);
+    border:1px solid rgba(217,169,0,.28);
+    font-size:1.05rem;
+    line-height:1;
+    transition:transform .18s ease;
+  }
+
+  body.dark .estoque-pull-icon{
+    color:#FFCD09;
+    background:rgba(255,205,9,.08);
+    border-color:rgba(255,205,9,.22);
+  }
+
+  #estoquePullRefresh.ready .estoque-pull-icon{
+    transform:rotate(180deg);
+  }
+
+  #estoquePullRefresh.refreshing .estoque-pull-icon{
+    animation:estoquePullSpin .82s linear infinite;
+  }
+
+  #estoquePullRefresh.success .estoque-pull-icon{
+    animation:none;
+    color:#16A34A;
+    background:rgba(34,197,94,.12);
+    border-color:rgba(34,197,94,.30);
+  }
+
+  #estoquePullRefresh.error .estoque-pull-icon{
+    animation:none;
+    color:#DC2626;
+    background:rgba(239,68,68,.10);
+    border-color:rgba(239,68,68,.28);
+  }
+
+  .estoque-pull-copy{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:1px;
+  }
+
+  .estoque-pull-copy b{
+    font-size:.79rem;
+    line-height:1.15;
+  }
+
+  .estoque-pull-copy small{
+    color:#716A58;
+    font-size:.65rem;
+    line-height:1.15;
+    font-weight:800;
+  }
+
+  body.dark .estoque-pull-copy small{
+    color:#BBB3A6;
+  }
+
+  @keyframes estoquePullSpin{
+    to{ transform:rotate(360deg); }
+  }
+}
+</style>
+
+
+<style id="estoque-v66-mobile-header">
+/* ============================================================
+   ESTOQUE V66 — CABEÇALHO MOBILE
+   Mantém o menu atual e adiciona uma identidade visual superior
+   semelhante ao sistema gerencial.
+   ============================================================ */
+.mobile-brand-header{
+  display:none;
+}
+
+@media (max-width:900px){
+  .topbar{
+    padding-top:calc(12px + env(safe-area-inset-top)) !important;
+  }
+
+  .mobile-brand-header{
+    display:flex !important;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    width:100%;
+    padding:0;
+    margin:0 0 6px 0;
+  }
+
+  .mobile-brand-main{
+    min-width:0;
+    flex:1 1 auto;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .mobile-brand-mark{
+    flex:0 0 62px;
+    width:62px;
+    height:62px;
+    border-radius:18px;
+    display:grid;
+    place-items:center;
+    font-size:1.55rem;
+    font-weight:1000;
+    letter-spacing:-.03em;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.72),
+      0 12px 26px rgba(106,82,0,.12);
+  }
+
+  body:not(.dark) .mobile-brand-mark{
+    background:linear-gradient(145deg,#FFF8DA,#FFE575 48%,#FFCD09);
+    color:#241F14;
+    border:1px solid rgba(112,85,0,.18);
+  }
+
+  body.dark .mobile-brand-mark{
+    background:linear-gradient(145deg,#FFCD09,#F1BC00);
+    color:#1F1710;
+    border:1px solid rgba(255,205,9,.24);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.22),
+      0 10px 24px rgba(0,0,0,.28);
+  }
+
+  .mobile-brand-copy{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .mobile-brand-copy strong{
+    display:block;
+    font-size:1.15rem;
+    line-height:1.1;
+    font-weight:1000;
+    letter-spacing:-.02em;
+  }
+
+  .mobile-brand-copy span{
+    display:block;
+    font-size:.83rem;
+    line-height:1.18;
+    font-weight:900;
+    opacity:.92;
+  }
+
+  .mobile-brand-copy b{
+    font-weight:1000;
+  }
+
+  body:not(.dark) .mobile-brand-copy strong{
+    color:#241F14;
+  }
+
+  body:not(.dark) .mobile-brand-copy span{
+    color:#5C4722;
+  }
+
+  body.dark .mobile-brand-copy strong{
+    color:#FFCD09;
+  }
+
+  body.dark .mobile-brand-copy span{
+    color:#EADFD1;
+  }
+
+  .mobile-brand-menu{
+    flex:0 0 auto !important;
+    min-height:44px !important;
+    padding:0 14px !important;
+    border-radius:14px !important;
+    white-space:nowrap;
+  }
+
+  /* Mantém apenas o botão novo no cabeçalho mobile */
+  .title-block > .mobile-menu{
+    display:none !important;
+  }
+
+  .title-block{
+    width:100%;
+  }
+}
+
+@media (max-width:520px){
+  .mobile-brand-header{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .mobile-brand-main{
+    width:100%;
+  }
+
+  .mobile-brand-menu{
+    width:auto;
+    align-self:flex-start;
+  }
+}
+</style>
+
 </head>
 <body>
   <script>
@@ -1182,6 +1499,16 @@
 
     <main class="main">
       <header class="topbar">
+        <div class="mobile-brand-header" aria-label="Identidade do sistema">
+          <div class="mobile-brand-main">
+            <div class="mobile-brand-mark">AV</div>
+            <div class="mobile-brand-copy">
+              <strong>Sistema de Estoque</strong>
+              <span>Loja <b id="mobileHeaderLoja">—</b> • Avenida</span>
+            </div>
+          </div>
+          <button class="btn secondary mobile-menu mobile-brand-menu" onclick="toggleSidebar()" aria-label="Abrir menu">☰ Menu</button>
+        </div>
         <div class="title-block">
           <button class="btn secondary mobile-menu" onclick="toggleSidebar()">☰ Menu</button>
           <h1 id="pageTitle">Painel Geral</h1>
@@ -2436,6 +2763,8 @@
     function atualizarTopo(){
       aplicarMetadadosPadrao(state);
       document.getElementById('topLoja').textContent = state.meta.loja || '—';
+      const mobileHeaderLoja = document.getElementById('mobileHeaderLoja');
+      if(mobileHeaderLoja) mobileHeaderLoja.textContent = state.meta.loja || '—';
       document.getElementById('topMes').textContent = state.meta.mes || '—';
       document.getElementById('topGerente').textContent = state.meta.gerente || '—';
       document.getElementById('topUsuario').textContent = currentUser ? currentUser.nome : '—';
@@ -5260,6 +5589,278 @@
       });
     });
   }
+</script>
+
+
+<script id="estoque-v65-pull-refresh-script">
+let estoquePullStartY = 0;
+let estoquePullDistance = 0;
+let estoquePullEligible = false;
+let estoquePullRefreshing = false;
+
+const ESTOQUE_PULL_THRESHOLD = 86;
+const ESTOQUE_PULL_MAX = 132;
+
+function estoqueEhMobile(){
+  return window.matchMedia('(max-width: 900px)').matches;
+}
+
+function criarIndicadorPullEstoque(){
+  if(document.getElementById('estoquePullRefresh')) return;
+
+  const el = document.createElement('div');
+  el.id = 'estoquePullRefresh';
+  el.setAttribute('aria-live','polite');
+  el.innerHTML = `
+    <span class="estoque-pull-icon" aria-hidden="true">↓</span>
+    <span class="estoque-pull-copy">
+      <b id="estoquePullTitle">Puxe para atualizar</b>
+      <small id="estoquePullSubtitle">Buscar dados mais recentes</small>
+    </span>
+  `;
+  document.body.appendChild(el);
+}
+
+function estadoIndicadorPullEstoque(estado, titulo, subtitulo){
+  const el = document.getElementById('estoquePullRefresh');
+  if(!el) return;
+
+  el.classList.remove('visible','ready','refreshing','success','error');
+
+  if(estado) el.classList.add(estado);
+  if(['ready','refreshing','success','error'].includes(estado)){
+    el.classList.add('visible');
+  }
+
+  const title = document.getElementById('estoquePullTitle');
+  const subtitle = document.getElementById('estoquePullSubtitle');
+  const icon = el.querySelector('.estoque-pull-icon');
+
+  if(title && titulo) title.textContent = titulo;
+  if(subtitle && subtitulo) subtitle.textContent = subtitulo;
+
+  if(icon){
+    if(estado === 'success') icon.textContent = '✓';
+    else if(estado === 'error') icon.textContent = '!';
+    else if(estado === 'refreshing') icon.textContent = '↻';
+    else icon.textContent = '↓';
+  }
+}
+
+function posicionarIndicadorPullEstoque(distancia){
+  const el = document.getElementById('estoquePullRefresh');
+  if(!el) return;
+
+  const d = Math.max(0,Math.min(ESTOQUE_PULL_MAX,distancia));
+  const progresso = Math.min(1,d / ESTOQUE_PULL_THRESHOLD);
+  const y = -72 + (d * .72);
+
+  el.style.transform = `translate(-50%, ${y}px) scale(${.94 + progresso * .06})`;
+  el.style.opacity = String(Math.min(1,.18 + progresso * .82));
+  el.classList.add('visible');
+
+  const title = document.getElementById('estoquePullTitle');
+  const subtitle = document.getElementById('estoquePullSubtitle');
+
+  if(d >= ESTOQUE_PULL_THRESHOLD){
+    el.classList.add('ready');
+    if(title) title.textContent = 'Solte para atualizar';
+    if(subtitle) subtitle.textContent = 'Sincronizar o estoque agora';
+  }else{
+    el.classList.remove('ready');
+    if(title) title.textContent = 'Puxe para atualizar';
+    if(subtitle) subtitle.textContent = 'Buscar dados mais recentes';
+  }
+}
+
+function resetarPullEstoque(){
+  const el = document.getElementById('estoquePullRefresh');
+  if(!el || estoquePullRefreshing) return;
+
+  el.classList.remove('visible','ready');
+  el.style.transform = '';
+  el.style.opacity = '';
+
+  estoquePullDistance = 0;
+  estoquePullEligible = false;
+}
+
+function alvoBloqueiaPullEstoque(target){
+  return !!target?.closest(
+    'input, textarea, select, button, a, .nav, .table-wrap, .modal, .modal-backdrop, [contenteditable="true"]'
+  );
+}
+
+async function atualizarEstoqueAgora(){
+  if(!currentAuthUser || estoquePullRefreshing) return false;
+
+  estoquePullRefreshing = true;
+
+  const indicador = document.getElementById('estoquePullRefresh');
+  if(indicador){
+    indicador.style.transform = '';
+    indicador.style.opacity = '';
+  }
+
+  estadoIndicadorPullEstoque(
+    'refreshing',
+    'Atualizando estoque…',
+    'Buscando dados da loja'
+  );
+
+  definirStatusSync('syncing','☁️ Atualizando dados…');
+
+  try{
+    /*
+     * O Estoque possui duas fontes que precisam ser relidas:
+     * 1) estado compartilhado da operação;
+     * 2) diretório/permissões dos usuários.
+     */
+    await Promise.all([
+      carregarEstadoCompartilhado(),
+      carregarDiretorioOnline()
+    ]);
+
+    atualizarTudo();
+    aplicarPermissoes();
+
+    if(typeof iniciarRealtime === 'function'){
+      iniciarRealtime();
+    }
+
+    definirStatusSync('online','☁️ Online • atualizado agora');
+
+    estadoIndicadorPullEstoque(
+      'success',
+      'Estoque atualizado',
+      'Dados sincronizados agora'
+    );
+
+    setTimeout(() => {
+      const el = document.getElementById('estoquePullRefresh');
+      if(el){
+        el.classList.remove('visible','success');
+        el.style.transform = '';
+        el.style.opacity = '';
+      }
+    },900);
+
+    return true;
+  }catch(error){
+    console.error('Falha ao atualizar o Estoque:',error);
+
+    definirStatusSync(
+      'offline',
+      navigator.onLine
+        ? '☁️ Não foi possível atualizar agora'
+        : '☁️ Offline • dados locais preservados'
+    );
+
+    estadoIndicadorPullEstoque(
+      'error',
+      'Não foi possível atualizar',
+      navigator.onLine
+        ? 'Tente puxar novamente'
+        : 'Sem conexão com a internet'
+    );
+
+    setTimeout(() => {
+      const el = document.getElementById('estoquePullRefresh');
+      if(el){
+        el.classList.remove('visible','error');
+        el.style.transform = '';
+        el.style.opacity = '';
+      }
+    },1500);
+
+    return false;
+  }finally{
+    estoquePullRefreshing = false;
+    estoquePullDistance = 0;
+    estoquePullEligible = false;
+  }
+}
+
+function instalarPullToRefreshEstoque(){
+  criarIndicadorPullEstoque();
+
+  document.addEventListener('touchstart',event=>{
+    if(!estoqueEhMobile() || !currentAuthUser || estoquePullRefreshing) return;
+    if(event.touches.length !== 1) return;
+    if(window.scrollY > 1) return;
+    if(alvoBloqueiaPullEstoque(event.target)) return;
+
+    estoquePullStartY = event.touches[0].clientY;
+    estoquePullDistance = 0;
+    estoquePullEligible = true;
+  },{passive:true});
+
+  document.addEventListener('touchmove',event=>{
+    if(!estoquePullEligible || estoquePullRefreshing || !estoqueEhMobile()) return;
+
+    if(event.touches.length !== 1){
+      estoquePullEligible = false;
+      return;
+    }
+
+    const delta = event.touches[0].clientY - estoquePullStartY;
+
+    if(delta <= 0 || window.scrollY > 1){
+      resetarPullEstoque();
+      return;
+    }
+
+    estoquePullDistance = Math.min(
+      ESTOQUE_PULL_MAX,
+      delta * .58
+    );
+
+    if(estoquePullDistance > 4){
+      event.preventDefault();
+      posicionarIndicadorPullEstoque(estoquePullDistance);
+    }
+  },{passive:false});
+
+  document.addEventListener('touchend',()=>{
+    if(!estoquePullEligible || estoquePullRefreshing) return;
+
+    const atualizar = estoquePullDistance >= ESTOQUE_PULL_THRESHOLD;
+    estoquePullEligible = false;
+
+    if(atualizar){
+      atualizarEstoqueAgora();
+    }else{
+      resetarPullEstoque();
+    }
+  },{passive:true});
+
+  document.addEventListener('touchcancel',()=>{
+    resetarPullEstoque();
+  },{passive:true});
+}
+
+/* Bloqueia gesto de pinça/zoom no iPhone/iPad. */
+['gesturestart','gesturechange','gestureend'].forEach(tipo=>{
+  document.addEventListener(tipo,event=>{
+    if(estoqueEhMobile()) event.preventDefault();
+  },{passive:false});
+});
+
+/* Bloqueia multitouch de zoom em navegadores móveis. */
+document.addEventListener('touchmove',event=>{
+  if(
+    estoqueEhMobile() &&
+    event.touches &&
+    event.touches.length > 1
+  ){
+    event.preventDefault();
+  }
+},{passive:false});
+
+document.addEventListener(
+  'DOMContentLoaded',
+  instalarPullToRefreshEstoque
+);
 </script>
 
 </body>
