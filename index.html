@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Avenida Estoque V68 — Botão Menu Alinhado</title>
+  <title>Avenida Estoque V70 — Sessão Única por Operador</title>
   <!-- PWA / ÍCONES Estoque Avenida -->
   <meta name="theme-color" content="#291A1E">
   <meta name="application-name" content="Estoque Avenida">
@@ -667,7 +667,7 @@
     }
     #fiscalizacaoTable.fiscalizacao-history-table{
       width:100%;
-      min-width:1480px;
+      min-width:1550px;
       table-layout:fixed;
       border-collapse:separate;
       border-spacing:0;
@@ -675,6 +675,7 @@
     }
     #fiscalizacaoTable.fiscalizacao-history-table col.col-data{width:78px}
     #fiscalizacaoTable.fiscalizacao-history-table col.col-provador{width:70px}
+    #fiscalizacaoTable.fiscalizacao-history-table col.col-qtd{width:72px}
     #fiscalizacaoTable.fiscalizacao-history-table col.col-itens{width:205px}
     #fiscalizacaoTable.fiscalizacao-history-table col.col-valor{width:78px}
     #fiscalizacaoTable.fiscalizacao-history-table col.col-responsavel{width:120px}
@@ -1545,6 +1546,268 @@ html[data-theme="dark"]{
 }
 </style>
 
+
+<style id="estoque-v69-finalizacao-fiscalizacao">
+.fiscal-verificacao-box{
+  margin-top:16px;
+  padding:18px;
+  border-radius:18px;
+  border:1px solid rgba(255,205,9,.34);
+  background:linear-gradient(145deg,rgba(255,205,9,.08),rgba(255,205,9,.025));
+}
+.fiscal-verificacao-kicker{
+  display:block;
+  margin-bottom:8px;
+  color:#B58900;
+  font-size:.72rem;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+body.dark .fiscal-verificacao-kicker{
+  color:#FFCD09;
+}
+.fiscal-verificacao-box h3{
+  margin:0 0 16px;
+  font-size:1rem;
+  line-height:1.45;
+}
+.fiscal-verificacao-check{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  cursor:pointer;
+  line-height:1.45;
+  font-weight:800;
+}
+.fiscal-verificacao-check input{
+  flex:0 0 auto;
+  width:20px;
+  height:20px;
+  margin-top:1px;
+  accent-color:#16A34A;
+}
+.fiscal-finalizacao-resumo{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.fiscal-finalizacao-resumo>div{
+  padding:12px 14px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:var(--surface-2);
+}
+.fiscal-finalizacao-resumo small{
+  display:block;
+  color:var(--muted);
+  font-size:.70rem;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+.fiscal-finalizacao-resumo strong{
+  display:block;
+  line-height:1.35;
+}
+.fiscal-finalizacao-actions{
+  margin-top:16px;
+  justify-content:flex-end;
+}
+#fiscFinalizarConfirmBtn:disabled{
+  opacity:.46;
+  cursor:not-allowed;
+  filter:grayscale(.25);
+}
+@media(max-width:700px){
+  .fiscal-finalizacao-resumo{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+
+<style id="estoque-v70-checklist-finalizacao">
+.fiscal-checklist-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  margin:14px 0 16px;
+}
+.fiscal-check-card{
+  display:grid;
+  grid-template-columns:auto 38px 1fr;
+  align-items:flex-start;
+  gap:11px;
+  padding:13px 14px;
+  border-radius:15px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  cursor:pointer;
+}
+.fiscal-check-card input{
+  width:19px;
+  height:19px;
+  margin-top:3px;
+  accent-color:#16A34A;
+}
+.fiscal-check-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:rgba(255,205,9,.12);
+  border:1px solid rgba(217,169,0,.22);
+}
+.fiscal-check-card strong{
+  display:block;
+  margin-bottom:3px;
+  line-height:1.25;
+}
+.fiscal-check-card small{
+  display:block;
+  color:var(--muted);
+  line-height:1.4;
+  font-weight:700;
+}
+.fiscal-apuracao-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin:0 0 16px;
+}
+.fiscal-apuracao-bloco{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:14px;
+  border-radius:15px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+}
+.fiscal-apuracao-titulo{
+  color:#B58900;
+  font-size:.7rem;
+  font-weight:1000;
+  letter-spacing:.07em;
+}
+body.dark .fiscal-apuracao-titulo{
+  color:#FFCD09;
+}
+.fiscal-apuracao-bloco label{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  line-height:1.3;
+  font-size:.82rem;
+  font-weight:800;
+  cursor:pointer;
+}
+.fiscal-apuracao-bloco input{
+  margin-top:2px;
+  accent-color:#FFCD09;
+}
+.fiscal-termo-ciencia{
+  margin-top:4px;
+  background:linear-gradient(145deg,rgba(34,197,94,.08),rgba(34,197,94,.025));
+  border-color:rgba(34,197,94,.26);
+}
+.fiscal-detalhes-finalizacao{
+  margin-top:16px;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(34,197,94,.26);
+  background:linear-gradient(145deg,rgba(34,197,94,.07),rgba(34,197,94,.02));
+}
+.fiscal-detalhes-finalizacao h3{
+  margin:0 0 12px;
+}
+.fiscal-detalhes-checks{
+  display:grid;
+  gap:7px;
+  margin-bottom:12px;
+}
+.fiscal-detalhes-checks span{
+  display:block;
+  padding:8px 10px;
+  border-radius:10px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  font-weight:800;
+}
+.fiscal-detalhes-apuracao{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+}
+.fiscal-detalhes-apuracao>div{
+  padding:10px;
+  border-radius:12px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+}
+.fiscal-detalhes-apuracao small{
+  display:block;
+  margin-bottom:3px;
+  color:var(--muted);
+  font-size:.68rem;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.fiscal-detalhes-termo{
+  margin-top:12px;
+  color:#15803D;
+  font-weight:900;
+}
+body.dark .fiscal-detalhes-termo{
+  color:#4ADE80;
+}
+@media(max-width:820px){
+  .fiscal-apuracao-grid,
+  .fiscal-detalhes-apuracao{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+
+<style id="estoque-v70-historico-qtd-separada">
+#fiscalizacaoTable .fisc-cell-qtd{
+  text-align:center;
+}
+#fiscalizacaoTable .fisc-cell-qtd strong{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+  min-height:30px;
+  padding:5px 9px;
+  border-radius:10px;
+  background:rgba(255,205,9,.10);
+  border:1px solid rgba(217,169,0,.24);
+  color:inherit;
+  font-size:.95rem;
+}
+#fiscalizacaoTable .fisc-cell-itens .audit-note{
+  display:block;
+  text-align:left;
+  line-height:1.35;
+  white-space:normal;
+  word-break:break-word;
+}
+</style>
+
+
+<style id="estoque-v70-session-unique">
+.login-error.show{
+  white-space:normal;
+}
+</style>
+
 </head>
 <body>
   <script>
@@ -2072,12 +2335,23 @@ html[data-theme="dark"]{
       return INTERNAL_PASSWORD_PREFIX + String(valor ?? '');
     }
 
+    // A sessão de autenticação fica restrita à aba atual.
+    // Fechar a aba encerra a persistência local daquela sessão.
+    try{
+      Object.keys(localStorage).forEach(chave=>{
+        if(chave.startsWith('sb-qkyifeteokbdreuqriqq-auth-token')){
+          localStorage.removeItem(chave);
+        }
+      });
+    }catch(_){}
+
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_PUBLISHABLE_KEY,
       {
         auth: {
           persistSession: true,
+          storage: window.sessionStorage,
           autoRefreshToken: true,
           detectSessionInUrl: true
         },
@@ -2095,6 +2369,7 @@ html[data-theme="dark"]{
       teamVersion: TEAM_VERSION,
       dataVersion: DATA_VERSION,
       activeMonth: mesChaveAtual(),
+      activeSessions:{},
       tombstones:{recebimentos:{},inventarios:{},checklists:{},fiscalizacoes:{},categorias:{}},
       categorias:[
         {id:'malas',nome:'Malas',icone:'🧳'},
@@ -2132,6 +2407,16 @@ html[data-theme="dark"]{
     let syncQueued = false;
     let pendingRemoteSave = false;
     let applyingRemoteState = false;
+
+    const APP_SESSION_TOKEN_KEY = 'avenidaEstoqueActiveSessionToken';
+    const APP_DEVICE_ID_KEY = 'avenidaEstoqueDeviceId';
+    const SESSION_MONITOR_INTERVAL = 10000;
+
+    let currentSessionToken = '';
+    let sessionMonitorTimer = null;
+    let sessionTerminationInProgress = false;
+    let sessionForcedLogoutInProgress = false;
+
     let lastCloudSignature = '';
     let lastCloudUpdatedAt = '';
     let syncRetryCount = 0;
@@ -2294,6 +2579,24 @@ html[data-theme="dark"]{
       return out;
     }
 
+    function timestampSessaoAtiva(sessao){
+      const t=Date.parse(String(sessao?.updatedAt||sessao?.createdAt||''));
+      return Number.isFinite(t) ? t : 0;
+    }
+
+    function mesclarSessoesAtivas(remotas={},locais={}){
+      const out={...(remotas && typeof remotas==='object' ? structuredClone(remotas) : {})};
+
+      Object.entries(locais && typeof locais==='object' ? locais : {}).forEach(([userId,sessaoLocal])=>{
+        const sessaoRemota=out[userId];
+        if(!sessaoRemota || timestampSessaoAtiva(sessaoLocal)>=timestampSessaoAtiva(sessaoRemota)){
+          out[userId]=structuredClone(sessaoLocal);
+        }
+      });
+
+      return out;
+    }
+
     function mesclarEstadosCompartilhados(remoto={},local={}){
       const r=normalizarEstado({...structuredClone(DEFAULT_STATE),...(remoto||{})});
       const l=normalizarEstado({...structuredClone(DEFAULT_STATE),...(local||{})});
@@ -2311,6 +2614,7 @@ html[data-theme="dark"]{
         inventarios:mesclarColecaoPorId(r.inventarios,l.inventarios,tombstones.inventarios),
         checklists:mesclarColecaoPorId(r.checklists,l.checklists,tombstones.checklists),
         fiscalizacoes:mesclarColecaoPorId(r.fiscalizacoes,l.fiscalizacoes,tombstones.fiscalizacoes),
+        activeSessions:mesclarSessoesAtivas(r.activeSessions,l.activeSessions),
         tombstones,
         dataVersion:DATA_VERSION,
         teamVersion:TEAM_VERSION
@@ -2359,6 +2663,7 @@ html[data-theme="dark"]{
         .filter((u,i,arr)=>arr.findIndex(x=>(u.id && x.id===u.id) || normalizarLogin(x.nome)===normalizarLogin(u.nome))===i);
 
       s.permissoes = s.permissoes && typeof s.permissoes === 'object' ? s.permissoes : {};
+      s.activeSessions = s.activeSessions && typeof s.activeSessions === 'object' ? s.activeSessions : {};
       s.funcionarios = s.usuariosLogin.filter(u=>u.ativo).map(u=>u.nome);
       s.categorias = Array.isArray(s.categorias) && s.categorias.length ? s.categorias : structuredClone(DEFAULT_STATE.categorias);
       s.categorias = s.categorias.map(c=>(
@@ -2417,6 +2722,165 @@ html[data-theme="dark"]{
       }catch(e){
         console.warn('Falha ao salvar cache local:', e);
       }
+    }
+
+    function criarIdentificadorSessao(){
+      if(window.crypto?.randomUUID) return window.crypto.randomUUID();
+      const aleatorio=Array.from(window.crypto?.getRandomValues?.(new Uint8Array(16))||[])
+        .map(v=>v.toString(16).padStart(2,'0')).join('');
+      return aleatorio || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+
+    function obterDeviceId(){
+      try{
+        let id=localStorage.getItem(APP_DEVICE_ID_KEY);
+        if(!id){
+          id=criarIdentificadorSessao();
+          localStorage.setItem(APP_DEVICE_ID_KEY,id);
+        }
+        return id;
+      }catch(_){
+        return criarIdentificadorSessao();
+      }
+    }
+
+    function obterSessaoAtivaRemotaDoUsuario(userId=currentAuthUser?.id){
+      if(!userId) return null;
+      return state.activeSessions?.[userId] || null;
+    }
+
+    function sessaoAtualContinuaValida(){
+      if(!currentAuthUser || !currentSessionToken || sessionTerminationInProgress) return true;
+      const remota=obterSessaoAtivaRemotaDoUsuario(currentAuthUser.id);
+      return !!remota?.token && remota.token===currentSessionToken;
+    }
+
+    function atualizarRegistroSessaoLocal(token,ativo=true,motivo='login'){
+      if(!currentAuthUser?.id) return;
+
+      state.activeSessions = state.activeSessions && typeof state.activeSessions==='object'
+        ? state.activeSessions
+        : {};
+
+      state.activeSessions[currentAuthUser.id]={
+        token: ativo ? String(token||'') : '',
+        deviceId: obterDeviceId(),
+        updatedAt:new Date().toISOString(),
+        ativo:!!ativo,
+        motivo:String(motivo||''),
+        operador:currentUser?.operador||currentProfile?.username||'',
+        nome:currentUser?.nome||currentProfile?.full_name||''
+      };
+
+      persistirCacheLocal();
+    }
+
+    async function registrarNovaSessaoExclusiva(){
+      currentSessionToken=criarIdentificadorSessao();
+      sessionStorage.setItem(APP_SESSION_TOKEN_KEY,currentSessionToken);
+
+      atualizarRegistroSessaoLocal(currentSessionToken,true,'login');
+
+      pendingRemoteSave=true;
+      await sincronizarEstadoRemoto();
+
+      if(!sessaoAtualContinuaValida()){
+        throw new Error('SESSAO_SUBSTITUIDA');
+      }
+    }
+
+    async function encerrarRegistroSessaoAtual(motivo='logout'){
+      if(!currentAuthUser?.id || !currentSessionToken) return;
+
+      const remota=obterSessaoAtivaRemotaDoUsuario(currentAuthUser.id);
+      if(remota?.token && remota.token!==currentSessionToken){
+        return;
+      }
+
+      atualizarRegistroSessaoLocal('',false,motivo);
+      pendingRemoteSave=true;
+
+      try{
+        await sincronizarEstadoRemoto();
+      }catch(e){
+        console.warn('Não foi possível registrar o encerramento da sessão imediatamente:',e);
+      }
+    }
+
+    function encerrarMonitorSessaoUnica(){
+      clearInterval(sessionMonitorTimer);
+      sessionMonitorTimer=null;
+    }
+
+    async function forcarLogoutPorNovaSessao(){
+      if(sessionForcedLogoutInProgress || sessionTerminationInProgress || !currentAuthUser) return;
+
+      sessionForcedLogoutInProgress=true;
+      sessionTerminationInProgress=true;
+      encerrarMonitorSessaoUnica();
+      encerrarRealtime();
+
+      try{
+        currentSessionToken='';
+        sessionStorage.removeItem(APP_SESSION_TOKEN_KEY);
+        await supabaseClient.auth.signOut().catch(()=>{});
+      }finally{
+        mostrarLogin();
+        const erro=document.getElementById('loginError');
+        if(erro){
+          erro.textContent='Sua sessão foi encerrada porque este operador entrou no sistema em outro computador.';
+          erro.classList.add('show');
+        }
+        definirStatusSync('offline','☁️ Sessão substituída por outro acesso');
+        sessionTerminationInProgress=false;
+        sessionForcedLogoutInProgress=false;
+      }
+    }
+
+    function validarSessaoUnicaLocal(){
+      if(!currentAuthUser || !currentSessionToken || sessionTerminationInProgress) return true;
+
+      if(!sessaoAtualContinuaValida()){
+        void forcarLogoutPorNovaSessao();
+        return false;
+      }
+
+      return true;
+    }
+
+    async function verificarSessaoUnicaRemota(){
+      if(
+        !currentAuthUser ||
+        !currentSessionToken ||
+        sessionTerminationInProgress ||
+        !navigator.onLine
+      ) return;
+
+      try{
+        const {data,error}=await supabaseClient
+          .from(ONLINE_STATE_TABLE)
+          .select('data')
+          .eq('id',1)
+          .maybeSingle();
+
+        if(error) throw error;
+
+        const sessao=data?.data?.activeSessions?.[currentAuthUser.id] || null;
+
+        if(!sessao?.token || sessao.token!==currentSessionToken){
+          await forcarLogoutPorNovaSessao();
+        }
+      }catch(e){
+        console.warn('Falha temporária ao validar sessão exclusiva:',e);
+      }
+    }
+
+    function iniciarMonitorSessaoUnica(){
+      encerrarMonitorSessaoUnica();
+      sessionMonitorTimer=setInterval(
+        ()=>void verificarSessaoUnicaRemota(),
+        SESSION_MONITOR_INTERVAL
+      );
     }
 
     function estadoCompartilhavel(){
@@ -2563,6 +3027,10 @@ html[data-theme="dark"]{
       persistirCacheLocal();
       atualizarTudo();
       applyingRemoteState=false;
+
+      if(currentAuthUser && currentSessionToken && !sessionTerminationInProgress){
+        validarSessaoUnicaLocal();
+      }
     }
 
     async function carregarEstadoCompartilhado(){
@@ -3629,7 +4097,7 @@ html[data-theme="dark"]{
         salvar.classList.toggle('danger',!editando);
         salvar.classList.toggle('success',editando);
       }
-      if(status) status.disabled=!editando;
+      if(status) status.disabled=true;
       if(trigger && document.getElementById('fiscalConferencePanel')?.classList.contains('active')){
         trigger.textContent=editando?'✏️ Editando relatório':'− Fechar conferência';
       }
@@ -4111,7 +4579,7 @@ html[data-theme="dark"]{
         evidencias:[...evidencias],
         evidencia:evidencias.join(' | '),
         monitoramentoCamera,
-        status:document.getElementById('fiscStatus')?.value||'Em análise',
+
         observacao:String(document.getElementById('fiscObs')?.value||'').trim(),itens,
         valorTotal:itens.reduce((soma,item)=>soma+n(item.valor)*Math.max(1,n(item.quantidade)),0),
         quantidadeTotal:itens.reduce((soma,item)=>soma+Math.max(1,n(item.quantidade)),0),
@@ -4129,6 +4597,7 @@ html[data-theme="dark"]{
           ...anterior,
           ...dadosAtualizados,
           id:anterior.id,
+          status:anterior.status||'Em análise',
           createdAt:anterior.createdAt||agora
         };
         marcarAuditoria(ocorrencia);
@@ -4138,6 +4607,7 @@ html[data-theme="dark"]{
         const ocorrencia={
           id:idMovimento('FISC'),
           ...dadosAtualizados,
+          status:'Em análise',
           createdAt:agora
         };
         marcarAuditoria(ocorrencia);
@@ -4159,6 +4629,221 @@ html[data-theme="dark"]{
       if(status==='Indício confirmado') return 'fiscal-status-confirmado';
       if(status==='Finalizado') return 'fiscal-status-finalizado';
       return 'fiscal-status-em-analise';
+    }
+
+    let fiscalizacaoFinalizandoId = null;
+
+    function formatarDataHoraFiscalFinalizacao(iso){
+      if(!iso) return '—';
+      const dt=new Date(iso);
+      if(Number.isNaN(dt.getTime())) return String(iso);
+      return dt.toLocaleString('pt-BR',{
+        day:'2-digit',
+        month:'2-digit',
+        year:'numeric',
+        hour:'2-digit',
+        minute:'2-digit'
+      });
+    }
+
+    function solicitarFinalizacaoFiscalizacao(id){
+      if(!permissaoObrigatoria('fiscalizacao')) return;
+
+      const registro=(state.fiscalizacoes||[]).find(x=>x.id===id);
+      if(!registro){
+        toast('Relatório de fiscalização não encontrado.');
+        return;
+      }
+
+      if(String(registro.status||'Em análise')==='Finalizado'){
+        toast('Esta fiscalização já está finalizada.');
+        return;
+      }
+
+      fiscalizacaoFinalizandoId=id;
+
+      const resumoItem=(registro.itens||[])[0]||{};
+      const modal=document.getElementById('configModal');
+      const content=document.getElementById('configModalContent');
+      if(!modal || !content) return;
+
+      content.innerHTML=`
+        <div class="modal-head">
+          <div>
+            <h2 id="configModalTitle">✅ Finalizar fiscalização</h2>
+            <p>${escapeHtml(dataBRFromISO(registro.data))} às ${escapeHtml(registro.hora||'—')} • ${escapeHtml(registro.provador||'—')}</p>
+          </div>
+          <button class="icon-btn" onclick="fecharModalConfig()">✕</button>
+        </div>
+
+        <div class="fiscal-finalizacao-resumo">
+          <div>
+            <small>Status atual</small>
+            <strong><span class="status-pill ${classeStatusFiscal(registro.status)}">${escapeHtml(registro.status||'Em análise')}</span></strong>
+          </div>
+          <div>
+            <small>Responsável pelo provador</small>
+            <strong>${escapeHtml(registro.responsavelProvador||'—')}</strong>
+          </div>
+          <div>
+            <small>Fiscal do turno</small>
+            <strong>${escapeHtml(registro.fiscalTurno||'—')}</strong>
+          </div>
+          <div>
+            <small>Item / etiqueta</small>
+            <strong>${escapeHtml(resumoItem.descricao||resumoItem.referencia||resumoItem.codigoBarras||'—')}</strong>
+          </div>
+        </div>
+
+        <div class="fiscal-verificacao-box">
+          <span class="fiscal-verificacao-kicker">CHECKLIST DE VERIFICAÇÃO</span>
+          <h3>Confirme as etapas realizadas antes de encerrar esta fiscalização.</h3>
+
+          <div class="fiscal-checklist-grid">
+            <label class="fiscal-check-card">
+              <input id="fiscCheckCameras" type="checkbox" onchange="atualizarBotaoFinalizacaoFiscalizacao()">
+              <span class="fiscal-check-icon">📹</span>
+              <span><strong>Câmeras/monitoramento verificados</strong><small>Conferência das imagens ou monitoramento disponível relacionada ao horário e local da ocorrência.</small></span>
+            </label>
+
+            <label class="fiscal-check-card">
+              <input id="fiscCheckDados" type="checkbox" onchange="atualizarBotaoFinalizacaoFiscalizacao()">
+              <span class="fiscal-check-icon">📋</span>
+              <span><strong>Dados da ocorrência conferidos</strong><small>Provador, item/etiqueta, horário, responsáveis e demais informações foram revisados.</small></span>
+            </label>
+
+            <label class="fiscal-check-card">
+              <input id="fiscCheckEvidencias" type="checkbox" onchange="atualizarBotaoFinalizacaoFiscalizacao()">
+              <span class="fiscal-check-icon">🔎</span>
+              <span><strong>Evidências disponíveis revisadas</strong><small>Registros, imagens, informações e demais evidências relacionadas foram verificadas.</small></span>
+            </label>
+          </div>
+
+          <div class="fiscal-apuracao-grid">
+            <div class="fiscal-apuracao-bloco">
+              <span class="fiscal-apuracao-titulo">SUSPEITO</span>
+              <label><input type="radio" name="fiscSuspeitoStatus" value="Não identificado" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Não identificado</label>
+              <label><input type="radio" name="fiscSuspeitoStatus" value="Identificado" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Identificado</label>
+              <label><input type="radio" name="fiscSuspeitoStatus" value="Localizado" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Localizado</label>
+            </div>
+
+            <div class="fiscal-apuracao-bloco">
+              <span class="fiscal-apuracao-titulo">SEGURANÇA</span>
+              <label><input type="radio" name="fiscSegurancaStatus" value="Não foi necessário" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Não foi necessário</label>
+              <label><input type="radio" name="fiscSegurancaStatus" value="Segurança da loja acionada" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Segurança da loja acionada</label>
+              <label><input type="radio" name="fiscSegurancaStatus" value="Segurança do shopping acionada" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Segurança do shopping acionada</label>
+            </div>
+
+            <div class="fiscal-apuracao-bloco">
+              <span class="fiscal-apuracao-titulo">PROVIDÊNCIA FINAL</span>
+              <label><input type="radio" name="fiscProvidenciaStatus" value="Sem necessidade adicional" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Sem necessidade adicional</label>
+              <label><input type="radio" name="fiscProvidenciaStatus" value="Encaminhado à liderança" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Encaminhado à liderança</label>
+              <label><input type="radio" name="fiscProvidenciaStatus" value="Ocorrência tratada e encerrada" onchange="atualizarBotaoFinalizacaoFiscalizacao()"> Ocorrência tratada e encerrada</label>
+            </div>
+          </div>
+
+          <label class="fiscal-verificacao-check fiscal-termo-ciencia">
+            <input id="fiscConfirmarFinalizacao" type="checkbox" onchange="atualizarBotaoFinalizacaoFiscalizacao()">
+            <span><strong>Termo de ciência:</strong> confirmo que as informações acima refletem as verificações realizadas e autorizo a alteração do status para <strong>FINALIZADO</strong>.</span>
+          </label>
+        </div>
+
+        <div class="config-actions fiscal-finalizacao-actions">
+          <button class="btn secondary" onclick="fecharModalConfig()">Cancelar</button>
+          <button class="btn success" id="fiscFinalizarConfirmBtn" onclick="confirmarFinalizacaoFiscalizacao('${escapeHtml(id)}')" disabled>✅ Finalizar fiscalização</button>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function valorRadioFiscal(nome){
+      return document.querySelector(`input[name="${nome}"]:checked`)?.value||'';
+    }
+
+    function atualizarBotaoFinalizacaoFiscalizacao(){
+      const cameras=document.getElementById('fiscCheckCameras')?.checked;
+      const dados=document.getElementById('fiscCheckDados')?.checked;
+      const evidencias=document.getElementById('fiscCheckEvidencias')?.checked;
+      const suspeito=valorRadioFiscal('fiscSuspeitoStatus');
+      const seguranca=valorRadioFiscal('fiscSegurancaStatus');
+      const providencia=valorRadioFiscal('fiscProvidenciaStatus');
+      const ciencia=document.getElementById('fiscConfirmarFinalizacao')?.checked;
+      const btn=document.getElementById('fiscFinalizarConfirmBtn');
+
+      const completo=!!(
+        cameras &&
+        dados &&
+        evidencias &&
+        suspeito &&
+        seguranca &&
+        providencia &&
+        ciencia
+      );
+
+      if(btn) btn.disabled=!completo;
+    }
+
+    function confirmarFinalizacaoFiscalizacao(id){
+      if(!permissaoObrigatoria('fiscalizacao')) return;
+
+      const cameras=document.getElementById('fiscCheckCameras')?.checked;
+      const dados=document.getElementById('fiscCheckDados')?.checked;
+      const evidencias=document.getElementById('fiscCheckEvidencias')?.checked;
+      const suspeito=valorRadioFiscal('fiscSuspeitoStatus');
+      const seguranca=valorRadioFiscal('fiscSegurancaStatus');
+      const providencia=valorRadioFiscal('fiscProvidenciaStatus');
+      const ciencia=document.getElementById('fiscConfirmarFinalizacao')?.checked;
+
+      if(!cameras || !dados || !evidencias){
+        toast('Conclua todas as verificações obrigatórias antes de finalizar.');
+        return;
+      }
+
+      if(!suspeito || !seguranca || !providencia){
+        toast('Informe o resultado da apuração, segurança e providência final.');
+        return;
+      }
+
+      if(!ciencia){
+        toast('Confirme o termo de ciência antes de finalizar.');
+        return;
+      }
+
+      const registro=(state.fiscalizacoes||[]).find(x=>x.id===id);
+      if(!registro){
+        toast('Relatório de fiscalização não encontrado.');
+        fecharModalConfig();
+        return;
+      }
+
+      if(String(registro.status||'Em análise')==='Finalizado'){
+        toast('Esta fiscalização já está finalizada.');
+        fecharModalConfig();
+        return;
+      }
+
+      const agora=new Date();
+      registro.status='Finalizado';
+      registro.finalizacaoVerificada=true;
+      registro.finalizacaoChecklist={
+        camerasMonitoramentoVerificados:true,
+        dadosOcorrenciaConferidos:true,
+        evidenciasRevisadas:true,
+        suspeitoStatus:suspeito,
+        segurancaStatus:seguranca,
+        providenciaFinal:providencia,
+        termoCiencia:true
+      };
+      registro.finalizadoPor=currentUser?.nome||'—';
+      registro.finalizadoCargo=currentUser?.cargo||'—';
+      registro.finalizadoEm=agora.toISOString();
+      registro.lastUpdatedIso=agora.toISOString();
+
+      salvarEstado();
+      fecharModalConfig();
+      renderFiscalizacao();
+      toast(`Fiscalização ${registro.id} finalizada com sucesso ✅`);
     }
 
     function renderFiscalizacao(){
@@ -4198,12 +4883,13 @@ html[data-theme="dark"]{
       const table=document.getElementById('fiscalizacaoTable'); if(!table) return;
       table.className='fiscalizacao-history-table';
       table.innerHTML=`<colgroup>
-        <col class="col-data"><col class="col-provador"><col class="col-itens"><col class="col-valor"><col class="col-responsavel"><col class="col-fiscal"><col class="col-status"><col class="col-registro"><col class="col-acoes">
+        <col class="col-data"><col class="col-provador"><col class="col-qtd"><col class="col-itens"><col class="col-valor"><col class="col-responsavel"><col class="col-fiscal"><col class="col-status"><col class="col-registro"><col class="col-acoes">
       </colgroup>
       <thead><tr>
         <th><div class="fisc-th">Data / hora</div></th>
         <th><div class="fisc-th">Provador</div></th>
-        <th><div class="fisc-th">Etiquetas / itens</div></th>
+        <th><div class="fisc-th">Quantidade</div></th>
+        <th><div class="fisc-th">Etiqueta / item</div></th>
         <th><div class="fisc-th">Valor estimado</div></th>
         <th><div class="fisc-th">Responsável provador</div></th>
         <th><div class="fisc-th">Fiscal do turno</div></th>
@@ -4214,14 +4900,15 @@ html[data-theme="dark"]{
       <tbody>${filtrada.length?filtrada.map(x=>`<tr>
         <td class="fisc-cell-date"><strong>${escapeHtml(dataBRFromISO(x.data))}</strong><small>${escapeHtml(x.hora||'—')}</small></td>
         <td class="fisc-cell-provador"><strong>${escapeHtml((x.provador||'—').split(' ')[0]||x.provador||'—')}</strong><small>${escapeHtml((x.provador||'').split(' ').slice(1).join(' ')||'')}</small></td>
-        <td class="fisc-cell-itens"><strong>${n(x.quantidadeTotal)||((x.itens||[]).length)}</strong><span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td>
+        <td class="fisc-cell-qtd"><strong>${n(x.quantidadeTotal)||((x.itens||[]).reduce((s,i)=>s+Math.max(1,n(i.quantidade)),0))||((x.itens||[]).length)||0}</strong></td>
+        <td class="fisc-cell-itens"><span class="audit-note">${escapeHtml((x.itens||[]).map(i=>i.descricao||i.referencia||i.codigoBarras).filter(Boolean).slice(0,2).join(' • ')||'Sem descrição')}</span></td>
         <td class="fisc-cell-valor"><strong>${moedaBR(x.valorTotal)}</strong></td>
         <td class="fisc-cell-responsavel">${escapeHtml(x.responsavelProvador||'—')}</td>
         <td class="fisc-cell-fiscal">${escapeHtml(x.fiscalTurno||'—')}</td>
         <td><span class="status-pill ${classeStatusFiscal(x.status)}">${escapeHtml(x.status||'Em análise')}</span></td>
         <td class="fisc-cell-registro">${auditLabel(x)}</td>
-        <td class="no-print"><div class="config-actions"><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button><button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">Remover</button></div></td>
-      </tr>`).join(''):'<tr><td colspan="9" class="empty">Nenhuma ocorrência registrada para os filtros atuais.</td></tr>'}</tbody>`;
+        <td class="no-print"><div class="config-actions">${String(x.status||'Em análise')!=='Finalizado'?`<button class="btn success" onclick="solicitarFinalizacaoFiscalizacao('${x.id}')">✅ Finalizar</button>`:''}<button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar</button><button class="btn danger" onclick="removerFiscalizacao('${x.id}')">🗑️ Remover</button><button class="btn secondary" onclick="abrirDetalhesFiscalizacao('${x.id}')">👁️ Detalhes</button></div></td>
+      </tr>`).join(''):'<tr><td colspan="10" class="empty">Nenhuma ocorrência registrada para os filtros atuais.</td></tr>'}</tbody>`;
     }
 
     function abrirDetalhesFiscalizacao(id){
@@ -4229,10 +4916,10 @@ html[data-theme="dark"]{
       const itensNormalizados=(x.itens||[]).map(item=>normalizarItemFiscal(item));
       const itens=itensNormalizados.map(i=>`<tr><td>${escapeHtml(i.tipoEtiqueta||'BRANCA')}</td><td>${escapeHtml([i.departamento,i.categoria,i.subcategoria].filter(Boolean).join(' › ')||'—')}</td><td>${escapeHtml(i.referencia||'—')}</td><td>${escapeHtml(i.descricao||'—')}</td><td>${escapeHtml(i.cor||'—')}</td><td>${escapeHtml(i.tamanho||'—')}</td><td>${escapeHtml(i.codigoBarras||'—')}</td><td>${moedaBR(i.valor)}</td><td>${escapeHtml(i.codigoAuxiliar||'—')}</td><td>${escapeHtml(dataEtiquetaFormatada(i.dataEtiqueta))}</td><td>${Math.max(1,n(i.quantidade))}</td><td><strong>${moedaBR(n(i.valor)*Math.max(1,n(i.quantidade)))}</strong></td></tr>`).join('');
       document.getElementById('configModalContent').innerHTML=`<div class="modal-head"><div><h2 id="configModalTitle">🛡️ Ocorrência ${escapeHtml(x.id)}</h2><p>${escapeHtml(dataBRFromISO(x.data))} às ${escapeHtml(x.hora)} • ${escapeHtml(x.provador)}</p></div><button class="icon-btn" onclick="fecharModalConfig()">✕</button></div>
-      <div class="fiscal-detail-grid"><div><small>Responsável pelo provador</small><strong>${escapeHtml(x.responsavelProvador||'—')}</strong></div><div><small>Fiscal do turno</small><strong>${escapeHtml(x.fiscalTurno||'—')}</strong></div><div><small>Encontrado por</small><strong>${escapeHtml(x.encontradoPor||'—')}</strong></div><div><small>Tipo de indício / problema relatado</small><strong>${escapeHtml(textoIndiciosFiscal(x)||'—')}</strong></div><div><small>Monitoramento por câmera</small><strong>${escapeHtml(x.monitoramentoCamera||'Não informado')}</strong></div><div><small>Status</small><strong>${escapeHtml(x.status||'—')}</strong></div><div><small>Valor total estimado</small><strong>${moedaBR(x.valorTotal)}</strong></div></div>
+      <div class="fiscal-detail-grid"><div><small>Responsável pelo provador</small><strong>${escapeHtml(x.responsavelProvador||'—')}</strong></div><div><small>Fiscal do turno</small><strong>${escapeHtml(x.fiscalTurno||'—')}</strong></div><div><small>Encontrado por</small><strong>${escapeHtml(x.encontradoPor||'—')}</strong></div><div><small>Tipo de indício / problema relatado</small><strong>${escapeHtml(textoIndiciosFiscal(x)||'—')}</strong></div><div><small>Monitoramento por câmera</small><strong>${escapeHtml(x.monitoramentoCamera||'Não informado')}</strong></div><div><small>Status</small><strong>${escapeHtml(x.status||'—')}</strong></div><div><small>Valor total estimado</small><strong>${moedaBR(x.valorTotal)}</strong></div>${String(x.status||'')==='Finalizado'?`<div><small>Finalizado por</small><strong>${escapeHtml(x.finalizadoPor||'—')} • ${escapeHtml(x.finalizadoCargo||'')}</strong></div><div><small>Finalizado em</small><strong>${escapeHtml(formatarDataHoraFiscalFinalizacao(x.finalizadoEm))}</strong></div>`:''}</div>${String(x.status||'')==='Finalizado'&&x.finalizacaoChecklist?`<div class="fiscal-detalhes-finalizacao"><h3>✅ Verificações de encerramento</h3><div class="fiscal-detalhes-checks"><span>📹 Câmeras/monitoramento verificados</span><span>📋 Dados da ocorrência conferidos</span><span>🔎 Evidências disponíveis revisadas</span></div><div class="fiscal-detalhes-apuracao"><div><small>Suspeito</small><strong>${escapeHtml(x.finalizacaoChecklist.suspeitoStatus||'—')}</strong></div><div><small>Segurança</small><strong>${escapeHtml(x.finalizacaoChecklist.segurancaStatus||'—')}</strong></div><div><small>Providência final</small><strong>${escapeHtml(x.finalizacaoChecklist.providenciaFinal||'—')}</strong></div></div><div class="fiscal-detalhes-termo">✓ Termo de ciência confirmado no encerramento.</div></div>`:''}
       <div class="table-wrap"><table><thead><tr><th>Tipo etiqueta</th><th>Departamento</th><th>Cód. principal</th><th>Descrição</th><th>Cor</th><th>Tam.</th><th>Cód. barras</th><th>Valor</th><th>Cód. adicional</th><th>Data etiqueta</th><th>Qtd.</th><th>Subtotal</th></tr></thead><tbody>${itens||'<tr><td colspan="12" class="empty">Sem itens.</td></tr>'}</tbody></table></div>
       <div class="category-help" style="margin-top:14px"><strong>Observações</strong><br>${escapeHtml(x.observacao||'Sem observações.')}</div>
-      <div class="config-actions" style="margin-top:14px;justify-content:flex-end"><button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar este relatório</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir relatório desta fiscalização</button></div>`;
+      <div class="config-actions" style="margin-top:14px;justify-content:flex-end">${String(x.status||'Em análise')!=='Finalizado'?`<button class="btn success" onclick="solicitarFinalizacaoFiscalizacao('${x.id}')">✅ Finalizar</button>`:''}<button class="btn blue" onclick="editarFiscalizacao('${x.id}')">✏️ Editar este relatório</button><button class="btn" onclick="imprimirOcorrenciaFiscalizacao('${x.id}')">🖨️ Imprimir relatório desta fiscalização</button></div>`;
       document.getElementById('configModal').classList.add('active');
     }
 
@@ -5584,11 +6271,13 @@ html[data-theme="dark"]{
 
         if(loginResult.error || !loginResult.data?.session) throw new Error('LOGIN_INVALIDO');
 
-        await inicializarSessaoOnline(loginResult.data.session);
+        await inicializarSessaoOnline(loginResult.data.session,{novaSessao:true});
         document.getElementById('loginSenha').value='';
         toast(`Bem-vindo, ${currentUser.nome} ✅`);
       }catch(e){
         console.error('Falha no login por operador:',e);
+        currentSessionToken='';
+        sessionStorage.removeItem(APP_SESSION_TOKEN_KEY);
         await supabaseClient.auth.signOut().catch(()=>{});
         erro.textContent=e?.message==='LOGIN_INVALIDO'
           ? 'Operador ou senha incorretos. Confira os dados e tente novamente.'
@@ -5600,13 +6289,26 @@ html[data-theme="dark"]{
       }
     }
 
-    async function inicializarSessaoOnline(session){
+    async function inicializarSessaoOnline(session,{novaSessao=false}={}){
       currentAuthUser=session?.user||null;
       if(!currentAuthUser) throw new Error('Sessão inválida.');
+
+      currentSessionToken=String(sessionStorage.getItem(APP_SESSION_TOKEN_KEY)||'');
+
       definirStatusSync('syncing','☁️ Carregando perfil…');
       await carregarDiretorioOnline();
       await carregarEstadoCompartilhado();
+
+      if(novaSessao){
+        await registrarNovaSessaoExclusiva();
+      }else{
+        if(!currentSessionToken || !sessaoAtualContinuaValida()){
+          throw new Error('SESSAO_EXPIRADA');
+        }
+      }
+
       iniciarRealtime();
+      iniciarMonitorSessaoUnica();
       abrirSistema();
     }
 
@@ -5620,11 +6322,16 @@ html[data-theme="dark"]{
       }
       if(data?.session){
         try{
-          await inicializarSessaoOnline(data.session);
+          const tokenAba=String(sessionStorage.getItem(APP_SESSION_TOKEN_KEY)||'');
+          if(!tokenAba) throw new Error('SESSAO_EXPIRADA');
+
+          await inicializarSessaoOnline(data.session,{novaSessao:false});
           return;
         }catch(e){
           console.error(e);
-          await supabaseClient.auth.signOut();
+          currentSessionToken='';
+          sessionStorage.removeItem(APP_SESSION_TOKEN_KEY);
+          await supabaseClient.auth.signOut().catch(()=>{});
         }
       }
       mostrarLogin();
@@ -5638,6 +6345,7 @@ html[data-theme="dark"]{
     }
 
     function mostrarLogin(){
+      encerrarMonitorSessaoUnica();
       currentUser=null;
       currentProfile=null;
       currentAuthUser=null;
@@ -5652,8 +6360,23 @@ html[data-theme="dark"]{
 
     async function logout(){
       definirStatusSync('syncing','☁️ Encerrando sessão…');
-      await supabaseClient.auth.signOut();
+      sessionTerminationInProgress=true;
+
+      try{
+        await encerrarRegistroSessaoAtual('logout');
+      }catch(e){
+        console.warn('Falha ao registrar logout da sessão:',e);
+      }
+
+      currentSessionToken='';
+      sessionStorage.removeItem(APP_SESSION_TOKEN_KEY);
+      encerrarMonitorSessaoUnica();
+
+      await supabaseClient.auth.signOut().catch(()=>{});
+
       mostrarLogin();
+      sessionTerminationInProgress=false;
+
       document.getElementById('loginUser').value='';
       document.getElementById('loginSenha').value='';
       toast('Sessão encerrada.');
