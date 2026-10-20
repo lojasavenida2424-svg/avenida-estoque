@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#151719" />
   <meta name="description" content="ESTOQUE AV — gestão de estoque por loja, depósito e salão de vendas." />
-  <title>ESTOQUE AV | Gestão operacional</title>
+  <title>ESTOQUE AV | Lojas Avenida S/A</title>
   <style>
     :root{--gold:#edb92c;--gold2:#ffdc70;--bg:#f5f6f8;--card:#ffffff;--sidebar:#14171a;--ink:#1c232b;--muted:#7b8592;--stroke:#e7e9ed;--soft:#f6f7f9;--danger:#ce4149;--success:#13865d;--warning:#b4770d;--shadow:0 14px 45px rgba(18,25,33,.045);--rad:17px;--rad2:22px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}svg{display:block;flex-shrink:0}input,select,textarea{outline:none}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(237,185,44,.46);outline-offset:2px}
@@ -16,7 +16,7 @@
     @media(max-width:560px){.main{padding:0 13px 35px}.topbar{height:70px;gap:9px}.store-box{padding:7px 9px}.store-box label{display:none}.store-box select{min-width:102px;max-width:136px;font-size:11px}.page-intro{margin:24px 0 18px;align-items:stretch;flex-direction:column}.page-intro h1{font-size:25px}.page-intro p{font-size:12px}.page-intro .actions{width:100%}.page-intro .actions .btn{flex:1}.grid4{gap:9px}.stat{min-height:126px;padding:15px}.stat h2{font-size:26px}.stat small{font-size:10px}.stat-title{font-size:11px}.stat-icon{height:29px;width:29px}.panel-head,.body-pad{padding:16px}.table-tools{padding:12px}.search{min-width:100%;max-width:100%}.stores-grid{grid-template-columns:1fr}.quick-grid{grid-template-columns:repeat(2,1fr)}.modal-layer{padding:7px;align-items:flex-end}.modal{max-height:94vh;border-radius:20px 20px 0 0}.modal-header,.modal-body{padding:18px}.modal-foot{padding:13px 18px}.form-grid{gap:12px}.page-intro .actions .btn{font-size:12px}.snapshot strong{font-size:18px}.snapshot>div{padding:11px 5px}}
     @media print{.sidebar,.topbar,.page-intro .actions,.table-tools,.btn,.icon-btn,.toast-stack,.notice,.no-print{display:none!important}.app{display:block}.main{padding:0}.page-intro{margin:0 0 14px}.panel,.stat{box-shadow:none;border-color:#777;break-inside:avoid}.tbl th,.tbl td{padding:9px;border:1px solid #aaa}.cols-2,.grid4{break-inside:avoid}body{background:#fff;color:#111}.content{max-width:100%}}
 
-    /* ESTOQUE AV • LOGIN V1.1 — camada própria, sem alterar os módulos internos */
+    /* ESTOQUE AV • LOGIN V1.2 — identidade Avenida S/A · camada própria, sem alterar os módulos internos */
     #auth-root{position:fixed;inset:0;z-index:110;overflow-y:auto;background:#f4f2ec;color:#212121;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
     body.auth-locked{overflow:hidden}
     body.auth-locked .app{visibility:hidden;pointer-events:none}
@@ -81,15 +81,39 @@
     @media(max-height:675px) and (min-width:701px){.auth-form-side{padding-top:20px;padding-bottom:20px}.auth-topline{margin-bottom:19px}.auth-greeting{width:47px;height:47px;margin-bottom:13px}.auth-subtitle{margin-bottom:20px}.auth-info{margin-top:17px;padding-top:14px}.auth-form{gap:11px}.auth-hero{padding:25px 0}}
     @media(prefers-reduced-motion:reduce){.auth-submit,.auth-input{transition:none}}
     @media print{#auth-root{display:none!important}}
+  
+    /* ESTOQUE AV V1.2 — apresentação de marca corporativa AVENIDA S/A */
+    :root{--gold:#f0c23c;--gold2:#ffdc70}
+    #auth-root:empty{display:none!important;pointer-events:none!important}
+    .avenida-emblem{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;filter:drop-shadow(0 7px 13px rgba(0,0,0,.13))}
+    .avenida-emblem svg{display:block;width:100%;height:100%;overflow:visible}
+    .avenida-emblem-large{width:61px;height:61px;flex-basis:61px;filter:drop-shadow(0 10px 24px #10060b45)}
+    .brand .avenida-emblem{width:41px;height:41px;flex-basis:41px}
+    .brand{padding:4px 10px 27px;gap:12px}
+    .brand strong{font-size:17px;letter-spacing:.65px;font-weight:850;white-space:nowrap}
+    .brand .brand-sa{font-size:9px;font-weight:780;font-style:normal;letter-spacing:.7px;color:#f4cc61;vertical-align:2px}
+    .brand small{font-size:8px;letter-spacing:1.25px;white-space:nowrap}
+    .auth-brand{gap:17px}.auth-brand strong{font-size:22px;font-weight:850;letter-spacing:.45px;line-height:1}
+    .auth-brand .brand-sa{font-size:12px;color:#f3cf69;font-weight:700;vertical-align:4px;letter-spacing:.3px}
+    .auth-brand small{margin-top:9px;font-size:9px;letter-spacing:2px;color:#c9ccd0}
+    .auth-visual{background:radial-gradient(ellipse at 88% 12%,#f4c4491e 0%,transparent 37%),radial-gradient(ellipse at 4% 88%,#68203f75 0%,transparent 43%),linear-gradient(142deg,#261821 0%,#17151b 46%,#0f1318 100%)}
+    .auth-visual:before{background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px)}
+    .auth-hero h2 em{color:#f2c957}.auth-pretitle{color:#ffd267}
+    .auth-form-side{background:radial-gradient(circle at 85% 0%,#fceec478,transparent 31%),linear-gradient(155deg,#fbfaf8,#f4f0e8)}
+    .auth-greeting{border-radius:19px;background:#fff;border:1px solid #eee3cf;box-shadow:0 15px 36px #37201510;width:72px;height:72px}
+    .auth-greeting .avenida-emblem{width:50px;height:50px;flex-basis:50px}
+    .auth-submit{background:linear-gradient(112deg,#ffdb69,#edb832);box-shadow:0 12px 26px #dca83b31}
+    .auth-info{border-top-color:#e8e0d1}
+    @media(max-width:700px){
+      .auth-topline:before{content:none;display:none}
+      .auth-topline{padding-left:48px;min-height:39px;position:relative}
+      .auth-topline:after{content:"";position:absolute;left:0;top:0;width:36px;height:36px;background:#5b1936;border-radius:50%;box-shadow:inset -8px 8px #e3b83c;pointer-events:none}
+      .auth-form-side{background:radial-gradient(circle at 100% 0%,#f9e8bb50,transparent 45%),#faf8f3}
+      .auth-footer-mobile{letter-spacing:1.45px}
+      .brand{padding:0 10px 16px}
+    }
+
   </style>
-<style id="avenida-identity-v12">
-.av-identity{display:flex;align-items:center;justify-content:center;width:66px;height:58px;flex-shrink:0;border-radius:13px;background:#fff;padding:6px;box-shadow:0 8px 30px #0002}
-.av-identity img{display:block;max-width:100%;max-height:100%;object-fit:contain}
-.av-fallback{align-items:center;justify-content:center;width:100%;height:100%;border-radius:8px;background:linear-gradient(140deg,#f9cf33 0 49%,#7c173d 50%);color:#fff;font-weight:950;letter-spacing:-2px;font-size:23px}
-.auth-brand{align-items:center!important;gap:15px!important}.auth-brand strong{font-size:20px!important;letter-spacing:.5px!important}.auth-brand small{font-size:10px!important;letter-spacing:1.1px!important}
-.brand .av-identity{width:47px;height:44px;padding:4px;border-radius:10px}.brand{gap:10px!important}.brand strong{font-size:14px!important}.brand small{font-size:8px!important;letter-spacing:.6px!important}
-@media(max-width:600px){.auth-brand strong{font-size:16px!important}.auth-brand small{font-size:8px!important}.auth-brand .av-identity{width:51px;height:48px}}
-</style>
 </head>
 <body class="auth-locked">
   <div id="auth-root"></div>
@@ -107,7 +131,7 @@
   'use strict';
   const KEY='estoque_av_v1';const PREF='estoque_av_preferences';
   const $=s=>document.querySelector(s); const $$=s=>[...document.querySelectorAll(s)];
-  const uid=()=>('id'+(crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)));
+  const uid=()=>('id'+(globalThis.crypto?.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2)));
   const iso=()=>new Date().toISOString();
   const num=v=>Number(v)||0;
   const fmt=n=>new Intl.NumberFormat('pt-BR').format(n);
@@ -126,23 +150,87 @@
   function accounts(){try{const a=JSON.parse(localStorage.getItem(ACCOUNTS_KEY)||'[]');return Array.isArray(a)?a:[]}catch{return []}}
   function b64(bytes){return btoa(String.fromCharCode(...bytes))}
   function fromB64(str){return Uint8Array.from(atob(str),c=>c.charCodeAt(0))}
+  // SHA-256 e HMAC portáteis: fallback para HTML local (file:// e content://),
+  // onde o WebCrypto/SubtleCrypto pode ser bloqueado pelo navegador.
+  // O resultado é idêntico ao PBKDF2-HMAC-SHA256 usado em versões anteriores.
+  const SHA256_K=new Uint32Array([
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2]);
+  function sha256Bytes(input){
+    const data=input instanceof Uint8Array?input:new Uint8Array(input),len=data.length;
+    const padded=new Uint8Array((len+9+63)&~63);padded.set(data);padded[len]=0x80;
+    const hi=Math.floor(len/0x20000000),lo=(len*8)>>>0;
+    const pos=padded.length-8;for(let i=0;i<4;i++){padded[pos+i]=(hi>>>(24-i*8))&255;padded[pos+4+i]=(lo>>>(24-i*8))&255}
+    const h=new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+    const w=new Uint32Array(64);const rr=(v,n)=>(v>>>n)|(v<<(32-n));
+    for(let off=0;off<padded.length;off+=64){
+      for(let t=0;t<16;t++){const k=off+t*4;w[t]=((padded[k]<<24)|(padded[k+1]<<16)|(padded[k+2]<<8)|padded[k+3])>>>0}
+      for(let t=16;t<64;t++){const x=w[t-15],y=w[t-2];w[t]=(w[t-16]+(rr(x,7)^rr(x,18)^(x>>>3))+w[t-7]+(rr(y,17)^rr(y,19)^(y>>>10)))>>>0}
+      let [a,b,c,d,e,f,g,j]=h;
+      for(let t=0;t<64;t++){
+        const x=(j+(rr(e,6)^rr(e,11)^rr(e,25))+((e&f)^(~e&g))+SHA256_K[t]+w[t])>>>0;
+        const y=((rr(a,2)^rr(a,13)^rr(a,22))+((a&b)^(a&c)^(b&c)))>>>0;
+        j=g;g=f;f=e;e=(d+x)>>>0;d=c;c=b;b=a;a=(x+y)>>>0;
+      }
+      const v=[a,b,c,d,e,f,g,j];for(let t=0;t<8;t++)h[t]=(h[t]+v[t])>>>0;
+    }
+    const out=new Uint8Array(32);for(let i=0;i<8;i++){out[i*4]=(h[i]>>>24)&255;out[i*4+1]=(h[i]>>>16)&255;out[i*4+2]=(h[i]>>>8)&255;out[i*4+3]=h[i]&255}return out;
+  }
+  function hmac256(key,bytes){
+    if(key.length>64)key=sha256Bytes(key);
+    const ipad=new Uint8Array(64),opad=new Uint8Array(64);ipad.fill(0x36);opad.fill(0x5c);
+    for(let i=0;i<key.length;i++){ipad[i]^=key[i];opad[i]^=key[i]}
+    const a=new Uint8Array(64+bytes.length);a.set(ipad);a.set(bytes,64);
+    const inner=sha256Bytes(a),b=new Uint8Array(96);b.set(opad);b.set(inner,64);
+    return sha256Bytes(b);
+  }
   async function passwordHash(password,salt){
-    if(!crypto?.subtle)throw Error('Este navegador não oferece criptografia local. Abra o arquivo usando Chrome ou Edge atualizado.');
-    const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
-    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:fromB64(salt),iterations:180000,hash:'SHA-256'},material,256);
-    return b64(new Uint8Array(bits));
+    const saltBytes=fromB64(salt),passBytes=new TextEncoder().encode(password);
+    if(globalThis.crypto?.subtle){
+      try{
+        const material=await crypto.subtle.importKey('raw',passBytes,'PBKDF2',false,['deriveBits']);
+        const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:saltBytes,iterations:180000,hash:'SHA-256'},material,256);
+        return b64(new Uint8Array(bits));
+      }catch(err){console.warn('WebCrypto indisponível; usando cálculo local compatível.',err)}
+    }
+    // Fallback assíncrono em lotes; preserva contas da V1.1/V1.2.
+    const initial=new Uint8Array(saltBytes.length+4);initial.set(saltBytes);initial.set([0,0,0,1],saltBytes.length);
+    let result=hmac256(passBytes,initial),previous=result;
+    for(let i=2;i<=180000;i++){
+      previous=hmac256(passBytes,previous);
+      for(let j=0;j<32;j++)result[j]^=previous[j];
+      if(i%750===0)await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    return b64(result);
+  }
+  function authSalt(){
+    const bytes=new Uint8Array(16);
+    if(globalThis.crypto?.getRandomValues)crypto.getRandomValues(bytes);
+    else throw Error('Este navegador não oferece geração segura de credenciais. Abra no Chrome ou Edge atualizado.');
+    return b64(bytes);
   }
   function htmlAuthIcon(name,size=19){return ico(name,size)}
+
+  // Identidade AVENIDA S/A: emblema incorporado ao HTML, sem dependências externas.
+  function avenueLogo(size='normal'){
+    return `<span class="avenida-emblem ${size==='large'?'avenida-emblem-large':''}"><svg class="av-corporate-symbol" viewBox="0 0 72 72" role="img" aria-label="Emblema AV Avenida"><defs><linearGradient id="av-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE47B"/><stop offset="1" stop-color="#E7B528"/></linearGradient></defs><circle cx="36" cy="36" r="35" fill="#5B1936"/><path d="M36 1a35 35 0 0 1 31.5 19.8L55.5 31.6 45.3 12.8Z" fill="url(#av-gold)"/><path d="M12 54 31 17h6L18 54h-6Zm13.5 0 10.5-21 10.5 21h-7l-3.5-7.5L32.5 54h-7Z" fill="#fff"/><path d="m43 18 9.6 20.5L63 18h-7L52.5 26 49.5 18Z" fill="#fff"/><circle cx="36" cy="36" r="34.4" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width=".6"/></svg></span>`;
+  }
   function authTemplate(setup=false){
     const remembered=localStorage.getItem(REMEMBER_KEY)||'';
     return `<div class="auth-scene"><section class="auth-visual" aria-label="Apresentação do Estoque AV">
       <div class="auth-art" aria-hidden="true"><i class="ring"></i><i class="ring"></i><i class="ring"></i></div>
-      <div class="auth-brand"><span class="av-identity"><img src="logo-avenida.png" alt="Emblema Avenida S/A" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="av-fallback" style="display:none"><b>AV</b></span></span><div><strong>AVENIDA S/A</strong><small>ESTOQUE AV · CONTROLE OPERACIONAL</small></div></div>
-      <div class="auth-hero"><div class="auth-pretitle">PLATAFORMA DE GESTÃO</div><h2>Precisão em cada <em>movimento.</em></h2><p>Uma experiência inteligente para controlar mercadorias, organizar unidades e acompanhar sua operação com mais clareza.</p>
+      <div class="auth-brand">${avenueLogo('large')}<div><strong>AVENIDA <span class="brand-sa">S/A</span></strong><small>ESTOQUE AV · SISTEMA OPERACIONAL</small></div></div>
+      <div class="auth-hero"><div class="auth-pretitle">CONTROLE OPERACIONAL · LOJAS AVENIDA</div><h2>Precisão em cada <em>movimento.</em></h2><p>Uma experiência inteligente para controlar mercadorias, organizar unidades e acompanhar sua operação com mais clareza.</p>
       <div class="auth-pills"><span class="auth-pill">${htmlAuthIcon('box',16)} Gestão de produtos</span><span class="auth-pill">${htmlAuthIcon('arrows',16)} Transferências</span><span class="auth-pill">${htmlAuthIcon('shield',16)} Controle de perdas</span></div></div>
-      <div class="auth-visual-foot"><span><i></i> Ambiente de operação local</span><span>AVENIDA S/A · ESTOQUE AV</span></div>
-    </section><section class="auth-form-side"><div class="auth-pane"><div class="auth-topline"><span>ACESSO AO SISTEMA</span><span class="auth-status">Ambiente local</span></div>
-      <div class="auth-greeting">${htmlAuthIcon(setup?'shield':'box',29)}</div>
+      <div class="auth-visual-foot"><span><i></i> Ambiente de operação local</span><span>LOJAS AVENIDA S/A</span></div>
+    </section><section class="auth-form-side"><div class="auth-pane"><div class="auth-topline"><span>AVENIDA S/A · ESTOQUE</span><span class="auth-status">Ambiente local</span></div>
+      <div class="auth-greeting">${avenueLogo()}</div>
       <h1>${setup?'Configure seu acesso.':'Bem-vindo de volta.'}</h1><p class="auth-subtitle">${setup?'Crie as credenciais do primeiro operador deste navegador. Os cadastros do estoque já existentes serão preservados.':'Acesse sua área de trabalho e continue de onde parou.'}</p>
       <form class="auth-form" id="auth-form" autocomplete="on" novalidate>
       ${setup?`<div class="auth-field"><label for="auth-name">Nome do responsável</label><div class="auth-input-wrap">${htmlAuthIcon('store',18)}<input class="auth-input" type="text" id="auth-name" name="name" placeholder="Seu nome completo" autocomplete="name" minlength="2" maxlength="90" required></div></div>`:''}
@@ -152,7 +240,7 @@
       <div id="auth-error" class="auth-error" role="alert" aria-live="polite"></div>
       <button class="auth-submit" id="auth-submit" type="submit"><span>${setup?'Criar acesso e entrar':'Entrar no ESTOQUE AV'}</span>${htmlAuthIcon('right',19)}</button>
       </form><div class="auth-info">${htmlAuthIcon('info',16)}<span>${setup?'As credenciais serão guardadas apenas neste dispositivo. Guarde sua senha com segurança.':'Esta edição é local: os dados não são sincronizados entre dispositivos. O acesso por senha não substitui a segurança de uma autenticação em servidor.'}</span></div>
-      <div class="auth-footer-mobile">ESTOQUE AV · CONTROLE OPERACIONAL</div>
+      <div class="auth-footer-mobile">LOJAS AVENIDA S/A · ESTOQUE AV</div>
     </div></section></div>`;
   }
   function authError(message){const el=$('#auth-error');if(el)el.textContent=message}
@@ -170,7 +258,7 @@
         if(pass.length<8){authError('A senha deve conter pelo menos 8 caracteres.');return}
         if(pass!==confirm){authError('As senhas não coincidem.');return}
         btn.disabled=true;btn.querySelector('span').textContent='Configurando seu acesso…';
-        try{const salt=b64(crypto.getRandomValues(new Uint8Array(16))),hash=await passwordHash(pass,salt);const account={id:uid(),username:user,name,salt,hash,createdAt:iso()};
+        try{const salt=authSalt(),hash=await passwordHash(pass,salt);const account={id:uid(),username:user,name,salt,hash,createdAt:iso()};
           localStorage.setItem(ACCOUNTS_KEY,JSON.stringify([account]));localStorage.setItem(REMEMBER_KEY,user);startSession(account);
         }catch(err){authError(err.message||'Não foi possível criar seu acesso.');btn.disabled=false;btn.querySelector('span').textContent='Criar acesso e entrar'}
         return;
@@ -221,7 +309,7 @@
   const locationOptions=[['deposito','Depósito'],['salao','Salão de vendas']];
   const lossOptions=[['furto','Furto / indício de furto'],['avaria','Produto danificado / avaria']];
   function setPage(page){prefs.page=page;searchValue='';filterValue='all';savePrefs();$('#sidebar').classList.remove('open');$('#overlay-mobile').classList.remove('show');render();window.scrollTo({top:0,behavior:'smooth'})}
-  function renderNav(){const trans=db.transfers.filter(t=>t.storeId===prefs.storeId&&t.qty>t.received+(t.cancelledQty||0)).length;$('#sidebar').innerHTML=`<div class="brand"><span class="av-identity"><img src="logo-avenida.png" alt="Emblema Avenida S/A" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="av-fallback" style="display:none"><b>AV</b></span></span><span><strong>AVENIDA S/A</strong><small>ESTOQUE AV · CONTROLE OPERACIONAL</small></span></div>${nav.map((p,i)=>`${p.group?`<div class="nav-label">${p.group}</div>`:''}<button class="nav-btn ${prefs.page===p.id?'active':''}" data-page="${p.id}">${ico(p.icon)}<span>${p.name}</span>${p.id==='transfers'&&trans?`<span class="pill">${trans}</span>`:''}</button>`).join('')}<div class="sidebar-foot"><span class="dot"></span><div><strong>Modo local</strong><small>Dados salvos neste navegador. Faça backups regularmente.</small></div></div>`;$$('[data-page]').forEach(el=>el.addEventListener('click',()=>setPage(el.dataset.page)))}
+  function renderNav(){const trans=db.transfers.filter(t=>t.storeId===prefs.storeId&&t.qty>t.received+(t.cancelledQty||0)).length;$('#sidebar').innerHTML=`<div class="brand">${avenueLogo()}<span><strong>AVENIDA <i class="brand-sa">S/A</i></strong><small>ESTOQUE AV · OPERACIONAL</small></span></div>${nav.map((p,i)=>`${p.group?`<div class="nav-label">${p.group}</div>`:''}<button class="nav-btn ${prefs.page===p.id?'active':''}" data-page="${p.id}">${ico(p.icon)}<span>${p.name}</span>${p.id==='transfers'&&trans?`<span class="pill">${trans}</span>`:''}</button>`).join('')}<div class="sidebar-foot"><span class="dot"></span><div><strong>Modo local</strong><small>Dados salvos neste navegador. Faça backups regularmente.</small></div></div>`;$$('[data-page]').forEach(el=>el.addEventListener('click',()=>setPage(el.dataset.page)))}
   function renderTop(){const options=db.stores.map(s=>`<option value="${escapeHtml(s.id)}" ${s.id===prefs.storeId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');$('#topbar').innerHTML=`<button class="icon-btn mobile-toggle" id="mobile-toggle" aria-label="Abrir menu">${ico('menu')}</button><span class="topbar-title">Operações <b>/ ${escapeHtml(nav.find(n=>n.id===prefs.page)?.name||'Visão geral')}</b></span><span class="top-spacer"></span><div class="store-box">${ico('store',16)}<label>Unidade</label><select id="store-switch" aria-label="Selecionar loja">${options}</select></div><button class="icon-btn" id="theme-toggle" aria-label="Alternar tema" title="Alternar tema">${ico(prefs.theme==='dark'?'sun':'moon')}</button><button class="icon-btn" id="user-button" title="Identificação do operador"><div class="avatar">${escapeHtml(op().slice(0,2).toUpperCase())}</div></button>`;$('#store-switch').addEventListener('change',e=>{prefs.storeId=e.target.value;savePrefs();render()});$('#theme-toggle').addEventListener('click',()=>{prefs.theme=prefs.theme==='dark'?'light':'dark';savePrefs();render()});$('#user-button').addEventListener('click',accountModal);$('#mobile-toggle')?.addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#overlay-mobile').classList.add('show')})}
   function render(){if(!sessionUser){showAuth();return}document.body.classList.toggle('dark',prefs.theme==='dark');renderNav();renderTop();const pages={dashboard:dashboardPage,products:productsPage,movement:movementPage,transfers:transfersPage,losses:lossesPage,inventory:inventoryPage,reports:reportsPage,stores:storesPage,settings:settingsPage};$('#content').innerHTML=(pages[prefs.page]||dashboardPage)();bindContent()}
   function pageHead(title,desc,actions='',kicker='GESTÃO DE ESTOQUE'){return `<div class="page-intro"><div><div class="eyebrow">${kicker}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${actions}</div></div>`}
@@ -255,7 +343,7 @@
   function reportsPage(){const storeId=prefs.storeId,active=db.losses.filter(l=>l.storeId===storeId&&!l.reversedAt),lossQty=active.reduce((a,l)=>a+l.qty,0),lossCost=active.reduce((a,l)=>a+l.qty*(pname(l.productId)?.cost||0),0),withCost=active.every(l=>pname(l.productId)?.cost!==null),tot=totals(storeId);const byReason=[['Furto / indícios',active.filter(x=>x.reason==='furto').reduce((a,x)=>a+x.qty,0)],['Avarias',active.filter(x=>x.reason==='avaria').reduce((a,x)=>a+x.qty,0)]];const products=[...db.products].sort((a,b)=>stockTotals(storeId,b.id).total-stockTotals(storeId,a.id).total).slice(0,8);return pageHead('Relatórios e indicadores','Acompanhe as quantidades, as perdas e a movimentação por loja.',`${act('Exportar perdas','exportLosses','download','btn-dark')}<button class="btn" data-action="print">${ico('printer')} Imprimir</button>`)+`<div class="grid4">${stat('Estoque total',fmt(tot.total),'Peças em depósito, salão e trânsito','box')}${stat('Peças perdidas',fmt(lossQty),'Perdas ativas no histórico','loss','red')}${stat('Valor das perdas',money(lossCost),withCost?'Com custos cadastrados':'Parcial: produtos sem custo cadastrado','chart')}${stat('Referências ativas',fmt(db.products.filter(p=>stockTotals(storeId,p.id).total>0).length),'Produtos com saldo nesta loja','layers','green')}</div><div class="cols-2 equal"><section class="panel"><div class="panel-head"><strong>Motivos das perdas</strong><small>Em peças</small></div><div class="body-pad">${byReason.map(([name,n])=>`<div class="bar-item"><div class="bar-label"><span>${name}</span><span>${fmt(n)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${lossQty?n/lossQty*100:0}%"></div></div></div>`).join('')}<div class="divider"></div><div class="report-row"><span>Furto — ocorrências</span><b>${active.filter(x=>x.reason==='furto').length}</b></div><div class="report-row"><span>Avaria — ocorrências</span><b>${active.filter(x=>x.reason==='avaria').length}</b></div><div class="report-row"><span>Perdas estornadas</span><b>${db.losses.filter(x=>x.storeId===storeId&&x.reversedAt).length}</b></div></div></section><section class="panel"><div class="panel-head"><strong>Localização do estoque</strong><small>Saldo atual</small></div><div class="body-pad">${[['Depósito',tot.deposito],['Salão de vendas',tot.salao],['Em transferência',tot.transito]].map(x=>`<div class="report-row"><span>${x[0]}</span><b>${fmt(x[1])} peças</b></div>`).join('')}<div class="divider"></div><strong style="font-size:12px">Saldo por loja</strong>${db.stores.map(s=>`<div class="report-row"><span>${escapeHtml(s.name)}</span><b>${fmt(totals(s.id).total)}</b></div>`).join('')}</div></section></div><section class="panel section-gap"><div class="panel-head"><strong>Produtos com maior saldo</strong><small>Unidade atual</small></div><div class="body-pad">${products.length?products.map(p=>{const q=stockTotals(storeId,p.id).total;return `<div class="report-row"><span>${escapeHtml(nameOf(p))}<small style="display:block" class="muted">${escapeHtml(p.reference)}</small></span><b>${fmt(q)} peças</b></div>`}).join(''):noRows('box','Sem dados','Cadastre produtos para visualizar o relatório.')}</div></section>`}
   function storesPage(){return pageHead('Unidades','Cadastre lojas e acompanhe o estoque de cada uma de forma independente.',act('Adicionar loja','storeModal'))+`<div class="stores-grid">${db.stores.map(s=>{const t=totals(s.id);return `<section class="panel"><div class="store-card"><span class="store-mark">${ico('store',23)}</span><div style="flex:1;min-width:0"><h3>${escapeHtml(s.name)}</h3><p>Código: ${escapeHtml(s.code)}</p></div><button class="icon-btn" title="Editar loja" data-action="storeModal" data-id="${s.id}">${ico('edit',16)}</button></div><div class="body-pad" style="padding-top:0"><div class="report-row"><span>Depósito</span><b>${fmt(t.deposito)}</b></div><div class="report-row"><span>Salão</span><b>${fmt(t.salao)}</b></div><div class="report-row"><span>Em transferência</span><b>${fmt(t.transito)}</b></div><div class="report-row"><span><b>Total de peças</b></span><b>${fmt(t.total)}</b></div><button class="btn btn-small" style="margin-top:13px;width:100%" data-action="switchStore" data-id="${s.id}">${ico('right',15)} ${s.id===prefs.storeId?'Unidade selecionada':'Acessar unidade'}</button></div></section>`}).join('')}</div><div class="notice">${ico('info')}<span>O cadastro dos produtos é compartilhado. Porém os saldos, perdas, inventários e transferências são vinculados à unidade que realizou a operação.</span></div>`}
   function storeModal(id){const s=db.stores.find(x=>x.id===id);modal(s?'Editar unidade':'Cadastrar unidade','Defina como a loja será identificada no sistema.',`<div class="form-grid">${field('s-code','Código da loja *','text',s?.code||'','maxlength="12"')}${field('s-name','Nome da unidade *','text',s?.name||'','maxlength="80"')}</div>`,`<button class="btn btn-primary" id="s-submit">${ico('check')} Salvar unidade</button>`);$('#s-submit').addEventListener('click',()=>{try{const code=formVal('s-code'),name=formVal('s-name');assert(code&&name,'Preencha o código e o nome.');assert(!db.stores.some(x=>x.id!==id&&x.code.toLowerCase()===code.toLowerCase()),'Já existe uma unidade com este código.');commit(d=>{if(s)Object.assign(d.stores.find(x=>x.id===id),{code,name});else d.stores.push({id:uid(),code,name,createdAt:iso()})},'Unidade salva com sucesso.')}catch(e){toast(e.message,true)}})}
-  function settingsPage(){return pageHead('Configurações','Personalize a experiência e proteja seus registros operacionais.',`<button class="btn" data-action="exportBackup">${ico('download')} Fazer backup</button>`)+`<div class="cols-2 equal"><section class="panel"><div class="panel-head"><strong>Preferências</strong>${ico('settings')}</div><div class="body-pad"><div class="report-row"><span>Conta do operador</span><button class="btn btn-small" data-action="accountModal">${ico('edit',14)} ${escapeHtml(op())}</button></div><div class="report-row"><span>Aparência do sistema</span><button class="btn btn-small" data-action="themeSwitch">${ico(prefs.theme==='dark'?'sun':'moon',14)} ${prefs.theme==='dark'?'Tema escuro':'Tema claro'}</button></div><div class="report-row"><span>Loja ativa</span><strong>${escapeHtml(getStore()?.name||'—')}</strong></div><div class="report-row"><span>Modo de armazenamento</span><span class="chip yellow">Local / navegador</span></div></div></section><section class="panel"><div class="panel-head"><strong>Backup e recuperação</strong>${ico('shield')}</div><div class="body-pad"><p class="text-note">Salve uma cópia dos registros para preservar o histórico. O backup inclui mercadorias, lojas, movimentações, transferências, inventários, perdas e fotos compactadas.</p><div class="actions" style="margin:17px 0">${act('Exportar JSON','exportBackup','download','btn-dark')}${act('Restaurar backup','importBackup','upload','')}</div><p class="text-note"><b>Importante:</b> restaurar substitui todos os registros locais atuais. Guarde os arquivos em local seguro.</p></div></section></div><section class="panel section-gap"><div class="panel-head"><strong>Sobre esta versão</strong><span class="chip">1.1 · Local</span></div><div class="body-pad"><div class="report-row"><span>Cadastro de produtos e saldos manuais</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Várias lojas e controle depósito/salão</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Abastecimento com recebimento confirmado</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Furto e avaria com baixa automática</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Inventário e ajustes com trilha de histórico</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Sincronização Supabase e login multiusuário no servidor</span><span class="chip yellow">Não configurados</span></div></div></section><div class="notice blue">${ico('info')}<span>Esta edição é totalmente funcional para uso local e testes, mas não sincroniza dados entre dispositivos. Para colocá-la em operação com múltiplos colaboradores e lojas ao mesmo tempo, é necessário configurar um backend com autenticação, permissões, transações e políticas de acesso, como o Supabase.</span></div>`}
+  function settingsPage(){return pageHead('Configurações','Personalize a experiência e proteja seus registros operacionais.',`<button class="btn" data-action="exportBackup">${ico('download')} Fazer backup</button>`)+`<div class="cols-2 equal"><section class="panel"><div class="panel-head"><strong>Preferências</strong>${ico('settings')}</div><div class="body-pad"><div class="report-row"><span>Conta do operador</span><button class="btn btn-small" data-action="accountModal">${ico('edit',14)} ${escapeHtml(op())}</button></div><div class="report-row"><span>Aparência do sistema</span><button class="btn btn-small" data-action="themeSwitch">${ico(prefs.theme==='dark'?'sun':'moon',14)} ${prefs.theme==='dark'?'Tema escuro':'Tema claro'}</button></div><div class="report-row"><span>Loja ativa</span><strong>${escapeHtml(getStore()?.name||'—')}</strong></div><div class="report-row"><span>Modo de armazenamento</span><span class="chip yellow">Local / navegador</span></div></div></section><section class="panel"><div class="panel-head"><strong>Backup e recuperação</strong>${ico('shield')}</div><div class="body-pad"><p class="text-note">Salve uma cópia dos registros para preservar o histórico. O backup inclui mercadorias, lojas, movimentações, transferências, inventários, perdas e fotos compactadas.</p><div class="actions" style="margin:17px 0">${act('Exportar JSON','exportBackup','download','btn-dark')}${act('Restaurar backup','importBackup','upload','')}</div><p class="text-note"><b>Importante:</b> restaurar substitui todos os registros locais atuais. Guarde os arquivos em local seguro.</p></div></section></div><section class="panel section-gap"><div class="panel-head"><strong>Sobre esta versão</strong><span class="chip">1.3 · Local</span></div><div class="body-pad"><div class="report-row"><span>Cadastro de produtos e saldos manuais</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Várias lojas e controle depósito/salão</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Abastecimento com recebimento confirmado</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Furto e avaria com baixa automática</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Inventário e ajustes com trilha de histórico</span><span class="chip green">Ativo</span></div><div class="report-row"><span>Sincronização Supabase e login multiusuário no servidor</span><span class="chip yellow">Não configurados</span></div></div></section><div class="notice blue">${ico('info')}<span>Esta edição é totalmente funcional para uso local e testes, mas não sincroniza dados entre dispositivos. Para colocá-la em operação com múltiplos colaboradores e lojas ao mesmo tempo, é necessário configurar um backend com autenticação, permissões, transações e políticas de acesso, como o Supabase.</span></div>`}
   function operatorModal(){modal('Identificação local','Este nome será registrado nas próximas operações deste navegador.',`${field('operator-name','Nome do colaborador *','text',op(),'maxlength="90"')}<div class="notice">${ico('info')}<span>Esta identificação não constitui login ou autenticação. Para impedir que alguém se identifique como outro operador, será necessário ativar autenticação em um servidor.</span></div>`,`<button class="btn btn-primary" id="operator-save">${ico('check')} Salvar</button>`);$('#operator-save').addEventListener('click',()=>{const name=formVal('operator-name');if(name.length<2){toast('Informe o nome do colaborador.',true);return}prefs.operator=name;savePrefs();closeModal();render();toast('Identificação local atualizada.')})}
   function confirmDialog(title,description,action){modal(title,description,`<p style="line-height:1.7;font-size:13px">${escapeHtml(description)}</p>`,`<button class="btn btn-danger" id="confirm-act">${ico('check')} Confirmar</button>`);$('#confirm-act').addEventListener('click',action)}
   const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
